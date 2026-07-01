@@ -390,9 +390,9 @@ section {
 
 .intro.section-band::after {
   background:
-    repeating-linear-gradient(180deg, rgba(247, 241, 229, 0.06) 0 1px, transparent 1px 132px),
-    radial-gradient(circle at 50% 45%, transparent 0 28%, rgba(8, 11, 13, 0.44) 74%);
-  opacity: 0.34;
+    radial-gradient(circle at 50% 45%, transparent 0 28%, rgba(8, 11, 13, 0.44) 74%),
+    linear-gradient(180deg, rgba(8, 11, 13, 0.1), transparent 32%, rgba(8, 11, 13, 0.24));
+  opacity: 0.36;
 }
 
 .nebula-canvas {
@@ -513,9 +513,9 @@ section {
 
 .services::after {
   background:
-    repeating-linear-gradient(180deg, rgba(247, 241, 229, 0.055) 0 1px, transparent 1px 118px),
-    linear-gradient(90deg, rgba(8, 11, 13, 0.84), transparent 24% 76%, rgba(8, 11, 13, 0.84));
-  opacity: 0.38;
+    linear-gradient(90deg, rgba(8, 11, 13, 0.84), transparent 24% 76%, rgba(8, 11, 13, 0.84)),
+    radial-gradient(circle at 50% 38%, transparent 0 34%, rgba(8, 11, 13, 0.38) 82%);
+  opacity: 0.4;
 }
 
 .warp-canvas {
