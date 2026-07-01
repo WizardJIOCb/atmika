@@ -358,6 +358,104 @@ section {
     #0d1112;
 }
 
+.intro.section-band,
+.split.section-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.intro.section-band > *,
+.split.section-band > * {
+  position: relative;
+  z-index: 1;
+}
+
+.intro.section-band::before,
+.split.section-band::before,
+.intro.section-band::after,
+.split.section-band::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+}
+
+.intro.section-band::before {
+  background:
+    linear-gradient(90deg, rgba(8, 11, 13, 0.86), rgba(8, 11, 13, 0.62) 42%, rgba(8, 11, 13, 0.9)),
+    repeating-linear-gradient(180deg, rgba(247, 241, 229, 0.08) 0 1px, transparent 1px 142px),
+    radial-gradient(circle at 12% 22%, rgba(123, 169, 177, 0.34), transparent 28%),
+    radial-gradient(circle at 72% 40%, rgba(217, 170, 97, 0.34), transparent 34%),
+    linear-gradient(120deg, rgba(19, 61, 70, 0.55), rgba(58, 42, 30, 0.28), rgba(7, 9, 10, 0.94));
+  background-size: auto, auto, 72% 72%, 70% 70%, 140% 140%;
+  filter: saturate(1.08);
+  opacity: 0.92;
+  transform: scale(1.08);
+  animation: atmikaSceneDrift 18s ease-in-out infinite alternate;
+}
+
+.intro.section-band::after {
+  background:
+    linear-gradient(180deg, transparent 0 16%, rgba(8, 11, 13, 0.5) 16% 18%, transparent 18% 36%, rgba(8, 11, 13, 0.44) 36% 38%, transparent 38% 58%, rgba(8, 11, 13, 0.46) 58% 60%, transparent 60%),
+    linear-gradient(100deg, transparent 0%, rgba(247, 241, 229, 0.14) 42%, transparent 64%);
+  mix-blend-mode: screen;
+  opacity: 0.36;
+  animation: atmikaLightSweep 9s ease-in-out infinite alternate;
+}
+
+.split.section-band::before {
+  background:
+    linear-gradient(90deg, rgba(8, 11, 13, 0.88), rgba(8, 11, 13, 0.58) 48%, rgba(8, 11, 13, 0.86)),
+    repeating-linear-gradient(180deg, transparent 0 120px, rgba(247, 241, 229, 0.08) 120px 121px, transparent 121px 138px),
+    radial-gradient(circle at 16% 72%, rgba(217, 170, 97, 0.28), transparent 30%),
+    radial-gradient(circle at 82% 28%, rgba(139, 186, 176, 0.3), transparent 34%),
+    linear-gradient(130deg, rgba(17, 55, 51, 0.6), rgba(19, 21, 23, 0.74), rgba(94, 64, 41, 0.36));
+  background-size: auto, auto, 64% 64%, 72% 72%, 150% 150%;
+  opacity: 0.94;
+  transform: scale(1.08);
+  animation: atmikaSceneDrift 20s ease-in-out infinite alternate-reverse;
+}
+
+.split.section-band::after {
+  background:
+    linear-gradient(180deg, rgba(8, 11, 13, 0.16), transparent 26%, rgba(8, 11, 13, 0.52) 50%, transparent 72%, rgba(8, 11, 13, 0.22)),
+    linear-gradient(110deg, transparent 12%, rgba(217, 170, 97, 0.12) 44%, transparent 68%);
+  mix-blend-mode: screen;
+  opacity: 0.42;
+  animation: atmikaLightSweep 10s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes atmikaSceneDrift {
+  from {
+    background-position: center, center, 0% 35%, 100% 45%, 0% 50%;
+  }
+
+  to {
+    background-position: center, center, 18% 45%, 82% 34%, 100% 50%;
+  }
+}
+
+@keyframes atmikaLightSweep {
+  from {
+    transform: translateX(-8%);
+  }
+
+  to {
+    transform: translateX(8%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro.section-band::before,
+  .split.section-band::before,
+  .intro.section-band::after,
+  .split.section-band::after {
+    animation: none;
+  }
+}
+
 .section-heading {
   display: grid;
   grid-template-columns: minmax(0, 0.78fr) minmax(280px, 1.22fr);
