@@ -479,6 +479,10 @@ const initGalleryCarousel = () => {
   });
 
   carousel.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('.gallery-arrow, .gallery-dots button')) {
+      return;
+    }
+
     pointerStartX = event.clientX;
     pointerDeltaX = 0;
     carousel.setPointerCapture(event.pointerId);
