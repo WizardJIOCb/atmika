@@ -358,6 +358,58 @@ section {
     #0d1112;
 }
 
+.intro.section-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 72% 38%, rgba(217, 170, 97, 0.18), transparent 36%),
+    radial-gradient(circle at 22% 72%, rgba(92, 141, 143, 0.18), transparent 34%),
+    #080b0d;
+}
+
+.intro.section-band > :not(.nebula-canvas) {
+  position: relative;
+  z-index: 2;
+}
+
+.intro.section-band::before,
+.intro.section-band::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  content: "";
+}
+
+.intro.section-band::before {
+  background:
+    linear-gradient(90deg, rgba(8, 11, 13, 0.86), rgba(8, 11, 13, 0.42) 46%, rgba(8, 11, 13, 0.78)),
+    linear-gradient(180deg, rgba(8, 11, 13, 0.06), rgba(8, 11, 13, 0.52));
+}
+
+.intro.section-band::after {
+  background:
+    repeating-linear-gradient(180deg, rgba(247, 241, 229, 0.06) 0 1px, transparent 1px 132px),
+    radial-gradient(circle at 50% 45%, transparent 0 28%, rgba(8, 11, 13, 0.44) 74%);
+  opacity: 0.34;
+}
+
+.nebula-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.nebula-canvas.is-fallback {
+  display: none;
+}
+
 .section-heading {
   display: grid;
   grid-template-columns: minmax(0, 0.78fr) minmax(280px, 1.22fr);

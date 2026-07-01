@@ -134,6 +134,7 @@ document.querySelector('#app').innerHTML = `
     </section>
 
     <section class="intro section-band">
+      <canvas class="nebula-canvas" data-nebula-canvas aria-hidden="true"></canvas>
       <div class="section-heading">
         <span class="kicker">Новый сайт Атмики</span>
         <h2>Мягкая, глубокая и честная упаковка опыта</h2>
@@ -313,3 +314,149 @@ mobilePanel.querySelectorAll('a').forEach((link) => link.addEventListener('click
 window.addEventListener('scroll', () => {
   header.classList.toggle('is-scrolled', window.scrollY > 12);
 });
+
+const initNebulaBackground = async () => {
+  const canvas = document.querySelector('[data-nebula-canvas]');
+
+  if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+
+  try {
+    const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js');
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+      preserveDrawingBuffer: true,
+      powerPreference: 'low-power',
+    });
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
+    const group = new THREE.Group();
+    const prefersFineMotion = window.matchMedia('(min-width: 720px)').matches;
+    let animationFrame = 0;
+    let isVisible = true;
+
+    camera.position.z = 36;
+    scene.add(group);
+
+    const makeGlowTexture = () => {
+      const textureCanvas = document.createElement('canvas');
+      textureCanvas.width = 256;
+      textureCanvas.height = 256;
+      const context = textureCanvas.getContext('2d');
+      const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
+
+      gradient.addColorStop(0, 'rgba(255,255,255,0.68)');
+      gradient.addColorStop(0.26, 'rgba(255,238,206,0.32)');
+      gradient.addColorStop(0.58, 'rgba(180,211,218,0.12)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 256, 256);
+
+      const texture = new THREE.CanvasTexture(textureCanvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    };
+
+    const glowTexture = makeGlowTexture();
+    const nebulaColors = [0xd9aa61, 0x9cb9b9, 0xf7f1e5, 0x5f8f8a];
+
+    for (let i = 0; i < 26; i += 1) {
+      const material = new THREE.SpriteMaterial({
+        map: glowTexture,
+        color: nebulaColors[i % nebulaColors.length],
+        transparent: true,
+        opacity: 0.12 + (i % 5) * 0.018,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const sprite = new THREE.Sprite(material);
+      const scale = 10 + Math.random() * 28;
+
+      sprite.position.set(
+        (Math.random() - 0.5) * 70,
+        (Math.random() - 0.5) * 26,
+        -18 - Math.random() * 36,
+      );
+      sprite.scale.set(scale * (1.9 + Math.random()), scale * 0.52, 1);
+      sprite.material.rotation = Math.random() * Math.PI;
+      group.add(sprite);
+    }
+
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = prefersFineMotion ? 900 : 420;
+    const positions = new Float32Array(starCount * 3);
+    const colors = new Float32Array(starCount * 3);
+    const color = new THREE.Color();
+
+    for (let i = 0; i < starCount; i += 1) {
+      const index = i * 3;
+      positions[index] = (Math.random() - 0.5) * 92;
+      positions[index + 1] = (Math.random() - 0.5) * 32;
+      positions[index + 2] = -18 - Math.random() * 64;
+      color.setHex(i % 4 === 0 ? 0xd9aa61 : 0xbfd3d5);
+      colors[index] = color.r;
+      colors[index + 1] = color.g;
+      colors[index + 2] = color.b;
+    }
+
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    group.add(new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({
+        size: 0.1,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.66,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    ));
+
+    const resize = () => {
+      const { width, height } = canvas.getBoundingClientRect();
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
+
+      renderer.setPixelRatio(pixelRatio);
+      renderer.setSize(Math.max(1, width), Math.max(1, height), false);
+      camera.aspect = Math.max(1, width) / Math.max(1, height);
+      camera.updateProjectionMatrix();
+    };
+
+    const render = (time = 0) => {
+      if (!isVisible) {
+        animationFrame = requestAnimationFrame(render);
+        return;
+      }
+
+      const speed = time * 0.00008;
+      group.rotation.z = Math.sin(speed * 1.4) * 0.035;
+      group.rotation.y = Math.sin(speed) * 0.08;
+      group.position.x = Math.sin(speed * 1.7) * 1.2;
+      renderer.render(scene, camera);
+      animationFrame = requestAnimationFrame(render);
+    };
+
+    new ResizeObserver(resize).observe(canvas);
+    resize();
+    render();
+
+    new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+    }, { threshold: 0.05 }).observe(canvas);
+
+    window.addEventListener('pagehide', () => {
+      cancelAnimationFrame(animationFrame);
+      renderer.dispose();
+      starGeometry.dispose();
+      glowTexture.dispose();
+    }, { once: true });
+  } catch (error) {
+    canvas.classList.add('is-fallback');
+  }
+};
+
+initNebulaBackground();
