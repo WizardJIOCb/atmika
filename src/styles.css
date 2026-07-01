@@ -774,7 +774,7 @@ section {
 
   .hero-content,
   .hero-panel {
-    width: min(100%, 340px);
+    width: 100%;
   }
 
   .intro,
@@ -786,7 +786,7 @@ section {
   .story-card,
   .quote-card,
   .contact-inner {
-    width: min(100%, 340px);
+    width: 100%;
   }
 
   .eyebrow,
