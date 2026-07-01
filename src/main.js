@@ -43,6 +43,33 @@ const services = [
   },
 ];
 
+const galleryItems = [
+  {
+    type: 'video',
+    src: 'public/gallery/video5314648452544629298.mp4',
+    title: 'Тонкое поле',
+    tag: 'Видео',
+  },
+  {
+    type: 'video',
+    src: 'public/gallery/video5343562412899475796.mp4',
+    title: 'Практика состояния',
+    tag: 'Видео',
+  },
+  {
+    type: 'image',
+    src: 'public/gallery/5343562413359441019 (1).jpg',
+    title: 'Алхимия внимания',
+    tag: 'Фото',
+  },
+  {
+    type: 'video',
+    src: 'public/gallery/video5343562412899475797.mp4',
+    title: 'Глубина процесса',
+    tag: 'Видео',
+  },
+];
+
 const audience = [
   'Вы чувствуете, что привычная картина мира больше не объясняет ваш опыт.',
   'Приходят яркие сны, мистические переживания, тонкие ощущения или сильные внутренние вопросы.',
@@ -83,6 +110,7 @@ document.querySelector('#app').innerHTML = `
     </a>
     <nav class="desktop-nav" aria-label="Основная навигация">
       <a href="#work">Форматы</a>
+      <a href="#gallery">Галерея</a>
       <a href="#for-whom">Кому подходит</a>
       <a href="#story">История</a>
       <a href="#contact">Контакты</a>
@@ -101,6 +129,7 @@ document.querySelector('#app').innerHTML = `
       <i data-lucide="x"></i>
     </button>
     <a href="#work">Форматы</a>
+    <a href="#gallery">Галерея</a>
     <a href="#for-whom">Кому подходит</a>
     <a href="#story">История</a>
     <a href="#contact">Контакты</a>
@@ -167,6 +196,42 @@ document.querySelector('#app').innerHTML = `
             <div class="price">${service.price}</div>
           </article>
         `).join('')}
+      </div>
+    </section>
+
+    <section class="gallery section-band" id="gallery">
+      <div class="section-heading section-heading-centered gallery-heading">
+        <span class="kicker">Галерея</span>
+        <h2>Визуальный ритм практик Атмики</h2>
+      </div>
+      <div class="gallery-carousel" data-gallery-carousel aria-label="Галерея практик Атмики">
+        <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="Предыдущий слайд" data-gallery-prev>
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <div class="gallery-stage">
+          ${galleryItems.map((item, index) => `
+            <figure class="gallery-slide" data-gallery-item data-index="${index}">
+              <div class="gallery-media">
+                ${item.type === 'video'
+                  ? `<video src="${item.src}" muted loop playsinline preload="metadata"></video>`
+                  : `<img src="${item.src}" alt="${item.title}" loading="lazy" />`
+                }
+              </div>
+              <figcaption>
+                <span>${item.tag}</span>
+                <strong>${item.title}</strong>
+              </figcaption>
+            </figure>
+          `).join('')}
+        </div>
+        <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="Следующий слайд" data-gallery-next>
+          <i data-lucide="chevron-right"></i>
+        </button>
+        <div class="gallery-dots" aria-label="Выбор слайда">
+          ${galleryItems.map((item, index) => `
+            <button type="button" aria-label="Показать слайд ${index + 1}" data-gallery-dot="${index}"></button>
+          `).join('')}
+        </div>
       </div>
     </section>
 
@@ -270,6 +335,8 @@ document.querySelector('#app').innerHTML = `
 const iconPaths = {
   'arrow-right': '<path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path>',
   'calendar-days': '<path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path>',
+  'chevron-left': '<path d="m15 18-6-6 6-6"></path>',
+  'chevron-right': '<path d="m9 18 6-6-6-6"></path>',
   'circle-check': '<circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-5"></path>',
   flame: '<path d="M8.5 14.5A4.5 4.5 0 0 0 12 22a4.5 4.5 0 0 0 3.5-7.5c-1.5-1.8-1.9-3.2-1.2-5.5-2.3 1.1-3.8 2.8-4.3 5.1-.9-.9-1.3-2.1-1.1-3.7-2 1.6-3.2 3.6-3.2 5.6 0 2.2 1.2 4.3 3.3 5.5"></path>',
   'heart-pulse': '<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5a5.5 5.5 0 0 0-10 3.5c0 2.3 1.5 4 3 5.5l7 7Z"></path><path d="M3.2 14H7l2-3 2 6 2-3h4.8"></path>',
@@ -316,6 +383,142 @@ mobilePanel.querySelectorAll('a').forEach((link) => link.addEventListener('click
 window.addEventListener('scroll', () => {
   header.classList.toggle('is-scrolled', window.scrollY > 12);
 });
+
+const initGalleryCarousel = () => {
+  const carousel = document.querySelector('[data-gallery-carousel]');
+
+  if (!carousel) {
+    return;
+  }
+
+  const slides = [...carousel.querySelectorAll('[data-gallery-item]')];
+  const dots = [...carousel.querySelectorAll('[data-gallery-dot]')];
+  const prevButton = carousel.querySelector('[data-gallery-prev]');
+  const nextButton = carousel.querySelector('[data-gallery-next]');
+  let activeIndex = 0;
+  let autoTimer = 0;
+  let pointerStartX = 0;
+  let pointerDeltaX = 0;
+
+  const normalizeOffset = (index) => {
+    let offset = index - activeIndex;
+    const half = slides.length / 2;
+
+    if (offset > half) {
+      offset -= slides.length;
+    }
+
+    if (offset < -half) {
+      offset += slides.length;
+    }
+
+    return offset;
+  };
+
+  const updateVideos = () => {
+    slides.forEach((slide, index) => {
+      const video = slide.querySelector('video');
+
+      if (!video) {
+        return;
+      }
+
+      if (Math.abs(normalizeOffset(index)) <= 1) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  };
+
+  const render = () => {
+    slides.forEach((slide, index) => {
+      const offset = normalizeOffset(index);
+      const distance = Math.min(Math.abs(offset), 3);
+
+      slide.style.setProperty('--offset', offset);
+      slide.style.setProperty('--distance', distance);
+      slide.style.zIndex = String(20 - distance);
+      slide.toggleAttribute('aria-current', offset === 0);
+      slide.setAttribute('aria-hidden', String(distance > 2));
+    });
+
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('is-active', index === activeIndex);
+      dot.setAttribute('aria-current', String(index === activeIndex));
+    });
+
+    updateVideos();
+  };
+
+  const goTo = (index) => {
+    activeIndex = (index + slides.length) % slides.length;
+    render();
+  };
+
+  const restartAuto = () => {
+    window.clearInterval(autoTimer);
+    autoTimer = window.setInterval(() => goTo(activeIndex + 1), 6200);
+  };
+
+  prevButton.addEventListener('click', () => {
+    goTo(activeIndex - 1);
+    restartAuto();
+  });
+
+  nextButton.addEventListener('click', () => {
+    goTo(activeIndex + 1);
+    restartAuto();
+  });
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+      goTo(index);
+      restartAuto();
+    });
+  });
+
+  carousel.addEventListener('pointerdown', (event) => {
+    pointerStartX = event.clientX;
+    pointerDeltaX = 0;
+    carousel.setPointerCapture(event.pointerId);
+    window.clearInterval(autoTimer);
+  });
+
+  carousel.addEventListener('pointermove', (event) => {
+    if (!pointerStartX) {
+      return;
+    }
+
+    pointerDeltaX = event.clientX - pointerStartX;
+  });
+
+  carousel.addEventListener('pointerup', () => {
+    if (Math.abs(pointerDeltaX) > 44) {
+      goTo(activeIndex + (pointerDeltaX < 0 ? 1 : -1));
+    }
+
+    pointerStartX = 0;
+    pointerDeltaX = 0;
+    restartAuto();
+  });
+
+  carousel.addEventListener('pointercancel', () => {
+    pointerStartX = 0;
+    pointerDeltaX = 0;
+    restartAuto();
+  });
+
+  carousel.addEventListener('mouseenter', () => window.clearInterval(autoTimer));
+  carousel.addEventListener('mouseleave', restartAuto);
+  carousel.addEventListener('focusin', () => window.clearInterval(autoTimer));
+  carousel.addEventListener('focusout', restartAuto);
+
+  render();
+  restartAuto();
+};
+
+initGalleryCarousel();
 
 const initNebulaBackground = async () => {
   const canvas = document.querySelector('[data-nebula-canvas]');
