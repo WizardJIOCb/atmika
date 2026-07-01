@@ -68,6 +68,12 @@ const galleryItems = [
     title: 'Глубина процесса',
     tag: 'Видео',
   },
+  {
+    type: 'video',
+    src: 'public/gallery/generated_video (25).mp4',
+    title: 'Светлая трансформация',
+    tag: 'Видео',
+  },
 ];
 
 const audience = [
