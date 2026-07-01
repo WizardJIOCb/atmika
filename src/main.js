@@ -171,6 +171,7 @@ document.querySelector('#app').innerHTML = `
     </section>
 
     <section class="split section-band" id="for-whom">
+      <canvas class="sky-canvas" data-sky-canvas aria-hidden="true"></canvas>
       <div>
         <span class="kicker">Кому подходит</span>
         <h2>Для тех, кто уже чувствует: прежний режим больше не работает</h2>
@@ -623,3 +624,169 @@ const initWarpBackground = async () => {
 };
 
 initWarpBackground();
+
+const initSkyBackground = async () => {
+  const canvas = document.querySelector('[data-sky-canvas]');
+
+  if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+
+  try {
+    const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js');
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: false,
+      preserveDrawingBuffer: true,
+      powerPreference: 'low-power',
+    });
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const uniforms = {
+      uTime: { value: 0 },
+      uResolution: { value: new THREE.Vector2(1, 1) },
+    };
+    let animationFrame = 0;
+    let isVisible = true;
+
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms,
+      vertexShader: `
+        varying vec2 vUv;
+
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+
+        uniform float uTime;
+        uniform vec2 uResolution;
+        varying vec2 vUv;
+
+        mat2 rotate2d(float angle) {
+          float s = sin(angle);
+          float c = cos(angle);
+          return mat2(c, -s, s, c);
+        }
+
+        float hash(vec2 p) {
+          p = fract(p * vec2(127.1, 311.7));
+          p += dot(p, p + 34.23);
+          return fract(p.x * p.y);
+        }
+
+        float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+
+          return mix(
+            mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+            mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+            u.y
+          );
+        }
+
+        float fbm(vec2 p) {
+          float value = 0.0;
+          float amplitude = 0.5;
+
+          for (int i = 0; i < 6; i++) {
+            value += amplitude * noise(p);
+            p = rotate2d(0.42) * p * 2.04 + 19.17;
+            amplitude *= 0.52;
+          }
+
+          return value;
+        }
+
+        void main() {
+          vec2 uv = vUv;
+          vec2 centered = uv - 0.5;
+          centered.x *= uResolution.x / max(uResolution.y, 1.0);
+
+          float time = uTime * 0.085;
+          float horizon = smoothstep(0.08, 0.72, uv.y);
+          vec3 night = vec3(0.018, 0.045, 0.052);
+          vec3 dawn = vec3(0.72, 0.39, 0.20);
+          vec3 pale = vec3(0.84, 0.73, 0.53);
+          vec3 sky = mix(dawn, night, horizon);
+
+          float sun = 1.0 - smoothstep(0.0, 0.74, length((centered - vec2(0.16, -0.08)) * vec2(1.0, 1.55)));
+          sky += pale * sun * 0.38;
+
+          vec2 cloudUv = centered * vec2(1.42, 0.72);
+          cloudUv.x += time;
+          cloudUv.y += sin(centered.x * 2.2 + time * 1.7) * 0.12;
+
+          float lowCloud = fbm(cloudUv * 2.1 + vec2(0.0, time * 0.6));
+          float highCloud = fbm(cloudUv * 5.2 - vec2(time * 1.4, 0.0));
+          float cloudBand = smoothstep(0.12, 0.82, uv.y) * (1.0 - smoothstep(0.84, 1.0, uv.y));
+          float clouds = smoothstep(0.42, 0.83, lowCloud * 0.78 + highCloud * 0.42);
+          clouds *= cloudBand;
+
+          float streaks = pow(abs(sin((centered.x + centered.y * 0.24 + time * 1.6) * 8.0 + fbm(cloudUv * 1.3) * 2.8)), 8.0);
+          streaks *= smoothstep(0.1, 0.62, uv.y) * 0.18;
+
+          vec3 cloudColor = mix(vec3(0.25, 0.54, 0.54), vec3(1.0, 0.71, 0.36), smoothstep(-0.35, 0.7, centered.x + sun));
+          vec3 color = mix(sky, cloudColor, clouds * 0.74 + streaks);
+
+          float grain = noise(uv * uResolution.xy * 0.42 + uTime);
+          color += (grain - 0.5) * 0.026;
+
+          float edge = smoothstep(1.18, 0.22, length(centered * vec2(0.82, 1.22)));
+          float alpha = clamp((0.58 + clouds * 0.34 + sun * 0.14) * edge, 0.0, 0.92);
+
+          gl_FragColor = vec4(color, alpha);
+        }
+      `,
+    });
+
+    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+
+    const resize = () => {
+      const { width, height } = canvas.getBoundingClientRect();
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.35);
+
+      renderer.setPixelRatio(pixelRatio);
+      renderer.setSize(Math.max(1, width), Math.max(1, height), false);
+      uniforms.uResolution.value.set(
+        Math.max(1, width) * pixelRatio,
+        Math.max(1, height) * pixelRatio,
+      );
+    };
+
+    const render = (time = 0) => {
+      if (isVisible) {
+        uniforms.uTime.value = time * 0.001;
+        renderer.render(scene, camera);
+      }
+
+      animationFrame = requestAnimationFrame(render);
+    };
+
+    new ResizeObserver(resize).observe(canvas);
+    resize();
+    render();
+
+    new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+    }, { threshold: 0.05 }).observe(canvas);
+
+    window.addEventListener('pagehide', () => {
+      cancelAnimationFrame(animationFrame);
+      renderer.dispose();
+      material.dispose();
+    }, { once: true });
+  } catch (error) {
+    canvas.classList.add('is-fallback');
+  }
+};
+
+initSkyBackground();
