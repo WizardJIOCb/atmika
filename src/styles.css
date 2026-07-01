@@ -481,6 +481,58 @@ section {
   margin-bottom: 0;
 }
 
+.services {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(217, 170, 97, 0.14), transparent 34%),
+    radial-gradient(circle at 82% 62%, rgba(70, 131, 130, 0.16), transparent 32%),
+    #070a0b;
+}
+
+.services > :not(.warp-canvas) {
+  position: relative;
+  z-index: 2;
+}
+
+.services::before,
+.services::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  content: "";
+}
+
+.services::before {
+  background:
+    linear-gradient(180deg, rgba(8, 11, 13, 0.82), rgba(8, 11, 13, 0.34) 42%, rgba(8, 11, 13, 0.82)),
+    radial-gradient(circle at 50% 36%, transparent 0 24%, rgba(8, 11, 13, 0.36) 76%);
+}
+
+.services::after {
+  background:
+    repeating-linear-gradient(180deg, rgba(247, 241, 229, 0.055) 0 1px, transparent 1px 118px),
+    linear-gradient(90deg, rgba(8, 11, 13, 0.84), transparent 24% 76%, rgba(8, 11, 13, 0.84));
+  opacity: 0.38;
+}
+
+.warp-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.warp-canvas.is-fallback {
+  display: none;
+}
+
 .services-heading {
   display: flex;
   flex-direction: column;

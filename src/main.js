@@ -150,6 +150,7 @@ document.querySelector('#app').innerHTML = `
     </section>
 
     <section class="services" id="work">
+      <canvas class="warp-canvas" data-warp-canvas aria-hidden="true"></canvas>
       <div class="section-heading services-heading">
         <span class="kicker">Форматы работы</span>
         <h2>От первой сессии до глубокой программы</h2>
@@ -361,32 +362,32 @@ const initNebulaBackground = async () => {
     };
 
     const glowTexture = makeGlowTexture();
-    const nebulaColors = [0xd9aa61, 0x9cb9b9, 0xf7f1e5, 0x5f8f8a];
+    const nebulaColors = [0xd9aa61, 0x9cb9b9, 0xf7f1e5, 0x5f8f8a, 0xb77952];
 
-    for (let i = 0; i < 26; i += 1) {
+    for (let i = 0; i < 44; i += 1) {
       const material = new THREE.SpriteMaterial({
         map: glowTexture,
         color: nebulaColors[i % nebulaColors.length],
         transparent: true,
-        opacity: 0.12 + (i % 5) * 0.018,
+        opacity: 0.18 + (i % 5) * 0.026,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       });
       const sprite = new THREE.Sprite(material);
-      const scale = 10 + Math.random() * 28;
+      const scale = 22 + Math.random() * 58;
 
       sprite.position.set(
-        (Math.random() - 0.5) * 70,
-        (Math.random() - 0.5) * 26,
-        -18 - Math.random() * 36,
+        (Math.random() - 0.5) * 88,
+        (Math.random() - 0.5) * 34,
+        -16 - Math.random() * 42,
       );
-      sprite.scale.set(scale * (1.9 + Math.random()), scale * 0.52, 1);
+      sprite.scale.set(scale * (2.15 + Math.random() * 1.15), scale * 0.72, 1);
       sprite.material.rotation = Math.random() * Math.PI;
       group.add(sprite);
     }
 
     const starGeometry = new THREE.BufferGeometry();
-    const starCount = prefersFineMotion ? 900 : 420;
+    const starCount = prefersFineMotion ? 1500 : 760;
     const positions = new Float32Array(starCount * 3);
     const colors = new Float32Array(starCount * 3);
     const color = new THREE.Color();
@@ -407,10 +408,10 @@ const initNebulaBackground = async () => {
     group.add(new THREE.Points(
       starGeometry,
       new THREE.PointsMaterial({
-        size: 0.1,
+        size: 0.16,
         vertexColors: true,
         transparent: true,
-        opacity: 0.66,
+        opacity: 0.78,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       }),
@@ -432,10 +433,11 @@ const initNebulaBackground = async () => {
         return;
       }
 
-      const speed = time * 0.00008;
-      group.rotation.z = Math.sin(speed * 1.4) * 0.035;
-      group.rotation.y = Math.sin(speed) * 0.08;
-      group.position.x = Math.sin(speed * 1.7) * 1.2;
+      const speed = time * 0.00018;
+      group.rotation.z = Math.sin(speed * 1.5) * 0.075;
+      group.rotation.y = Math.sin(speed) * 0.18;
+      group.position.x = Math.sin(speed * 1.7) * 2.4;
+      group.position.y = Math.cos(speed * 1.25) * 0.9;
       renderer.render(scene, camera);
       animationFrame = requestAnimationFrame(render);
     };
@@ -460,3 +462,164 @@ const initNebulaBackground = async () => {
 };
 
 initNebulaBackground();
+
+const initWarpBackground = async () => {
+  const canvas = document.querySelector('[data-warp-canvas]');
+
+  if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+
+  try {
+    const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js');
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: false,
+      preserveDrawingBuffer: true,
+      powerPreference: 'low-power',
+    });
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const uniforms = {
+      uTime: { value: 0 },
+      uResolution: { value: new THREE.Vector2(1, 1) },
+    };
+    let animationFrame = 0;
+    let isVisible = true;
+
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms,
+      vertexShader: `
+        varying vec2 vUv;
+
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+
+        uniform float uTime;
+        uniform vec2 uResolution;
+        varying vec2 vUv;
+
+        mat2 rotate2d(float angle) {
+          float s = sin(angle);
+          float c = cos(angle);
+          return mat2(c, -s, s, c);
+        }
+
+        float hash(vec2 p) {
+          p = fract(p * vec2(123.34, 456.21));
+          p += dot(p, p + 45.32);
+          return fract(p.x * p.y);
+        }
+
+        float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(
+            mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+            mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+            u.y
+          );
+        }
+
+        float fbm(vec2 p) {
+          float value = 0.0;
+          float amplitude = 0.55;
+
+          for (int i = 0; i < 5; i++) {
+            value += amplitude * noise(p);
+            p = rotate2d(0.62) * p * 2.03 + 17.1;
+            amplitude *= 0.5;
+          }
+
+          return value;
+        }
+
+        void main() {
+          vec2 uv = vUv - 0.5;
+          uv.x *= uResolution.x / max(uResolution.y, 1.0);
+
+          float time = uTime * 0.32;
+          vec2 drift = uv;
+          drift *= rotate2d(sin(time * 0.22) * 0.18);
+
+          float radial = length(drift);
+          float angle = atan(drift.y, drift.x);
+          float tunnel = 1.0 / max(radial * 3.8, 0.16);
+          float rayNoise = fbm(vec2(angle * 2.2 + time * 0.65, tunnel + time * 0.9));
+          float cloud = fbm(drift * 3.4 + vec2(time * 0.38, -time * 0.22));
+          float fineCloud = fbm(drift * 8.0 - vec2(time * 0.6, time * 0.34));
+
+          float rays = pow(abs(sin(angle * 10.0 + rayNoise * 4.0 + time * 1.8)), 18.0);
+          rays *= smoothstep(0.12, 0.82, radial) * (1.0 - smoothstep(0.78, 1.15, radial));
+
+          float core = smoothstep(0.54, 0.02, radial);
+          float mist = smoothstep(0.22, 0.9, cloud * 0.72 + fineCloud * 0.38);
+          float pulse = 0.72 + 0.28 * sin(time * 2.2 + radial * 8.0);
+          float intensity = (mist * 0.72 + rays * 0.9 + core * 0.42) * pulse;
+
+          vec3 teal = vec3(0.24, 0.58, 0.58);
+          vec3 amber = vec3(1.0, 0.58, 0.22);
+          vec3 ink = vec3(0.02, 0.035, 0.04);
+          vec3 color = mix(teal, amber, smoothstep(-0.8, 0.9, sin(angle * 2.0 + time) + cloud));
+          color = mix(ink, color, intensity);
+          color += vec3(0.95, 0.77, 0.48) * rays * 0.3;
+          color += vec3(0.52, 0.82, 0.86) * core * 0.18;
+
+          float vignette = smoothstep(1.25, 0.2, radial);
+          float alpha = clamp((intensity * 0.74 + core * 0.18) * vignette, 0.0, 0.86);
+          gl_FragColor = vec4(color, alpha);
+        }
+      `,
+    });
+
+    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+
+    const resize = () => {
+      const { width, height } = canvas.getBoundingClientRect();
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.45);
+
+      renderer.setPixelRatio(pixelRatio);
+      renderer.setSize(Math.max(1, width), Math.max(1, height), false);
+      uniforms.uResolution.value.set(
+        Math.max(1, width) * pixelRatio,
+        Math.max(1, height) * pixelRatio,
+      );
+    };
+
+    const render = (time = 0) => {
+      if (isVisible) {
+        uniforms.uTime.value = time * 0.001;
+        renderer.render(scene, camera);
+      }
+
+      animationFrame = requestAnimationFrame(render);
+    };
+
+    new ResizeObserver(resize).observe(canvas);
+    resize();
+    render();
+
+    new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+    }, { threshold: 0.05 }).observe(canvas);
+
+    window.addEventListener('pagehide', () => {
+      cancelAnimationFrame(animationFrame);
+      renderer.dispose();
+      material.dispose();
+    }, { once: true });
+  } catch (error) {
+    canvas.classList.add('is-fallback');
+  }
+};
+
+initWarpBackground();
