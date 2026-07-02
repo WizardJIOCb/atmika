@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "python -m http.server 5173",
-    "start": "python -m http.server 5173"
+    "dev": "node server.mjs",
+    "start": "node server.mjs"
   },
   "dependencies": {},
   "devDependencies": {}

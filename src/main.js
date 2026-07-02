@@ -1,205 +1,115 @@
-const services = [
-  {
-    icon: 'sparkles',
-    title: 'Осознанный выход из Матрицы',
-    tag: 'Основная программа',
-    price: 'от 300 000 ₽',
-    text: 'Глубокий маршрут для тех, кто хочет перестать жить из автоматических сценариев, вернуть контакт с истинным Я и собрать новую опору внутри себя.',
-  },
-  {
-    icon: 'star',
-    title: 'Квантовая чистка поля души',
-    tag: 'Индивидуальная сессия',
-    price: '50 000 ₽',
-    text: 'Работа с первопричинами, внутренними блоками, повторяющимися событиями и тем, что ощущается как энергетическая тяжесть.',
-  },
-  {
-    icon: 'heart-pulse',
-    title: 'Квантовый хирург',
-    tag: 'Программа',
-    price: '150 000 ₽',
-    text: 'Практики внимания к телу, сознанию и внутренним программам для тех, кто хочет мягко перестроить контакт с собой.',
-  },
-  {
-    icon: 'waves',
-    title: 'Квантовое омоложение тела',
-    tag: 'Программа',
-    price: '150 000 ₽',
-    text: 'Работа с восприятием тела, состоянием, жизненной энергией и внутренними настройками молодости.',
-  },
-  {
-    icon: 'circle-check',
-    title: 'Квантовое самоисцеление',
-    tag: 'Программа',
-    price: '150 000 ₽',
-    text: 'Практический путь к большему равновесию, спокойствию и способности слышать собственное тело.',
-  },
-  {
-    icon: 'flame',
-    title: 'Офлайн-практики и ретриты',
-    tag: 'Греция и выездные форматы',
-    price: 'от 70 €',
-    text: 'Древняя чистка огнем, звуковая терапия, индивидуальные и групповые форматы, трансформационные ретриты.',
-  },
-];
+﻿const content = window.ATMIKA_CONTENT;
 
-const galleryItems = [
-  {
-    type: 'video',
-    src: 'public/gallery/video5314648452544629298.mp4',
-    title: 'Тонкое поле',
-    tag: 'Видео',
-  },
-  {
-    type: 'video',
-    src: 'public/gallery/video5343562412899475796.mp4',
-    title: 'Практика состояния',
-    tag: 'Видео',
-  },
-  {
-    type: 'image',
-    src: 'public/gallery/IMG_20250802_010706_.png',
-    title: 'Алхимия внимания',
-    tag: 'Фото',
-  },
-  {
-    type: 'video',
-    src: 'public/gallery/video5343562412899475797.mp4',
-    title: 'Глубина процесса',
-    tag: 'Видео',
-  },
-  {
-    type: 'video',
-    src: 'public/gallery/generated_video (25).mp4',
-    title: 'Светлая трансформация',
-    tag: 'Видео',
-  },
-];
+if (!content) {
+  throw new Error('ATMIKA_CONTENT is not loaded. Check public/content.js.');
+}
 
-const audience = [
-  'Вы чувствуете, что привычная картина мира больше не объясняет ваш опыт.',
-  'Приходят яркие сны, мистические переживания, тонкие ощущения или сильные внутренние вопросы.',
-  'Есть желание выйти из повторяющихся сценариев, тревоги, зависимости от внешней оценки.',
-  'Хочется научиться управлять состоянием, телом и жизнью через осознанность.',
-];
+const services = content.services || [];
+const galleryItems = content.gallery?.items || [];
+const audience = content.audience?.items || [];
+const outcomes = content.outcomes?.items || [];
+const process = content.process?.items || [];
+const socialLinks = content.contact?.socialLinks || [];
 
-const outcomes = [
-  'больше внутреннего равновесия и ясности',
-  'ощущение контакта с истинным Я',
-  'разбор повторяющихся жизненных сценариев',
-  'мягкая работа с телом и энергией',
-  'новый взгляд на отношения, деньги, цели и выбор',
-  'практики для самостоятельного исследования себя',
-];
+const text = (value) => String(value ?? '');
+const html = (value) => text(value)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#039;');
+const attr = html;
 
-const process = [
-  ['Диагностика запроса', 'Смотрим, что именно болит в жизни: ситуация, тело, отношения, страх, потеря опоры или ощущение застревания.'],
-  ['Поиск первопричины', 'Работа идет не только с поверхностным симптомом, а с тем, что стоит под ним: убеждениями, программами и энергетическим следом.'],
-  ['Квантовая практика', 'Через проводничество, медитативное состояние, внимание к телу и полю вы проходите трансформационный опыт.'],
-  ['Интеграция', 'После сессии важны наблюдение, бережные действия и возвращение в повседневность уже из нового состояния.'],
-];
+const setMeta = () => {
+  const meta = content.meta || {};
+  document.title = text(meta.title) || document.title;
+  document.querySelector('meta[name="description"]')?.setAttribute('content', text(meta.description));
+  document.querySelector('meta[property="og:title"]')?.setAttribute('content', text(meta.ogTitle || meta.title));
+  document.querySelector('meta[property="og:description"]')?.setAttribute('content', text(meta.ogDescription || meta.description));
+  document.querySelector('meta[property="og:url"]')?.setAttribute('content', text(meta.ogUrl));
+  document.querySelector('meta[property="og:image"]')?.setAttribute('content', text(meta.ogImage));
+  document.querySelector('link[rel="icon"]')?.setAttribute('href', text(meta.favicon));
+};
 
-const socialLinks = [
-  ['instagram', 'Instagram', 'https://www.instagram.com/provodnik_iz_ada?igsh=cGI1M2FhNzVqdnAw'],
-  ['play', 'TikTok', 'https://www.tiktok.com/@provodnik_iz_matrix?_r=1&_t=ZG-97Lcrxl5vIu'],
-  ['youtube', 'YouTube', 'https://youtube.com/@atmika_consciousness?si=s7oHtk21mwiodvL0'],
-];
+setMeta();
 
 document.querySelector('#app').innerHTML = `
   <header class="site-header" data-header>
-    <a class="brand" href="#top" aria-label="Атмика">
-      <span class="brand-mark">A</span>
+    <a class="brand" href="#top" aria-label="${attr(content.brand?.ariaLabel)}">
+      <span class="brand-mark">${html(content.brand?.mark || 'A')}</span>
       <span>
-        <strong>АТМИКА</strong>
-        <small>проводник сознания</small>
+        <strong>${html(content.brand?.name)}</strong>
+        <small>${html(content.brand?.subtitle)}</small>
       </span>
     </a>
     <nav class="desktop-nav" aria-label="Основная навигация">
-      <a href="#work">Форматы</a>
-      <a href="#gallery">Галерея</a>
-      <a href="#for-whom">Кому подходит</a>
-      <a href="#story">История</a>
-      <a href="#contact">Контакты</a>
+      ${(content.navigation || []).map((item) => `<a href="${attr(item.href)}">${html(item.label)}</a>`).join('')}
     </nav>
-    <a class="header-cta" href="#contact">
+    <a class="header-cta" href="${attr(content.header?.ctaHref || '#contact')}">
       <i data-lucide="calendar-days"></i>
-      <span>Записаться</span>
+      <span>${html(content.header?.ctaLabel)}</span>
     </a>
-    <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false" data-menu-toggle>
+    <button class="menu-toggle" type="button" aria-label="${attr(content.header?.openMenuLabel)}" aria-expanded="false" data-menu-toggle>
       <i data-lucide="menu"></i>
     </button>
   </header>
 
   <div class="mobile-panel" data-mobile-panel>
-    <button class="panel-close" type="button" aria-label="Закрыть меню" data-panel-close>
+    <button class="panel-close" type="button" aria-label="${attr(content.header?.closeMenuLabel)}" data-panel-close>
       <i data-lucide="x"></i>
     </button>
-    <a href="#work">Форматы</a>
-    <a href="#gallery">Галерея</a>
-    <a href="#for-whom">Кому подходит</a>
-    <a href="#story">История</a>
-    <a href="#contact">Контакты</a>
+    ${(content.navigation || []).map((item) => `<a href="${attr(item.href)}">${html(item.label)}</a>`).join('')}
   </div>
 
   <main id="top">
     <section class="hero">
       <div class="hero-bg" aria-hidden="true"></div>
       <div class="hero-content">
-        <div class="eyebrow">Духовный и квантовый коуч</div>
-        <h1>Осознанный выход из Матрицы</h1>
-        <p>
-          Атмика помогает душам всех возрастов проснуться от глубокого сна, вернуть контакт с истинным сознанием и через практики самоисследования выйти из иллюзорных сценариев жизни.
-        </p>
+        <div class="eyebrow">${html(content.hero?.eyebrow)}</div>
+        <h1>${html(content.hero?.title)}</h1>
+        <p>${html(content.hero?.text)}</p>
         <div class="hero-actions">
-          <a class="button primary" href="#contact">
-            <span>Записаться на консультацию</span>
+          <a class="button primary" href="${attr(content.hero?.primaryHref || '#contact')}">
+            <span>${html(content.hero?.primaryLabel)}</span>
             <i data-lucide="arrow-right"></i>
           </a>
-          <a class="button ghost" href="#work">
-            <span>Посмотреть форматы</span>
+          <a class="button ghost" href="${attr(content.hero?.secondaryHref || '#work')}">
+            <span>${html(content.hero?.secondaryLabel)}</span>
           </a>
         </div>
       </div>
-      <div class="hero-panel" aria-label="Ключевые направления">
-        <span>Квантовые сессии</span>
-        <span>Практики сознания</span>
-        <span>Работа с телом</span>
-        <span>Ретриты и звук</span>
+      <div class="hero-panel" aria-label="${attr(content.hero?.panelAriaLabel)}">
+        ${(content.hero?.panel || []).map((item) => `<span>${html(item)}</span>`).join('')}
       </div>
     </section>
 
     <section class="intro section-band">
       <canvas class="nebula-canvas" data-nebula-canvas aria-hidden="true"></canvas>
       <div class="section-heading">
-        <span class="kicker">Новый сайт Атмики</span>
-        <h2>Мягкая, глубокая и честная упаковка опыта</h2>
+        <span class="kicker">${html(content.intro?.kicker)}</span>
+        <h2>${html(content.intro?.title)}</h2>
       </div>
       <div class="intro-copy">
-        <p>
-          Здесь нет обещания “волшебной кнопки”. Есть проводник, личный мистический опыт, семь лет практики, работа с сознанием, телом, энергией и ситуациями, которые человек уже готов увидеть глубже.
-        </p>
-        <p>
-          Основная идея проекта: человек может выйти из автоматических программ, перестать отдавать управление страху и начать проживать реальность из гармонии, ясности и внутреннего присутствия.
-        </p>
+        ${(content.intro?.paragraphs || []).map((paragraph) => `<p>${html(paragraph)}</p>`).join('')}
       </div>
     </section>
 
     <section class="services" id="work">
       <canvas class="warp-canvas" data-warp-canvas aria-hidden="true"></canvas>
       <div class="section-heading services-heading">
-        <span class="kicker">Форматы работы</span>
-        <h2>От первой сессии до глубокой программы</h2>
+        <span class="kicker">${html(content.servicesSection?.kicker)}</span>
+        <h2>${html(content.servicesSection?.title)}</h2>
       </div>
       <div class="service-grid">
         ${services.map((service) => `
           <article class="service-card">
             <div class="service-topline">
-              <span class="icon-box"><i data-lucide="${service.icon}"></i></span>
-              <span>${service.tag}</span>
+              <span class="icon-box"><i data-lucide="${attr(service.icon)}"></i></span>
+              <span>${html(service.tag)}</span>
             </div>
-            <h3>${service.title}</h3>
-            <p>${service.text}</p>
-            <div class="price">${service.price}</div>
+            <h3>${html(service.title)}</h3>
+            <p>${html(service.text)}</p>
+            <div class="price">${html(service.price)}</div>
           </article>
         `).join('')}
       </div>
@@ -207,11 +117,11 @@ document.querySelector('#app').innerHTML = `
 
     <section class="gallery section-band" id="gallery">
       <div class="section-heading section-heading-centered gallery-heading">
-        <span class="kicker">Галерея</span>
-        <h2>Визуальный ритм практик Атмики</h2>
+        <span class="kicker">${html(content.gallery?.kicker)}</span>
+        <h2>${html(content.gallery?.title)}</h2>
       </div>
-      <div class="gallery-carousel" data-gallery-carousel aria-label="Галерея практик Атмики">
-        <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="Предыдущий слайд" data-gallery-prev>
+      <div class="gallery-carousel" data-gallery-carousel aria-label="${attr(content.gallery?.ariaLabel)}">
+        <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="${attr(content.gallery?.prevLabel)}" data-gallery-prev>
           <i data-lucide="chevron-left"></i>
         </button>
         <div class="gallery-stage">
@@ -219,23 +129,23 @@ document.querySelector('#app').innerHTML = `
             <figure class="gallery-slide" data-gallery-item data-index="${index}">
               <div class="gallery-media">
                 ${item.type === 'video'
-                  ? `<video src="${item.src}" muted loop playsinline preload="metadata"></video>`
-                  : `<img src="${item.src}" alt="${item.title}" loading="lazy" />`
+                  ? `<video src="${attr(item.src)}" muted loop playsinline preload="metadata"></video>`
+                  : `<img src="${attr(item.src)}" alt="${attr(item.title)}" loading="lazy" />`
                 }
               </div>
               <figcaption>
-                <span>${item.tag}</span>
-                <strong>${item.title}</strong>
+                <span>${html(item.tag)}</span>
+                <strong>${html(item.title)}</strong>
               </figcaption>
             </figure>
           `).join('')}
         </div>
-        <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="Следующий слайд" data-gallery-next>
+        <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="${attr(content.gallery?.nextLabel)}" data-gallery-next>
           <i data-lucide="chevron-right"></i>
         </button>
-        <div class="gallery-dots" aria-label="Выбор слайда">
+        <div class="gallery-dots" aria-label="${attr(content.gallery?.dotsLabel)}">
           ${galleryItems.map((item, index) => `
-            <button type="button" aria-label="Показать слайд ${index + 1}" data-gallery-dot="${index}"></button>
+            <button type="button" aria-label="${attr(content.gallery?.dotLabel)} ${index + 1}" data-gallery-dot="${index}"></button>
           `).join('')}
         </div>
       </div>
@@ -244,17 +154,15 @@ document.querySelector('#app').innerHTML = `
     <section class="split section-band" id="for-whom">
       <canvas class="sky-canvas" data-sky-canvas aria-hidden="true"></canvas>
       <div>
-        <span class="kicker">Кому подходит</span>
-        <h2>Для тех, кто уже чувствует: прежний режим больше не работает</h2>
-        <p>
-          Чаще всего приходят с вопросом: “Что мешает мне двигаться в жизни или достичь желаемого?”. В работе мы ищем не только внешнее препятствие, а внутренний источник напряжения.
-        </p>
+        <span class="kicker">${html(content.audience?.kicker)}</span>
+        <h2>${html(content.audience?.title)}</h2>
+        <p>${html(content.audience?.text)}</p>
       </div>
       <div class="check-list">
         ${audience.map((item) => `
           <div class="check-item">
             <i data-lucide="circle-check"></i>
-            <span>${item}</span>
+            <span>${html(item)}</span>
           </div>
         `).join('')}
       </div>
@@ -262,14 +170,14 @@ document.querySelector('#app').innerHTML = `
 
     <section class="outcomes" id="outcomes">
       <div class="section-heading section-heading-centered">
-        <span class="kicker">Что может измениться</span>
-        <h2>Результат начинается с состояния</h2>
+        <span class="kicker">${html(content.outcomes?.kicker)}</span>
+        <h2>${html(content.outcomes?.title)}</h2>
       </div>
       <div class="outcome-list">
         ${outcomes.map((item, index) => `
           <div class="outcome-item">
             <span class="outcome-number">${String(index + 1).padStart(2, '0')}</span>
-            <span>${item}</span>
+            <span>${html(item)}</span>
           </div>
         `).join('')}
       </div>
@@ -277,15 +185,15 @@ document.querySelector('#app').innerHTML = `
 
     <section class="process section-band" id="process">
       <div class="section-heading section-heading-stack process-heading">
-        <span class="kicker">Как проходит работа</span>
-        <h2>Структура, в которой есть место мистическому опыту</h2>
+        <span class="kicker">${html(content.process?.kicker)}</span>
+        <h2>${html(content.process?.title)}</h2>
       </div>
       <div class="timeline">
-        ${process.map(([title, text], index) => `
+        ${process.map((item, index) => `
           <article class="timeline-item">
             <span>${String(index + 1).padStart(2, '0')}</span>
-            <h3>${title}</h3>
-            <p>${text}</p>
+            <h3>${html(item.title)}</h3>
+            <p>${html(item.text)}</p>
           </article>
         `).join('')}
       </div>
@@ -293,51 +201,43 @@ document.querySelector('#app').innerHTML = `
 
     <section class="story" id="story">
       <div class="story-card">
-        <span class="kicker">Личная история</span>
-        <h2>От первых мистических переживаний к проводничеству</h2>
-        <p>
-          Путь Атмики начался с раннего опыта тонкого восприятия: вещих снов, астральных переживаний, контакта с невидимым и вопросов, на которые обычная логика не отвечала. Позже были обучение ясновидению, самостоятельные практики, раскрытие способностей и собственные методы работы через квантовое поле.
-        </p>
-        <p>
-          Сегодня этот опыт собран в практические форматы: очищение поля, работа с телом через сознание, изменение внутренних программ, самоисследование и сопровождение тех, кто готов идти глубже.
-        </p>
+        <span class="kicker">${html(content.story?.kicker)}</span>
+        <h2>${html(content.story?.title)}</h2>
+        ${(content.story?.paragraphs || []).map((paragraph) => `<p>${html(paragraph)}</p>`).join('')}
       </div>
       <div class="quote-card">
-        <p>“Я помогаю душам всех возрастов достичь пробуждения истинного сознания и через практики выйти из иллюзорной матрицы.”</p>
+        <p>${html(content.story?.quote)}</p>
       </div>
     </section>
 
     <section class="contact" id="contact">
       <div class="contact-inner">
         <div>
-          <span class="kicker">Первый шаг</span>
-          <h2>Начните с короткой консультации</h2>
-          <p>
-            15 минут, чтобы обозначить запрос, почувствовать контакт и понять, какой формат сейчас подходит: сессия, программа, офлайн-практика или ретрит.
-          </p>
+          <span class="kicker">${html(content.contact?.kicker)}</span>
+          <h2>${html(content.contact?.title)}</h2>
+          <p>${html(content.contact?.text)}</p>
           <div class="contact-actions">
-            <a class="button primary" href="https://wa.clck.bar/306974364351" target="_blank" rel="noreferrer">
+            <a class="button primary" href="${attr(content.contact?.primaryHref)}" target="_blank" rel="noreferrer">
               <i data-lucide="message-circle"></i>
-              <span>Написать в WhatsApp</span>
+              <span>${html(content.contact?.primaryLabel)}</span>
             </a>
-            <a class="button ghost light" href="mailto:magicscar8@gmail.com">magicscar8@gmail.com</a>
+            <a class="button ghost light" href="${attr(content.contact?.secondaryHref)}">${html(content.contact?.secondaryLabel)}</a>
           </div>
         </div>
         <div class="social-card">
-          <h3>Социальные сети</h3>
-          ${socialLinks.map(([icon, label, href]) => `
-            <a href="${href}" target="_blank" rel="noreferrer">
-              <i data-lucide="${icon}"></i>
-              <span>${label}</span>
+          <h3>${html(content.contact?.socialTitle)}</h3>
+          ${socialLinks.map((item) => `
+            <a href="${attr(item.href)}" target="_blank" rel="noreferrer">
+              <i data-lucide="${attr(item.icon)}"></i>
+              <span>${html(item.label)}</span>
             </a>
           `).join('')}
-          <small>Практики не заменяют медицинскую, психотерапевтическую или юридическую помощь.</small>
+          <small>${html(content.contact?.disclaimer)}</small>
         </div>
       </div>
     </section>
   </main>
 `;
-
 const iconPaths = {
   'arrow-right': '<path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path>',
   'calendar-days': '<path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path>',
@@ -1003,3 +903,4 @@ const initSkyBackground = async () => {
 };
 
 initSkyBackground();
+
