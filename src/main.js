@@ -58,7 +58,7 @@ const galleryItems = [
   },
   {
     type: 'image',
-    src: 'public/gallery/5343562413359441019 (1).jpg',
+    src: 'public/gallery/IMG_20250802_010706_.png',
     title: 'Алхимия внимания',
     tag: 'Фото',
   },
