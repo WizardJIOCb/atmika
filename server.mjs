@@ -12,9 +12,12 @@ const adminPassword = process.env.ATMIKA_ADMIN_PASSWORD || 'change-me-atmika';
 const sessionTtlMs = 1000 * 60 * 60 * 12;
 const sessions = new Map();
 
-const contentJsonPath = path.join(root, 'public', 'content.json');
-const contentJsPath = path.join(root, 'public', 'content.js');
-const backupDir = path.join(root, 'data', 'backups');
+const contentDir = process.env.ATMIKA_CONTENT_DIR
+  ? path.resolve(process.env.ATMIKA_CONTENT_DIR)
+  : path.join(root, 'public');
+const contentJsonPath = path.join(contentDir, 'content.json');
+const contentJsPath = path.join(contentDir, 'content.js');
+const backupDir = path.join(contentDir, 'backups');
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -113,6 +116,7 @@ const writeContent = async (content) => {
     throw new Error('Контент должен быть объектом');
   }
 
+  await mkdir(contentDir, { recursive: true });
   await mkdir(backupDir, { recursive: true });
 
   const current = await readFile(contentJsonPath, 'utf8').catch(() => '');
@@ -223,8 +227,32 @@ const serveStatic = async (request, response, url) => {
   }
 };
 
+const serveManagedContent = async (response, filePath, contentType) => {
+  try {
+    await stat(filePath);
+    response.writeHead(200, {
+      'Content-Type': contentType,
+      'Cache-Control': 'no-store',
+    });
+    createReadStream(filePath).pipe(response);
+  } catch {
+    response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    response.end('Not found');
+  }
+};
+
 createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
+
+  if (url.pathname === '/public/content.js') {
+    await serveManagedContent(response, contentJsPath, 'text/javascript; charset=utf-8');
+    return;
+  }
+
+  if (url.pathname === '/public/content.json') {
+    await serveManagedContent(response, contentJsonPath, 'application/json; charset=utf-8');
+    return;
+  }
 
   if (url.pathname.startsWith('/api/admin/')) {
     await handleApi(request, response, url);
