@@ -688,13 +688,44 @@ p {
   }
 
   .matrix-grid,
-  .timeline,
-  .matrix-gallery {
+  .timeline {
     grid-template-columns: 1fr;
   }
 
+  .matrix-gallery {
+    display: flex;
+    grid-template-columns: none;
+    gap: 14px;
+    min-height: auto;
+    margin-right: -16px;
+    margin-left: -16px;
+    padding: 0 16px 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-padding: 16px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .matrix-gallery::-webkit-scrollbar {
+    display: none;
+  }
+
   .matrix-gallery figure {
-    height: 420px;
+    flex: 0 0 min(82vw, 360px);
+    height: min(72vh, 520px);
+    min-height: 420px;
+    transform: none;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+
+  .matrix-gallery::after {
+    display: block;
+    flex: 0 0 2px;
+    content: "";
   }
 
   .white-rabbit {
