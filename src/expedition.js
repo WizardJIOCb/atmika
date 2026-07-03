@@ -138,6 +138,39 @@ app.innerHTML = `
           </figure>
         `).join('')}
       </div>
+      <div class="gallery-carousel expedition-mobile-carousel" data-expedition-carousel aria-label="${attr(content.gallery?.ariaLabel || 'Gallery')}">
+        <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="${attr(content.gallery?.prevLabel || 'Previous slide')}" data-expedition-prev>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <div class="gallery-stage">
+          ${gallery.map((item, index) => `
+            <figure class="gallery-slide" data-expedition-item data-index="${index}">
+              <div class="gallery-media">
+                ${item.type === 'video'
+                  ? `<video src="${attr(item.src)}" muted loop playsinline autoplay preload="auto"></video>`
+                  : `<img src="${attr(item.src)}" alt="${attr(item.title)}" loading="lazy" />`
+                }
+              </div>
+              <figcaption>
+                <span>${html(item.tag)}</span>
+                <strong>${html(item.title)}</strong>
+              </figcaption>
+            </figure>
+          `).join('')}
+        </div>
+        <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="${attr(content.gallery?.nextLabel || 'Next slide')}" data-expedition-next>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
+        <div class="gallery-dots" aria-label="${attr(content.gallery?.dotsLabel || 'Gallery slides')}">
+          ${gallery.map((item, index) => `
+            <button type="button" aria-label="${attr(content.gallery?.dotLabel || 'Slide')} ${index + 1}" data-expedition-dot="${index}"></button>
+          `).join('')}
+        </div>
+      </div>
     </section>
 
     <section class="section split-section" id="for-whom">
@@ -237,5 +270,136 @@ const initVideoPlayback = () => {
   });
 };
 
+const initMobileGalleryCarousel = () => {
+  const carousel = document.querySelector('[data-expedition-carousel]');
+
+  if (!carousel) {
+    return;
+  }
+
+  const slides = [...carousel.querySelectorAll('[data-expedition-item]')];
+  const dots = [...carousel.querySelectorAll('[data-expedition-dot]')];
+  const prevButton = carousel.querySelector('[data-expedition-prev]');
+  const nextButton = carousel.querySelector('[data-expedition-next]');
+  let activeIndex = 0;
+  let autoTimer = 0;
+  let pointerStartX = 0;
+  let pointerDeltaX = 0;
+
+  const normalizeOffset = (index) => {
+    let offset = index - activeIndex;
+    const half = slides.length / 2;
+
+    if (offset > half) {
+      offset -= slides.length;
+    }
+
+    if (offset < -half) {
+      offset += slides.length;
+    }
+
+    return offset;
+  };
+
+  const updateVideos = () => {
+    slides.forEach((slide) => {
+      const video = slide.querySelector('video');
+
+      if (video) {
+        video.play().catch(() => {});
+      }
+    });
+  };
+
+  const render = () => {
+    slides.forEach((slide, index) => {
+      const offset = normalizeOffset(index);
+      const distance = Math.min(Math.abs(offset), 3);
+
+      slide.style.setProperty('--offset', offset);
+      slide.style.setProperty('--distance', distance);
+      slide.style.zIndex = String(20 - distance);
+      slide.toggleAttribute('aria-current', offset === 0);
+      slide.setAttribute('aria-hidden', String(distance > 2));
+    });
+
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('is-active', index === activeIndex);
+      dot.setAttribute('aria-current', String(index === activeIndex));
+    });
+
+    updateVideos();
+  };
+
+  const goTo = (nextIndex) => {
+    activeIndex = (nextIndex + slides.length) % slides.length;
+    render();
+  };
+
+  const restartAuto = () => {
+    window.clearInterval(autoTimer);
+    autoTimer = window.setInterval(() => goTo(activeIndex + 1), 5200);
+  };
+
+  prevButton?.addEventListener('click', () => {
+    goTo(activeIndex - 1);
+    restartAuto();
+  });
+
+  nextButton?.addEventListener('click', () => {
+    goTo(activeIndex + 1);
+    restartAuto();
+  });
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+      goTo(index);
+      restartAuto();
+    });
+  });
+
+  carousel.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('.gallery-arrow, .gallery-dots button')) {
+      return;
+    }
+
+    pointerStartX = event.clientX;
+    pointerDeltaX = 0;
+    carousel.setPointerCapture(event.pointerId);
+  });
+
+  carousel.addEventListener('pointermove', (event) => {
+    if (!pointerStartX) {
+      return;
+    }
+
+    pointerDeltaX = event.clientX - pointerStartX;
+  });
+
+  carousel.addEventListener('pointerup', () => {
+    if (Math.abs(pointerDeltaX) > 44) {
+      goTo(activeIndex + (pointerDeltaX < 0 ? 1 : -1));
+      restartAuto();
+    }
+
+    pointerStartX = 0;
+    pointerDeltaX = 0;
+  });
+
+  carousel.addEventListener('pointercancel', () => {
+    pointerStartX = 0;
+    pointerDeltaX = 0;
+  });
+
+  carousel.addEventListener('mouseenter', () => window.clearInterval(autoTimer));
+  carousel.addEventListener('mouseleave', restartAuto);
+  carousel.addEventListener('focusin', () => window.clearInterval(autoTimer));
+  carousel.addEventListener('focusout', restartAuto);
+
+  render();
+  restartAuto();
+};
+
 initMenu();
 initVideoPlayback();
+initMobileGalleryCarousel();
