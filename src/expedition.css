@@ -1004,8 +1004,8 @@ blockquote {
   top: clamp(92px, 14vh, 150px);
   z-index: 40;
   display: block;
-  width: 168px;
-  height: 170px;
+  width: 178px;
+  height: 210px;
   border: 0;
   background: transparent;
   color: var(--text);
@@ -1019,9 +1019,9 @@ blockquote {
 
 .white-rabbit::before {
   position: absolute;
-  right: 32px;
-  bottom: 8px;
-  width: 118px;
+  right: 28px;
+  bottom: 20px;
+  width: 128px;
   height: 34px;
   border-radius: 999px;
   background:
@@ -1036,8 +1036,8 @@ blockquote {
 
 .white-rabbit::after {
   position: absolute;
-  right: 34px;
-  top: 42px;
+  right: 42px;
+  top: 74px;
   width: 46px;
   height: 46px;
   border: 1px solid rgba(85, 247, 230, 0.28);
@@ -1058,7 +1058,7 @@ blockquote {
 .rabbit-bubble {
   position: absolute;
   top: 18px;
-  right: 126px;
+  right: 132px;
   display: grid;
   align-items: center;
   width: 252px;
@@ -1099,42 +1099,44 @@ blockquote {
 .rabbit-body {
   position: relative;
   display: block;
-  width: 82px;
-  height: 96px;
-  margin: 58px auto 0;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 54% 52% 46% 44%;
-  background:
-    radial-gradient(circle at 36% 22%, rgba(255, 255, 255, 0.98), transparent 21%),
-    radial-gradient(circle at 68% 66%, rgba(85, 247, 230, 0.16), transparent 28%),
-    linear-gradient(135deg, #ffffff, #dbe6dc 62%, #bac8bf);
-  box-shadow: inset -13px -18px 20px rgba(55, 76, 64, 0.22), inset 10px 8px 18px rgba(255, 255, 255, 0.7);
+  width: 118px;
+  height: 198px;
+  margin: 8px auto 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   animation: rabbit-hop 2600ms ease-in-out infinite;
 }
 
+.rabbit-body picture,
+.rabbit-body img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.rabbit-body img {
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 14px rgba(245, 255, 248, 0.28))
+    drop-shadow(0 0 22px rgba(85, 247, 230, 0.22));
+}
+
 .rabbit-body::before {
-  position: absolute;
-  left: 7px;
-  bottom: 10px;
-  width: 18px;
-  height: 26px;
-  border-radius: 999px;
-  background: linear-gradient(145deg, #ffffff, #cbd8cf);
-  content: "";
-  box-shadow: inset -5px -7px 8px rgba(58, 78, 66, 0.12);
-  transform: rotate(28deg);
+  display: none;
 }
 
 .rabbit-body::after {
   position: absolute;
-  right: 4px;
-  bottom: -10px;
-  width: 66px;
-  height: 20px;
+  right: 10px;
+  bottom: 2px;
+  width: 78px;
+  height: 22px;
   border-radius: 50%;
   background: rgba(245, 255, 248, 0.34);
   content: "";
-  filter: blur(8px);
+  filter: blur(10px);
   animation: rabbit-shadow 2600ms ease-in-out infinite;
 }
 
@@ -1872,22 +1874,22 @@ blockquote {
     justify-content: flex-end;
     gap: 8px;
     width: min(340px, calc(100vw - 20px));
-    height: 84px;
+    height: 96px;
     padding: 0;
     filter: drop-shadow(0 0 14px rgba(245, 255, 248, 0.22)) drop-shadow(0 0 20px rgba(85, 247, 230, 0.12));
   }
 
   .white-rabbit::before {
-    right: 18px;
+    right: 10px;
     bottom: 2px;
-    width: 82px;
-    height: 22px;
+    width: 96px;
+    height: 24px;
     filter: blur(8px);
   }
 
   .white-rabbit::after {
-    right: 24px;
-    top: 16px;
+    right: 22px;
+    top: 18px;
     width: 34px;
     height: 34px;
   }
@@ -1916,74 +1918,21 @@ blockquote {
 
   .rabbit-body {
     flex: 0 0 auto;
-    width: 50px;
-    height: 60px;
-    margin: 20px 4px 0 0;
+    width: 68px;
+    height: 104px;
+    margin: -8px 0 0 0;
   }
 
   .rabbit-body::before {
-    left: 5px;
-    bottom: 7px;
-    width: 11px;
-    height: 18px;
+    display: none;
   }
 
-  .rabbit-tail {
-    left: -10px;
-    top: 31px;
-    width: 18px;
-    height: 18px;
-  }
-
-  .rabbit-paw-front {
-    right: 1px;
-    top: 36px;
-    width: 11px;
-    height: 22px;
-  }
-
-  .rabbit-paw-back {
-    left: 14px;
-    bottom: -4px;
-    width: 24px;
-    height: 11px;
-  }
-
-  .rabbit-head {
-    top: -25px;
-    left: 9px;
-    width: 36px;
-    height: 34px;
-  }
-
-  .rabbit-ear {
-    top: -49px;
-    width: 12px;
-    height: 46px;
-  }
-
-  .rabbit-ear-left {
-    left: 12px;
-  }
-
-  .rabbit-ear-right {
-    right: 7px;
-    height: 43px;
-  }
-
-  .rabbit-eye {
-    top: 12px;
-    right: 10px;
-    width: 4px;
-    height: 4px;
-    box-shadow: -15px -1px 0 #050907, 0 0 8px rgba(85, 247, 230, 0.36);
-  }
-
-  .rabbit-nose {
-    right: 1px;
-    bottom: 7px;
-    width: 5px;
-    height: 4px;
+  .rabbit-body::after {
+    right: 2px;
+    bottom: 0;
+    width: 42px;
+    height: 12px;
+    filter: blur(7px);
   }
 
   .atmika-chat {
