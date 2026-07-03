@@ -1342,11 +1342,6 @@ blockquote {
     z-index: 45;
   }
 
-  body.menu-open .menu-toggle {
-    top: 20px;
-    right: 20px;
-  }
-
   .route-strip,
   .tour-row,
   .outcome-grid {
@@ -1381,11 +1376,6 @@ blockquote {
     right: 16px;
     transform: none;
     z-index: 45;
-  }
-
-  body.menu-open .menu-toggle {
-    top: 20px;
-    right: 20px;
   }
 
   .expedition-brand {
