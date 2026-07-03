@@ -213,13 +213,13 @@ app.innerHTML = `
         ${services.slice(0, 4).map((service, index) => {
           const media = gallery[index % gallery.length];
           return `
-            <article class="tour-card">
+            <a class="tour-card" href="#contact" aria-label="${attr(`${service.title}: перейти к контактам`)}">
               <div class="tour-media">${mediaMarkup(media)}</div>
               <span>Route ${String(index + 1).padStart(2, '0')}</span>
               <h3>${html(service.title)}</h3>
               <p>${html(service.tag)}</p>
               <strong>${html(service.price)}</strong>
-            </article>
+            </a>
           `;
         }).join('')}
       </div>
@@ -233,16 +233,16 @@ app.innerHTML = `
           ${services.map((service, index) => {
             const media = gallery[index % gallery.length];
             return `
-              <figure class="gallery-slide work-slide" data-work-item data-index="${index}">
+              <a class="gallery-slide work-slide" href="#contact" data-work-item data-index="${index}" aria-label="${attr(`${service.title}: перейти к контактам`)}">
                 <div class="gallery-media">
                   ${mediaMarkup(media)}
                 </div>
-                <figcaption>
+                <span class="gallery-caption">
                   <span>${html(service.tag)}</span>
                   <strong>${html(service.title)}</strong>
                   <em>${html(service.price)}</em>
-                </figcaption>
-              </figure>
+                </span>
+              </a>
             `;
           }).join('')}
         </div>
@@ -259,14 +259,14 @@ app.innerHTML = `
       </div>
       <div class="service-list">
         ${services.map((service, index) => `
-          <article class="service-line">
+          <a class="service-line" href="#contact" aria-label="${attr(`${service.title}: перейти к контактам`)}">
             <span>${String(index + 1).padStart(2, '0')}</span>
             <div>
               <h3>${html(service.title)}</h3>
               <p>${html(service.text)}</p>
             </div>
             <strong>${html(service.price)}</strong>
-          </article>
+          </a>
         `).join('')}
       </div>
     </section>
