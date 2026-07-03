@@ -34,6 +34,10 @@ body {
   font-family: Inter, "Segoe UI", Arial, sans-serif;
 }
 
+body.chat-open {
+  overflow: hidden;
+}
+
 body::before {
   content: "";
   position: fixed;
@@ -667,8 +671,9 @@ blockquote {
     rgba(1, 4, 4, 0.74);
   opacity: 0;
   pointer-events: none;
+  overscroll-behavior: contain;
   transition: opacity 220ms ease;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(3px);
 }
 
 .atmika-chat[aria-hidden="false"] {
@@ -680,6 +685,7 @@ blockquote {
   position: relative;
   width: min(760px, 100%);
   max-height: min(760px, calc(100vh - 48px));
+  min-height: 0;
   display: grid;
   grid-template-rows: auto auto minmax(240px, 1fr) auto;
   overflow: hidden;
@@ -744,8 +750,13 @@ blockquote {
   display: grid;
   align-content: start;
   gap: 12px;
+  min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 18px 24px 24px;
+  scroll-behavior: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .atmika-chat-empty,
