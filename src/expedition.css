@@ -1713,7 +1713,7 @@ blockquote {
   .atmika-chat-actions {
     position: static;
     display: grid;
-    grid-template-columns: 42px 84px;
+    grid-template-columns: 42px 84px 76px;
     flex-direction: row;
     align-items: stretch;
     width: max-content;
@@ -1739,8 +1739,19 @@ blockquote {
     font-size: 0;
   }
 
+  .atmika-chat-actions [data-chat-new] {
+    grid-column: 3;
+    grid-row: 1;
+    font-size: 0;
+  }
+
   .atmika-chat-actions [data-chat-share]::before {
     content: "Ссылка";
+    font-size: 12px;
+  }
+
+  .atmika-chat-actions [data-chat-new]::before {
+    content: "Новый";
     font-size: 12px;
   }
 

@@ -398,6 +398,7 @@ app.innerHTML = `
         </div>
         <div class="atmika-chat-actions">
           <button type="button" data-chat-share>Поделиться</button>
+          <button type="button" data-chat-new>Новый</button>
           <button type="button" data-chat-close aria-label="Закрыть чат">×</button>
         </div>
       </div>
@@ -584,6 +585,7 @@ let openAtmikaChat = () => {};
 const initAtmikaChat = () => {
   const dialog = document.querySelector('[data-chat-dialog]');
   const closeButton = document.querySelector('[data-chat-close]');
+  const newButton = document.querySelector('[data-chat-new]');
   const shareButton = document.querySelector('[data-chat-share]');
   const shareStatus = document.querySelector('[data-chat-share-status]');
   const messagesEl = document.querySelector('[data-chat-messages]');
@@ -667,6 +669,27 @@ const initAtmikaChat = () => {
     isReady = true;
   };
 
+  const startNewChat = async () => {
+    if (isSending) {
+      return;
+    }
+
+    chatId = '';
+    isReady = false;
+    currentMessages = [];
+    localStorage.removeItem('atmika_chat_id');
+    renderMessages([]);
+    setStatus('Создаю новый диалог...');
+
+    try {
+      await loadChat();
+      setStatus('Новый чат готов. Можно скопировать свежую ссылку.');
+      input.focus();
+    } catch (error) {
+      setStatus(error.message || 'Не удалось создать новый чат');
+    }
+  };
+
   openAtmikaChat = async () => {
     dialog.setAttribute('aria-hidden', 'false');
     document.body.classList.add('chat-open');
@@ -694,6 +717,8 @@ const initAtmikaChat = () => {
       closeChat();
     }
   });
+
+  newButton?.addEventListener('click', startNewChat);
 
   shareButton?.addEventListener('click', async () => {
     if (!isReady) {
