@@ -33,6 +33,11 @@ app.innerHTML = `
     <nav class="matrix-nav" aria-label="Навигация">
       ${nav.map((item) => `<a href="${attr(item.href)}">${html(item.label)}</a>`).join('')}
     </nav>
+    <button class="matrix-menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false" data-matrix-menu-toggle>
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </header>
 
   <main id="top">
@@ -477,6 +482,37 @@ const initGalleryCarousel = () => {
   restartAuto();
 };
 
+const initMatrixMenu = () => {
+  const header = document.querySelector('.matrix-header');
+  const toggle = document.querySelector('[data-matrix-menu-toggle]');
+  const links = [...document.querySelectorAll('.matrix-nav a')];
+
+  if (!header || !toggle) {
+    return;
+  }
+
+  const setOpen = (isOpen) => {
+    header.classList.toggle('is-menu-open', isOpen);
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    toggle.setAttribute('aria-label', isOpen ? 'Закрыть меню' : 'Открыть меню');
+  };
+
+  toggle.addEventListener('click', () => {
+    setOpen(!header.classList.contains('is-menu-open'));
+  });
+
+  links.forEach((link) => {
+    link.addEventListener('click', () => setOpen(false));
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      setOpen(false);
+    }
+  });
+};
+
 initMatrixRain();
+initMatrixMenu();
 initGalleryCarousel();
 initWhiteRabbit();

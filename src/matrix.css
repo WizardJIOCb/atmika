@@ -143,6 +143,29 @@ body::after {
   text-shadow: 0 0 12px rgba(0, 255, 136, 0.8);
 }
 
+.matrix-menu-toggle {
+  display: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(0, 255, 136, 0.26);
+  border-radius: 8px;
+  background: rgba(0, 255, 136, 0.08);
+  color: var(--green);
+  cursor: pointer;
+}
+
+.matrix-menu-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.42);
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
 .matrix-section,
 .matrix-hero {
   position: relative;
@@ -852,14 +875,108 @@ p {
 }
 
 @media (max-width: 900px) {
-  .matrix-header,
-  .matrix-nav {
-    align-items: flex-start;
+  .matrix-header {
+    position: fixed;
+    top: 10px;
+    align-items: center;
+    gap: 12px;
+    width: calc(100% - 20px);
+    min-height: 58px;
+    padding: 8px 10px 8px 12px;
+    z-index: 70;
   }
 
-  .matrix-header {
-    position: absolute;
+  .matrix-brand {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .matrix-mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .matrix-brand strong {
+    font-size: 14px;
+    letter-spacing: 0.12em;
+  }
+
+  .matrix-brand small {
+    font-size: 11px;
+  }
+
+  .matrix-menu-toggle {
+    display: flex;
+    flex: 0 0 auto;
     flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .matrix-header.is-menu-open .matrix-menu-toggle span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .matrix-header.is-menu-open .matrix-menu-toggle span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .matrix-header.is-menu-open .matrix-menu-toggle span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .matrix-nav {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: rgba(2, 5, 3, 0.94);
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.44), inset 0 0 22px rgba(0, 255, 136, 0.05);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition:
+      max-height 220ms ease,
+      opacity 180ms ease,
+      padding 180ms ease,
+      transform 180ms ease,
+      border-color 180ms ease;
+  }
+
+  .matrix-header.is-menu-open .matrix-nav {
+    max-height: 240px;
+    padding: 8px;
+    border-color: rgba(0, 255, 136, 0.22);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .matrix-nav a {
+    min-height: 42px;
+    padding: 12px;
+    border: 1px solid rgba(0, 255, 136, 0.14);
+    border-radius: 8px;
+    background: rgba(0, 255, 136, 0.045);
+    color: var(--green-soft);
+    text-align: center;
+  }
+
+  .matrix-nav a:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .matrix-hero {
+    padding-top: 110px;
   }
 
   .hero-grid,
