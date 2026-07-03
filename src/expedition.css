@@ -127,12 +127,22 @@ video {
   font-size: 12px;
 }
 
-.expedition-nav a {
+.expedition-nav a,
+.expedition-nav button {
   position: relative;
   padding: 8px 0;
 }
 
-.expedition-nav a::after {
+.expedition-nav button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.expedition-nav a::after,
+.expedition-nav button::after {
   content: "";
   position: absolute;
   left: 0;
@@ -145,7 +155,8 @@ video {
   transition: transform 0.2s ease;
 }
 
-.expedition-nav a:hover::after {
+.expedition-nav a:hover::after,
+.expedition-nav button:hover::after {
   transform: scaleX(1);
 }
 
@@ -1176,7 +1187,8 @@ blockquote {
     text-shadow: 0 0 22px rgba(85, 247, 230, 0.42);
   }
 
-  .expedition-nav a {
+  .expedition-nav a,
+  .expedition-nav button {
     display: flex;
     min-height: 54px;
     align-items: center;
@@ -1186,6 +1198,8 @@ blockquote {
     font-weight: 800;
     transform: translateY(-10px);
     opacity: 0;
+    padding: 0;
+    text-align: left;
   }
 
   .expedition-nav a:first-child {
@@ -1199,7 +1213,8 @@ blockquote {
     animation: menu-glint 900ms ease both;
   }
 
-  body.menu-open .expedition-nav a {
+  body.menu-open .expedition-nav a,
+  body.menu-open .expedition-nav button {
     animation: menu-link-pop 560ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
   }
 
@@ -1221,6 +1236,10 @@ blockquote {
 
   body.menu-open .expedition-nav a:nth-child(5) {
     animation-delay: 360ms;
+  }
+
+  body.menu-open .expedition-nav button:nth-child(6) {
+    animation-delay: 420ms;
   }
 
   @keyframes menu-glint {

@@ -160,6 +160,7 @@ app.innerHTML = `
     </a>
     <nav class="expedition-nav" aria-label="Site navigation">
       ${nav.map((item) => `<a href="${attr(item.href)}">${html(item.label)}</a>`).join('')}
+      <button type="button" data-menu-chat>Чат с кроликом</button>
     </nav>
     <a class="header-cta" href="${attr(content.header?.ctaHref || '#contact')}">${html(content.header?.ctaLabel)}</a>
     <button class="menu-toggle" type="button" aria-label="${attr(content.header?.openMenuLabel || 'Open menu')}" aria-expanded="false" data-menu-toggle>
@@ -429,7 +430,13 @@ const initMenu = () => {
   });
 
   navEl.addEventListener('click', (event) => {
-    if (event.target.closest('a')) {
+    const chatButton = event.target.closest('[data-menu-chat]');
+
+    if (chatButton) {
+      openAtmikaChat();
+    }
+
+    if (event.target.closest('a, [data-menu-chat]')) {
       document.body.classList.remove('menu-open');
       toggle.setAttribute('aria-expanded', 'false');
       toggle.setAttribute('aria-label', content.header?.openMenuLabel || 'Открыть меню');
