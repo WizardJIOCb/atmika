@@ -136,10 +136,10 @@ window.ATMIKA_CONTENT = {
         "tag": "Видео"
       },
       {
-        "type": "image",
-        "src": "public/gallery/IMG_20250802_010706_.png",
+        "type": "video",
+        "src": "public/gallery/generated_video (26).mp4",
         "title": "Алхимия внимания",
-        "tag": "Фото"
+        "tag": "Видео"
       },
       {
         "type": "video",
