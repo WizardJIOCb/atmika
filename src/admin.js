@@ -3,6 +3,9 @@ const api = {
   login: '/api/admin/login',
   logout: '/api/admin/logout',
   content: '/api/admin/content',
+  chats: '/api/admin/chats',
+  chat: '/api/admin/chat',
+  chatContext: '/api/admin/chat-context',
 };
 
 const sections = [
@@ -20,6 +23,7 @@ const sections = [
   ['process', 'Процесс'],
   ['story', 'История'],
   ['contact', 'Контакты'],
+  ['chatAdmin', 'Чаты'],
 ];
 
 const labels = {
@@ -69,10 +73,46 @@ const labels = {
 let content = null;
 let activeSection = 'hero';
 let isSaving = false;
+let chatAdmin = {
+  chats: [],
+  context: null,
+  selectedChat: null,
+  isLoading: false,
+  isSending: false,
+  loaded: false,
+};
 
 const root = document.querySelector('#admin');
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
+const escapeHtml = (value) => String(value ?? '')
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#039;');
+
+const formatDate = (value) => {
+  if (!value) {
+    return '—';
+  }
+
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
+};
+
+const publicChatUrl = (chat) => {
+  if (!chat?.url) {
+    return '';
+  }
+
+  return `${window.location.origin}${chat.url}`;
+};
 
 const getByPath = (path) => path.reduce((acc, key) => acc?.[key], content);
 
@@ -115,6 +155,87 @@ const notify = (message, isError = false) => {
 
   status.textContent = message;
   status.classList.toggle('is-error', isError);
+};
+
+const loadAdminChat = async (chatId) => {
+  const data = await requestJson(`${api.chat}?chat_id=${encodeURIComponent(chatId)}`);
+  chatAdmin.selectedChat = data.chat;
+};
+
+const loadChatAdmin = async (force = false) => {
+  if (chatAdmin.isLoading || (chatAdmin.loaded && !force)) {
+    return;
+  }
+
+  chatAdmin.isLoading = true;
+  renderApp();
+
+  try {
+    const [chatList, context] = await Promise.all([
+      requestJson(api.chats),
+      requestJson(api.chatContext),
+    ]);
+
+    chatAdmin.chats = chatList.chats || [];
+    chatAdmin.context = context;
+
+    const nextChatId = chatAdmin.selectedChat?.id || chatAdmin.chats[0]?.id;
+    if (nextChatId) {
+      await loadAdminChat(nextChatId);
+    } else {
+      chatAdmin.selectedChat = null;
+    }
+
+    chatAdmin.loaded = true;
+    notify('Чаты загружены.');
+  } catch (error) {
+    notify(error.message, true);
+  } finally {
+    chatAdmin.isLoading = false;
+    renderApp();
+  }
+};
+
+const selectAdminChat = async (chatId) => {
+  chatAdmin.isLoading = true;
+  renderApp();
+
+  try {
+    await loadAdminChat(chatId);
+    notify('Чат открыт.');
+  } catch (error) {
+    notify(error.message, true);
+  } finally {
+    chatAdmin.isLoading = false;
+    renderApp();
+  }
+};
+
+const sendAdminChatMessage = async (message) => {
+  if (!chatAdmin.selectedChat || chatAdmin.isSending) {
+    return;
+  }
+
+  chatAdmin.isSending = true;
+  notify('Отправляю сообщение в чат...');
+  renderApp();
+
+  try {
+    const data = await requestJson(api.chat, {
+      method: 'POST',
+      body: JSON.stringify({ chat_id: chatAdmin.selectedChat.id, message }),
+    });
+
+    chatAdmin.selectedChat = data.chat;
+    chatAdmin.loaded = false;
+    await loadChatAdmin(true);
+    notify('Ответ добавлен в чат.');
+  } catch (error) {
+    notify(error.message, true);
+  } finally {
+    chatAdmin.isSending = false;
+    renderApp();
+  }
 };
 
 const renderLogin = (message = '') => {
@@ -301,6 +422,112 @@ const bindEditorEvents = () => {
   });
 };
 
+const renderChatMessages = (messages = []) => {
+  if (!messages.length) {
+    return '<div class="chat-admin-empty">В этом чате пока нет сообщений.</div>';
+  }
+
+  return messages.map((message) => `
+    <article class="chat-admin-message is-${message.role}">
+      <div class="chat-admin-message-head">
+        <strong>${message.role === 'user' ? 'Посетитель' : 'Атмика'}</strong>
+        <span>${formatDate(message.createdAt)}</span>
+      </div>
+      <pre>${escapeHtml(message.content)}</pre>
+    </article>
+  `).join('');
+};
+
+const renderChatAdmin = () => {
+  const selected = chatAdmin.selectedChat;
+  const selectedUrl = publicChatUrl(selected);
+  const prompt = chatAdmin.context?.prompt || 'Контекст ещё не загружен.';
+  const models = [
+    chatAdmin.context?.model,
+    ...(chatAdmin.context?.fallbackModels || []),
+  ].filter(Boolean).join(', ');
+
+  return `
+    <section class="chat-admin">
+      <div class="chat-admin-grid">
+        <aside class="chat-admin-list">
+          <div class="chat-admin-list-head">
+            <h2>Все чаты</h2>
+            <button type="button" data-chat-refresh>${chatAdmin.isLoading ? 'Обновляю...' : 'Обновить'}</button>
+          </div>
+          ${chatAdmin.chats.length ? chatAdmin.chats.map((chat) => `
+            <button type="button" class="chat-admin-card ${selected?.id === chat.id ? 'is-active' : ''}" data-chat-id="${escapeHtml(chat.id)}">
+              <strong>${escapeHtml(chat.lastUserMessage || 'Новый чат')}</strong>
+              <span>${formatDate(chat.updatedAt)} · ${chat.messageCount} сообщ.</span>
+              <small>${escapeHtml(chat.lastMessage || 'Пока без сообщений')}</small>
+            </button>
+          `).join('') : '<div class="chat-admin-empty">Чатов пока нет.</div>'}
+        </aside>
+
+        <div class="chat-admin-detail">
+          <div class="chat-admin-detail-head">
+            <div>
+              <h2>${selected ? `Чат ${escapeHtml(selected.id)}` : 'Выберите чат'}</h2>
+              ${selected ? `<p>${formatDate(selected.updatedAt)}</p>` : '<p>Список появится после первого диалога на сайте.</p>'}
+            </div>
+            ${selected ? `
+              <div class="action-row">
+                <button type="button" data-chat-copy>Скопировать ссылку</button>
+                <button type="button" onclick="window.open('${escapeHtml(selectedUrl)}', '_blank')">Открыть</button>
+              </div>
+            ` : ''}
+          </div>
+
+          ${selected ? `
+            <div class="chat-admin-link">${escapeHtml(selectedUrl)}</div>
+            <div class="chat-admin-messages">${renderChatMessages(selected.messages)}</div>
+            <form class="chat-admin-form" data-chat-admin-form>
+              <textarea name="message" rows="3" placeholder="Написать в этот чат от имени посетителя..." ${chatAdmin.isSending ? 'disabled' : ''}></textarea>
+              <button type="submit" ${chatAdmin.isSending ? 'disabled' : ''}>${chatAdmin.isSending ? 'Думаю...' : 'Написать и получить ответ'}</button>
+            </form>
+          ` : ''}
+        </div>
+      </div>
+
+      <section class="chat-admin-context">
+        <div>
+          <h2>Текущий контекст новых ответов</h2>
+          <p>Модели: ${escapeHtml(models || 'не настроены')}</p>
+        </div>
+        <textarea readonly>${escapeHtml(prompt)}</textarea>
+      </section>
+    </section>
+  `;
+};
+
+const bindChatAdminEvents = () => {
+  root.querySelector('[data-chat-refresh]')?.addEventListener('click', () => loadChatAdmin(true));
+
+  root.querySelectorAll('[data-chat-id]').forEach((button) => {
+    button.addEventListener('click', () => selectAdminChat(button.dataset.chatId));
+  });
+
+  root.querySelector('[data-chat-copy]')?.addEventListener('click', async () => {
+    const url = publicChatUrl(chatAdmin.selectedChat);
+    await navigator.clipboard?.writeText(url).catch(() => {});
+    notify(`Ссылка на чат: ${url}`);
+  });
+
+  root.querySelector('[data-chat-admin-form]')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const field = event.currentTarget.querySelector('textarea[name="message"]');
+    const message = field.value.trim();
+
+    if (!message) {
+      notify('Введите сообщение для чата.', true);
+      return;
+    }
+
+    field.value = '';
+    await sendAdminChatMessage(message);
+  });
+};
+
 const saveContent = async () => {
   if (isSaving) {
     return;
@@ -329,7 +556,8 @@ const logout = async () => {
 };
 
 const renderApp = () => {
-  const currentValue = content[activeSection];
+  const isChatSection = activeSection === 'chatAdmin';
+  const currentValue = isChatSection ? null : content[activeSection];
 
   root.innerHTML = `
     <div class="admin-shell">
@@ -349,18 +577,20 @@ const renderApp = () => {
         <div class="admin-toolbar">
           <div>
             <h1>${sectionLabel(activeSection)}</h1>
-            <p class="status">Изменения сохраняются в content.json и сразу попадают на сайт.</p>
+            <p class="status">${isChatSection ? 'Просмотр диалогов, ссылки на чаты и текущий контекст AI.' : 'Изменения сохраняются в content.json и сразу попадают на сайт.'}</p>
           </div>
           <div class="action-row">
             <button type="button" onclick="window.open('/', '_blank')">Открыть сайт</button>
-            <button type="button" class="primary" data-save>Сохранить</button>
+            ${isChatSection ? '' : '<button type="button" class="primary" data-save>Сохранить</button>'}
             <button type="button" class="danger" data-logout>Выйти</button>
           </div>
         </div>
-        <section class="editor-panel">
-          <h2>${sectionLabel(activeSection)}</h2>
-          ${renderValue([activeSection], currentValue, activeSection)}
-        </section>
+        ${isChatSection ? renderChatAdmin() : `
+          <section class="editor-panel">
+            <h2>${sectionLabel(activeSection)}</h2>
+            ${renderValue([activeSection], currentValue, activeSection)}
+          </section>
+        `}
       </main>
     </div>
   `;
@@ -372,9 +602,18 @@ const renderApp = () => {
     });
   });
 
-  root.querySelector('[data-save]').addEventListener('click', saveContent);
+  root.querySelector('[data-save]')?.addEventListener('click', saveContent);
   root.querySelector('[data-logout]').addEventListener('click', logout);
-  bindEditorEvents();
+
+  if (isChatSection) {
+    bindChatAdminEvents();
+
+    if (!chatAdmin.loaded && !chatAdmin.isLoading) {
+      loadChatAdmin();
+    }
+  } else {
+    bindEditorEvents();
+  }
 };
 
 const loadContent = async () => {

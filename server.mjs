@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { createHash, randomBytes } from 'node:crypto';
-import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -173,6 +173,42 @@ const writeChat = async (chat) => {
   return nextChat;
 };
 
+const chatPreview = (chat) => {
+  const lastMessage = chat.messages.at(-1);
+  const lastUserMessage = [...chat.messages].reverse().find((message) => message.role === 'user');
+
+  return {
+    id: chat.id,
+    createdAt: chat.createdAt,
+    updatedAt: chat.updatedAt,
+    messageCount: chat.messages.length,
+    lastRole: lastMessage?.role || '',
+    lastMessage: String(lastMessage?.content || '').slice(0, 180),
+    lastUserMessage: String(lastUserMessage?.content || '').slice(0, 180),
+    url: `/?chat_id=${encodeURIComponent(chat.id)}`,
+  };
+};
+
+const listChats = async () => {
+  await mkdir(chatDir, { recursive: true });
+  const files = await readdir(chatDir).catch(() => []);
+  const chats = await Promise.all(files
+    .filter((file) => file.endsWith('.json'))
+    .map(async (file) => {
+      const id = file.slice(0, -5);
+
+      if (!isSafeChatId(id)) {
+        return null;
+      }
+
+      return chatPreview(await readChat(id));
+    }));
+
+  return chats
+    .filter(Boolean)
+    .sort((left, right) => new Date(right.updatedAt) - new Date(left.updatedAt));
+};
+
 const buildSiteContext = (content) => {
   const parts = [
     `Бренд: ${content.brand?.name || 'Атмика'} — ${content.brand?.subtitle || 'проводник сознания'}.`,
@@ -194,6 +230,10 @@ const buildChatSystemPrompt = async () => {
   return [
     'Ты чат-проводник сайта Атмики. Отвечай на русском мягко, ясно, живо и по делу.',
     'Твоя задача: помогать посетителю понять подход Атмики, форматы работы, кому это подходит, как записаться, и бережно вести диалог в стиле сайта.',
+    'У сайта есть матричный, мистический и немного ироничный слой: белый кролик, выход из Матрицы, Морфиус, красная таблетка, осознанность вместо автопилота. Если человек пишет в таком стиле, поддержи игру коротко и смешно, а потом свяжи ответ с Атмикой.',
+    'Если спрашивают “Как дела?”, отвечай тепло и живо: “держусь на частоте белого кролика”, “проверяю, не глючит ли Матрица”, или похожей короткой фразой, затем спроси, с чем помочь.',
+    'Если спрашивают про Морфиуса, не говори, что ничего не знаешь. Ответь как внутренняя шутка сайта: Морфиус условно жив, пьёт чай где-то между красной таблеткой и календарём записей, но главный проводник здесь — Атмика. Затем предложи помощь по форматам, состоянию, запросу или записи.',
+    'Если спрашивают “Что ты можешь?”, перечисли: объяснить подход Атмики, подобрать формат, рассказать цены и кому подходит, помочь сформулировать запрос, дать контакты, создать/сохранить ссылку на диалог. Отвечай компактно, можно списком.',
     'Не обещай исцеление, гарантированный результат или медицинскую, юридическую, финансовую помощь. Если вопрос про здоровье, травму или кризис — мягко предложи обратиться к профильному специалисту.',
     'Если человек хочет записаться, веди к WhatsApp или email из контактов. Если спрашивают цену, называй цены из контекста.',
     'Не выдумывай фактов о личной жизни Атмики вне контекста сайта. Если не знаешь — скажи честно и предложи уточнить напрямую.',
@@ -261,6 +301,52 @@ const callOpenRouter = async (messages) => {
   }
 
   throw lastError || new Error('OpenRouter request failed');
+};
+
+const appendChatMessageAndAnswer = async (requestedId, message) => {
+  if (requestedId && !isSafeChatId(requestedId)) {
+    const error = new Error('Invalid chat_id');
+    error.status = 400;
+    throw error;
+  }
+
+  const normalizedMessage = String(message || '').trim();
+
+  if (!normalizedMessage) {
+    const error = new Error('Message is empty');
+    error.status = 400;
+    throw error;
+  }
+
+  if (normalizedMessage.length > 4000) {
+    const error = new Error('Message is too long');
+    error.status = 400;
+    throw error;
+  }
+
+  const id = requestedId || createChatId();
+  let chat = await readChat(id);
+  chat.messages.push({
+    role: 'user',
+    content: normalizedMessage,
+    createdAt: new Date().toISOString(),
+  });
+  chat = await writeChat(chat);
+
+  const systemPrompt = await buildChatSystemPrompt();
+  const answer = await callOpenRouter([
+    { role: 'system', content: systemPrompt },
+    ...chat.messages.slice(-18).map(({ role, content }) => ({ role, content })),
+  ]);
+
+  chat.messages.push({
+    role: 'assistant',
+    content: answer,
+    createdAt: new Date().toISOString(),
+  });
+  chat = await writeChat(chat);
+
+  return { id, chat, answer };
 };
 
 const writeContent = async (content) => {
@@ -339,9 +425,47 @@ const handleApi = async (request, response, url) => {
       return;
     }
 
+    if (url.pathname === '/api/admin/chats' && request.method === 'GET') {
+      json(response, 200, { chats: await listChats() });
+      return;
+    }
+
+    if (url.pathname === '/api/admin/chat' && request.method === 'GET') {
+      const id = url.searchParams.get('chat_id');
+
+      if (!isSafeChatId(id)) {
+        json(response, 400, { error: 'Invalid chat_id' });
+        return;
+      }
+
+      const chat = await readChat(id);
+      json(response, 200, { chat: { ...chat, url: `/?chat_id=${encodeURIComponent(chat.id)}` } });
+      return;
+    }
+
+    if (url.pathname === '/api/admin/chat' && request.method === 'POST') {
+      const body = JSON.parse(await readBody(request, 1024 * 128) || '{}');
+      const result = await appendChatMessageAndAnswer(body.chat_id, body.message);
+      json(response, 200, {
+        chat_id: result.id,
+        chat: { ...result.chat, url: `/?chat_id=${encodeURIComponent(result.id)}` },
+        answer: result.answer,
+      });
+      return;
+    }
+
+    if (url.pathname === '/api/admin/chat-context' && request.method === 'GET') {
+      json(response, 200, {
+        model: openRouterModel,
+        fallbackModels: openRouterFallbackModels,
+        prompt: await buildChatSystemPrompt(),
+      });
+      return;
+    }
+
     json(response, 404, { error: 'API endpoint not found' });
   } catch (error) {
-    json(response, 500, { error: error.message || 'Ошибка сервера' });
+    json(response, error.status || 500, { error: error.message || 'Ошибка сервера' });
   }
 };
 
@@ -363,53 +487,14 @@ const handleChatApi = async (request, response, url) => {
 
     if (url.pathname === '/api/chat' && request.method === 'POST') {
       const body = JSON.parse(await readBody(request, 1024 * 128) || '{}');
-      const requestedId = body.chat_id;
-      const message = String(body.message || '').trim();
-
-      if (requestedId && !isSafeChatId(requestedId)) {
-        json(response, 400, { error: 'Invalid chat_id' });
-        return;
-      }
-
-      if (!message) {
-        json(response, 400, { error: 'Message is empty' });
-        return;
-      }
-
-      if (message.length > 4000) {
-        json(response, 400, { error: 'Message is too long' });
-        return;
-      }
-
-      const id = requestedId || createChatId();
-      let chat = await readChat(id);
-      chat.messages.push({
-        role: 'user',
-        content: message,
-        createdAt: new Date().toISOString(),
-      });
-      chat = await writeChat(chat);
-
-      const systemPrompt = await buildChatSystemPrompt();
-      const answer = await callOpenRouter([
-        { role: 'system', content: systemPrompt },
-        ...chat.messages.slice(-18).map(({ role, content }) => ({ role, content })),
-      ]);
-
-      chat.messages.push({
-        role: 'assistant',
-        content: answer,
-        createdAt: new Date().toISOString(),
-      });
-      chat = await writeChat(chat);
-
-      json(response, 200, { chat_id: id, messages: chat.messages, answer });
+      const result = await appendChatMessageAndAnswer(body.chat_id, body.message);
+      json(response, 200, { chat_id: result.id, messages: result.chat.messages, answer: result.answer });
       return;
     }
 
     json(response, 404, { error: 'Chat API endpoint not found' });
   } catch (error) {
-    json(response, 500, { error: error.message || 'Chat server error' });
+    json(response, error.status || 500, { error: error.message || 'Chat server error' });
   }
 };
 
