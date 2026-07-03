@@ -294,12 +294,13 @@ const initWhiteRabbit = () => {
   const update = () => {
     const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
     const progress = clamp(window.scrollY / maxScroll, 0, 1);
-    const maxTravel = Math.max(0, window.innerHeight - rabbit.offsetHeight - 168);
+    const isCompact = window.matchMedia('(max-width: 640px)').matches;
+    const maxTravel = isCompact ? 0 : Math.max(0, window.innerHeight - rabbit.offsetHeight - 168);
     const nextPhraseIndex = Math.min(phrases.length - 1, Math.floor(progress * phrases.length));
 
     targetY = progress * maxTravel;
-    targetX = Math.sin(progress * Math.PI * 2.6) * 9;
-    targetTilt = Math.sin(progress * Math.PI * 7) * 4;
+    targetX = Math.sin(progress * Math.PI * 2.6) * (isCompact ? 4 : 9);
+    targetTilt = Math.sin(progress * Math.PI * 7) * (isCompact ? 2 : 4);
     rabbit.style.opacity = String(0.78 + progress * 0.22);
 
     if (nextPhraseIndex !== phraseIndex) {

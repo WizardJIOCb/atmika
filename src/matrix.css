@@ -950,15 +950,16 @@ p {
 
   .white-rabbit {
     right: 4px;
-    top: 96px;
+    top: auto;
+    bottom: 14px;
     width: 118px;
     height: 132px;
   }
 
   .rabbit-bubble {
-    top: 8px;
-    right: 88px;
-    width: min(210px, calc(100vw - 124px));
+    top: 16px;
+    right: 82px;
+    width: min(190px, calc(100vw - 118px));
     min-height: 48px;
     padding: 8px 10px;
     font-size: 11px;
