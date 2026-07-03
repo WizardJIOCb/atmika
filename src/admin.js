@@ -302,7 +302,7 @@ const defaultItemFor = (path, array) => {
   }
 
   if (joined.includes('socialLinks')) {
-    return { icon: 'instagram', label: 'Соцсеть', href: 'https://' };
+    return { icon: 'play', label: 'Соцсеть', href: 'https://' };
   }
 
   if (joined.includes('process.items')) {

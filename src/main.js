@@ -246,7 +246,6 @@ const iconPaths = {
   'circle-check': '<circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-5"></path>',
   flame: '<path d="M8.5 14.5A4.5 4.5 0 0 0 12 22a4.5 4.5 0 0 0 3.5-7.5c-1.5-1.8-1.9-3.2-1.2-5.5-2.3 1.1-3.8 2.8-4.3 5.1-.9-.9-1.3-2.1-1.1-3.7-2 1.6-3.2 3.6-3.2 5.6 0 2.2 1.2 4.3 3.3 5.5"></path>',
   'heart-pulse': '<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5a5.5 5.5 0 0 0-10 3.5c0 2.3 1.5 4 3 5.5l7 7Z"></path><path d="M3.2 14H7l2-3 2 6 2-3h4.8"></path>',
-  instagram: '<rect width="18" height="18" x="3" y="3" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><path d="M17.5 6.5h.01"></path>',
   menu: '<path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path>',
   'message-circle': '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>',
   play: '<path d="m8 5 12 7-12 7Z"></path>',
