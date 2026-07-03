@@ -13,6 +13,11 @@ const sessionTtlMs = 1000 * 60 * 60 * 12;
 const sessions = new Map();
 const openRouterApiKey = process.env.OPENROUTER_API_KEY || '';
 const openRouterModel = process.env.OPENROUTER_MODEL || 'openai/gpt-oss-120b:free';
+const openRouterFallbackModels = (process.env.OPENROUTER_FALLBACK_MODELS
+  || 'openai/gpt-oss-20b:free,meta-llama/llama-3.3-70b-instruct:free')
+  .split(',')
+  .map((model) => model.trim())
+  .filter(Boolean);
 
 const contentDir = process.env.ATMIKA_CONTENT_DIR
   ? path.resolve(process.env.ATMIKA_CONTENT_DIR)
@@ -198,11 +203,7 @@ const buildChatSystemPrompt = async () => {
   ].join('\n');
 };
 
-const callOpenRouter = async (messages) => {
-  if (!openRouterApiKey) {
-    throw new Error('OPENROUTER_API_KEY is not configured');
-  }
-
+const callOpenRouterModel = async (model, messages) => {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -212,7 +213,7 @@ const callOpenRouter = async (messages) => {
       'X-Title': 'Atmika site chat',
     },
     body: JSON.stringify({
-      model: openRouterModel,
+      model,
       messages,
       temperature: 0.72,
       max_tokens: 900,
@@ -222,7 +223,11 @@ const callOpenRouter = async (messages) => {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.error?.message || `OpenRouter request failed: ${response.status}`);
+    const error = new Error(payload.error?.message || `OpenRouter request failed: ${response.status}`);
+    error.status = response.status;
+    error.code = payload.error?.code;
+    error.providerName = payload.error?.metadata?.provider_name;
+    throw error;
   }
 
   const answer = payload.choices?.[0]?.message?.content;
@@ -232,6 +237,30 @@ const callOpenRouter = async (messages) => {
   }
 
   return String(answer).trim();
+};
+
+const callOpenRouter = async (messages) => {
+  if (!openRouterApiKey) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
+  const models = [openRouterModel, ...openRouterFallbackModels]
+    .filter((model, index, list) => model && list.indexOf(model) === index);
+  let lastError;
+
+  for (const model of models) {
+    try {
+      return await callOpenRouterModel(model, messages);
+    } catch (error) {
+      lastError = error;
+
+      if (error.status !== 429 && error.code !== 429) {
+        break;
+      }
+    }
+  }
+
+  throw lastError || new Error('OpenRouter request failed');
 };
 
 const writeContent = async (content) => {
