@@ -95,19 +95,38 @@ app.innerHTML = `
         </div>
         <p>Фрагменты практик выглядят как найденные файлы из другого слоя реальности.</p>
       </div>
-      <div class="matrix-gallery">
-        ${gallery.map((item, index) => `
-          <figure style="--i:${index}">
-            ${item.type === 'video'
-              ? `<video src="${attr(item.src)}" muted loop playsinline autoplay preload="metadata"></video>`
-              : `<img src="${attr(item.src)}" alt="${attr(item.title)}" loading="lazy" />`
-            }
-            <figcaption>
-              <span>${html(item.tag)}</span>
-              <strong>${html(item.title)}</strong>
-            </figcaption>
-          </figure>
-        `).join('')}
+      <div class="gallery-carousel matrix-carousel" data-gallery-carousel aria-label="${attr(content.gallery?.ariaLabel || 'Галерея')}">
+        <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="${attr(content.gallery?.prevLabel || 'Предыдущий слайд')}" data-gallery-prev>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <div class="gallery-stage">
+          ${gallery.map((item, index) => `
+            <figure class="gallery-slide" data-gallery-item data-index="${index}">
+              <div class="gallery-media">
+                ${item.type === 'video'
+                  ? `<video src="${attr(item.src)}" muted loop playsinline preload="metadata"></video>`
+                  : `<img src="${attr(item.src)}" alt="${attr(item.title)}" loading="lazy" />`
+                }
+              </div>
+              <figcaption>
+                <span>${html(item.tag)}</span>
+                <strong>${html(item.title)}</strong>
+              </figcaption>
+            </figure>
+          `).join('')}
+        </div>
+        <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="${attr(content.gallery?.nextLabel || 'Следующий слайд')}" data-gallery-next>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
+        <div class="gallery-dots" aria-label="${attr(content.gallery?.dotsLabel || 'Слайды галереи')}">
+          ${gallery.map((item, index) => `
+            <button type="button" aria-label="${attr(content.gallery?.dotLabel || 'Слайд')} ${index + 1}" data-gallery-dot="${index}"></button>
+          `).join('')}
+        </div>
       </div>
     </section>
 
@@ -319,5 +338,144 @@ const initWhiteRabbit = () => {
   animate();
 };
 
+const initGalleryCarousel = () => {
+  const carousel = document.querySelector('[data-gallery-carousel]');
+
+  if (!carousel) {
+    return;
+  }
+
+  const slides = [...carousel.querySelectorAll('[data-gallery-item]')];
+  const dots = [...carousel.querySelectorAll('[data-gallery-dot]')];
+  const prevButton = carousel.querySelector('[data-gallery-prev]');
+  const nextButton = carousel.querySelector('[data-gallery-next]');
+  let activeIndex = 0;
+  let autoTimer = 0;
+  let pointerStartX = 0;
+  let pointerDeltaX = 0;
+
+  const normalizeOffset = (index) => {
+    let offset = index - activeIndex;
+    const half = slides.length / 2;
+
+    if (offset > half) {
+      offset -= slides.length;
+    }
+
+    if (offset < -half) {
+      offset += slides.length;
+    }
+
+    return offset;
+  };
+
+  const updateVideos = () => {
+    slides.forEach((slide, index) => {
+      const video = slide.querySelector('video');
+
+      if (!video) {
+        return;
+      }
+
+      if (Math.abs(normalizeOffset(index)) <= 1) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  };
+
+  const render = () => {
+    slides.forEach((slide, index) => {
+      const offset = normalizeOffset(index);
+      const distance = Math.min(Math.abs(offset), 3);
+
+      slide.style.setProperty('--offset', offset);
+      slide.style.setProperty('--distance', distance);
+      slide.style.zIndex = String(20 - distance);
+      slide.toggleAttribute('aria-current', offset === 0);
+      slide.setAttribute('aria-hidden', String(distance > 2));
+    });
+
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('is-active', index === activeIndex);
+      dot.setAttribute('aria-current', String(index === activeIndex));
+    });
+
+    updateVideos();
+  };
+
+  const goTo = (index) => {
+    activeIndex = (index + slides.length) % slides.length;
+    render();
+  };
+
+  const restartAuto = () => {
+    window.clearInterval(autoTimer);
+    autoTimer = window.setInterval(() => goTo(activeIndex + 1), 6200);
+  };
+
+  prevButton.addEventListener('click', () => {
+    goTo(activeIndex - 1);
+    restartAuto();
+  });
+
+  nextButton.addEventListener('click', () => {
+    goTo(activeIndex + 1);
+    restartAuto();
+  });
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+      goTo(index);
+      restartAuto();
+    });
+  });
+
+  carousel.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('.gallery-arrow, .gallery-dots button')) {
+      return;
+    }
+
+    pointerStartX = event.clientX;
+    pointerDeltaX = 0;
+    carousel.setPointerCapture(event.pointerId);
+    window.clearInterval(autoTimer);
+  });
+
+  carousel.addEventListener('pointermove', (event) => {
+    if (!pointerStartX) {
+      return;
+    }
+
+    pointerDeltaX = event.clientX - pointerStartX;
+  });
+
+  carousel.addEventListener('pointerup', () => {
+    if (Math.abs(pointerDeltaX) > 44) {
+      goTo(activeIndex + (pointerDeltaX < 0 ? 1 : -1));
+    }
+
+    pointerStartX = 0;
+    pointerDeltaX = 0;
+    restartAuto();
+  });
+
+  carousel.addEventListener('pointercancel', () => {
+    pointerStartX = 0;
+    pointerDeltaX = 0;
+    restartAuto();
+  });
+
+  carousel.addEventListener('mouseenter', () => window.clearInterval(autoTimer));
+  carousel.addEventListener('mouseleave', restartAuto);
+  carousel.addEventListener('focusin', () => window.clearInterval(autoTimer));
+  carousel.addEventListener('focusout', restartAuto);
+
+  render();
+  restartAuto();
+};
+
 initMatrixRain();
+initGalleryCarousel();
 initWhiteRabbit();

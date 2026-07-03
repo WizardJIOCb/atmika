@@ -380,6 +380,207 @@ p {
   text-transform: uppercase;
 }
 
+.gallery-carousel {
+  --ink: #f7f1e5;
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.gallery-stage {
+  position: relative;
+  width: min(100%, 1040px);
+  height: clamp(460px, 58vw, 620px);
+  perspective: 1400px;
+  transform-style: preserve-3d;
+}
+
+.gallery-slide {
+  --offset: 0;
+  --distance: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(230px, 25vw, 330px);
+  aspect-ratio: 9 / 16;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(247, 241, 229, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(247, 241, 229, 0.08), rgba(247, 241, 229, 0.02)),
+    #101615;
+  box-shadow:
+    0 34px 90px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(217, 170, 97, 0.05) inset;
+  opacity: calc(1 - var(--distance) * 0.18);
+  transform:
+    translate(-50%, -50%)
+    translateX(calc(var(--offset) * clamp(142px, 18vw, 245px)))
+    translateZ(calc(42px - var(--distance) * 78px))
+    rotateY(calc(var(--offset) * -15deg))
+    scale(calc(1 - var(--distance) * 0.11));
+  transition:
+    transform 620ms cubic-bezier(0.2, 0.82, 0.2, 1),
+    opacity 360ms ease,
+    filter 360ms ease;
+}
+
+.gallery-slide[aria-current] {
+  border-color: rgba(217, 170, 97, 0.44);
+  box-shadow:
+    0 40px 110px rgba(0, 0, 0, 0.58),
+    0 0 52px rgba(217, 170, 97, 0.16);
+}
+
+.gallery-slide[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+.gallery-media,
+.gallery-media img,
+.gallery-media video {
+  width: 100%;
+  height: 100%;
+}
+
+.gallery-media {
+  position: absolute;
+  inset: 0;
+}
+
+.gallery-media img,
+.gallery-media video {
+  display: block;
+  object-fit: cover;
+}
+
+.gallery-slide::before,
+.gallery-slide::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+}
+
+.gallery-slide::before {
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(8, 11, 13, 0.04), rgba(8, 11, 13, 0.38) 68%, rgba(8, 11, 13, 0.82)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 28% 74%, rgba(0, 0, 0, 0.18));
+}
+
+.gallery-slide::after {
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.gallery-slide figcaption {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  left: 20px;
+  z-index: 3;
+  display: grid;
+  gap: 8px;
+}
+
+.gallery-slide figcaption span {
+  justify-self: start;
+  padding: 5px 9px;
+  border: 1px solid rgba(217, 170, 97, 0.34);
+  border-radius: 999px;
+  background: rgba(8, 11, 13, 0.34);
+  color: #f0c878;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.gallery-slide figcaption strong {
+  color: var(--ink);
+  font-size: clamp(22px, 2vw, 28px);
+  line-height: 1.05;
+  text-shadow: 0 2px 22px rgba(0, 0, 0, 0.66);
+}
+
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 1px solid rgba(247, 241, 229, 0.18);
+  border-radius: 50%;
+  background: rgba(8, 11, 13, 0.54);
+  color: var(--ink);
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  transform: translateY(-50%);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.gallery-arrow:hover {
+  border-color: rgba(217, 170, 97, 0.46);
+  background: rgba(217, 170, 97, 0.16);
+  color: #f0c878;
+}
+
+.gallery-arrow svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gallery-arrow-prev {
+  left: 0;
+}
+
+.gallery-arrow-next {
+  right: 0;
+}
+
+.gallery-dots {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.gallery-dots button {
+  width: 36px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(247, 241, 229, 0.2);
+  cursor: pointer;
+  transition:
+    width 180ms ease,
+    background 180ms ease;
+}
+
+.gallery-dots button.is-active {
+  width: 54px;
+  background: #e8c07e;
+}
+
 .two-column {
   display: grid;
   grid-template-columns: minmax(0, 0.86fr) minmax(300px, 1.14fr);
@@ -678,9 +879,21 @@ p {
   .matrix-gallery figure {
     transform: none;
   }
+
+  .gallery-stage {
+    height: 560px;
+  }
+
+  .gallery-arrow-prev {
+    left: 8px;
+  }
+
+  .gallery-arrow-next {
+    right: 8px;
+  }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 640px) {
   .matrix-section,
   .matrix-hero {
     padding-right: 16px;
@@ -692,40 +905,47 @@ p {
     grid-template-columns: 1fr;
   }
 
-  .matrix-gallery {
-    display: flex;
-    grid-template-columns: none;
-    gap: 14px;
-    min-height: auto;
+  .gallery-stage {
+    height: 520px;
+    width: 100vw;
+    max-width: none;
     margin-right: -16px;
     margin-left: -16px;
-    padding: 0 16px 14px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-padding: 16px;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
   }
 
-  .matrix-gallery::-webkit-scrollbar {
-    display: none;
+  .gallery-slide {
+    width: min(68vw, 270px);
+    transform:
+      translate(-50%, -50%)
+      translateX(calc(var(--offset) * 132px))
+      translateZ(calc(28px - var(--distance) * 56px))
+      rotateY(calc(var(--offset) * -13deg))
+      scale(calc(1 - var(--distance) * 0.1));
   }
 
-  .matrix-gallery figure {
-    flex: 0 0 min(82vw, 360px);
-    height: min(72vh, 520px);
-    min-height: 420px;
-    transform: none;
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
+  .gallery-arrow {
+    width: 44px;
+    height: 44px;
   }
 
-  .matrix-gallery::after {
-    display: block;
-    flex: 0 0 2px;
-    content: "";
+  .gallery-arrow-prev {
+    left: 10px;
+  }
+
+  .gallery-arrow-next {
+    right: 10px;
+  }
+
+  .gallery-dots {
+    margin-top: 16px;
+  }
+
+  .gallery-dots button {
+    width: 28px;
+  }
+
+  .gallery-dots button.is-active {
+    width: 42px;
   }
 
   .white-rabbit {
