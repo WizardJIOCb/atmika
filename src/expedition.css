@@ -1141,9 +1141,14 @@ blockquote {
     margin-left: auto;
     position: fixed;
     top: 11px;
-    right: clamp(42px, 14vw, 64px);
+    right: 16px;
     transform: none;
     z-index: 45;
+  }
+
+  body.menu-open .menu-toggle {
+    top: 20px;
+    right: 20px;
   }
 
   .route-strip,
@@ -1177,9 +1182,14 @@ blockquote {
   .menu-toggle {
     position: fixed;
     top: 11px;
-    right: clamp(42px, 14vw, 64px);
+    right: 16px;
     transform: none;
     z-index: 45;
+  }
+
+  body.menu-open .menu-toggle {
+    top: 20px;
+    right: 20px;
   }
 
   .expedition-brand {
