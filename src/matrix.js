@@ -111,7 +111,7 @@ app.innerHTML = `
             <figure class="gallery-slide" data-gallery-item data-index="${index}">
               <div class="gallery-media">
                 ${item.type === 'video'
-                  ? `<video src="${attr(item.src)}" muted loop playsinline preload="metadata"></video>`
+                  ? `<video src="${attr(item.src)}" muted loop playsinline autoplay preload="auto"></video>`
                   : `<img src="${attr(item.src)}" alt="${attr(item.title)}" loading="lazy" />`
                 }
               </div>
@@ -376,18 +376,14 @@ const initGalleryCarousel = () => {
   };
 
   const updateVideos = () => {
-    slides.forEach((slide, index) => {
+    slides.forEach((slide) => {
       const video = slide.querySelector('video');
 
       if (!video) {
         return;
       }
 
-      if (Math.abs(normalizeOffset(index)) <= 1) {
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-      }
+      video.play().catch(() => {});
     });
   };
 
