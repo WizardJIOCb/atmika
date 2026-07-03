@@ -34,6 +34,7 @@ const renderMarkdown = (value) => {
   const blocks = [];
   let paragraph = [];
   let list = null;
+  let codeFence = null;
 
   const flushParagraph = () => {
     if (!paragraph.length) {
@@ -54,6 +55,26 @@ const renderMarkdown = (value) => {
   };
 
   lines.forEach((line) => {
+    const fence = line.match(/^\s*```/);
+
+    if (fence) {
+      if (codeFence) {
+        blocks.push(`<pre><code>${html(codeFence.join('\n'))}</code></pre>`);
+        codeFence = null;
+      } else {
+        flushParagraph();
+        flushList();
+        codeFence = [];
+      }
+
+      return;
+    }
+
+    if (codeFence) {
+      codeFence.push(line);
+      return;
+    }
+
     const unordered = line.match(/^\s*[-*]\s+(.+)$/);
     const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/);
 
@@ -99,6 +120,10 @@ const renderMarkdown = (value) => {
 
   flushParagraph();
   flushList();
+
+  if (codeFence) {
+    blocks.push(`<pre><code>${html(codeFence.join('\n'))}</code></pre>`);
+  }
 
   return blocks.join('');
 };
