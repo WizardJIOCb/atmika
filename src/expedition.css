@@ -685,7 +685,7 @@ blockquote {
   overflow: hidden;
   border: 1px solid rgba(85, 247, 230, 0.34);
   background:
-    linear-gradient(125deg, transparent 0 42%, rgba(255, 255, 255, 0.13) 49%, transparent 58%),
+    linear-gradient(125deg, transparent 0 44%, rgba(255, 255, 255, 0.018) 52%, transparent 66%),
     radial-gradient(circle at 16% 0%, rgba(85, 247, 230, 0.14), transparent 32rem),
     rgba(2, 8, 8, 0.96);
   box-shadow: 0 38px 140px rgba(0, 0, 0, 0.72), 0 0 70px rgba(85, 247, 230, 0.12);
