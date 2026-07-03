@@ -220,4 +220,93 @@ const initRain = () => {
   draw();
 };
 
+const initWhiteRabbit = () => {
+  const rabbit = document.querySelector('[data-white-rabbit]');
+
+  if (!rabbit) {
+    return;
+  }
+
+  const bubble = rabbit.querySelector('.rabbit-bubble');
+  const sections = [...document.querySelectorAll('main section')];
+  const phrases = [
+    'Следуй за белым кроликом.',
+    'Система заметила твое пробуждение.',
+    'Дыши глубже. Код уже дрожит.',
+    'Там, где страшно, часто спрятана дверь.',
+    'Выход начинается не с бунта, а с ясности.',
+    'Проверь: это твой выбор или старая программа?',
+    'Не спеши ломать Матрицу. Сначала увидь ее.',
+    'Тело знает пароль раньше ума.',
+    'Сверни туда, где становится тише.',
+    'Иллюзия сильна, пока ты с ней споришь.',
+    'Настоящий путь не шумит. Он зовет.',
+    'Смотри между строк: там меняется сценарий.',
+    'Каждый шаг вниз по странице снимает один слой.',
+    'Ты не обязан жить в чужом алгоритме.',
+    'Если реальность мерцает, значит ты близко.',
+    'Верни внимание себе. Это главный ключ.',
+    'Не ищи кнопку выхода. Стань тем, кто выходит.',
+    'Финальный портал всегда внутри.'
+  ];
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let targetY = 0;
+  let currentY = 0;
+  let targetX = 0;
+  let currentX = 0;
+  let targetTilt = 0;
+  let currentTilt = 0;
+  let phraseIndex = -1;
+  let frame = 0;
+
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  const update = () => {
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const progress = clamp(window.scrollY / maxScroll, 0, 1);
+    const maxTravel = Math.max(0, window.innerHeight - rabbit.offsetHeight - 168);
+    const nextPhraseIndex = Math.min(phrases.length - 1, Math.floor(progress * phrases.length));
+
+    targetY = progress * maxTravel;
+    targetX = Math.sin(progress * Math.PI * 2.6) * 9;
+    targetTilt = Math.sin(progress * Math.PI * 7) * 4;
+    rabbit.style.opacity = String(0.78 + progress * 0.22);
+
+    if (nextPhraseIndex !== phraseIndex) {
+      phraseIndex = nextPhraseIndex;
+      bubble.textContent = phrases[phraseIndex];
+      rabbit.setAttribute('aria-label', phrases[phraseIndex]);
+      bubble.style.opacity = '0.35';
+      bubble.style.transform = 'translateX(8px)';
+      window.setTimeout(() => {
+        bubble.style.opacity = '1';
+        bubble.style.transform = 'translateX(0)';
+      }, 80);
+    }
+  };
+
+  const animate = () => {
+    const easing = prefersReducedMotion ? 1 : 0.11;
+    currentY += (targetY - currentY) * easing;
+    currentX += (targetX - currentX) * easing;
+    currentTilt += (targetTilt - currentTilt) * easing;
+    rabbit.style.setProperty('--rabbit-y', `${currentY.toFixed(2)}px`);
+    rabbit.style.setProperty('--rabbit-x', `${currentX.toFixed(2)}px`);
+    rabbit.style.setProperty('--rabbit-tilt', `${currentTilt.toFixed(2)}deg`);
+    frame = requestAnimationFrame(animate);
+  };
+
+  rabbit.addEventListener('click', () => {
+    const next = sections.find((section) => section.getBoundingClientRect().top > 120) || sections[0];
+    next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  window.addEventListener('pagehide', () => cancelAnimationFrame(frame), { once: true });
+  update();
+  animate();
+};
+
 initRain();
+initWhiteRabbit();
