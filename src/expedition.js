@@ -274,6 +274,26 @@ app.innerHTML = `
       </div>
     </section>
   </main>
+  <div class="atmika-chat" data-chat-dialog aria-hidden="true">
+    <div class="atmika-chat-panel" role="dialog" aria-modal="true" aria-labelledby="atmika-chat-title">
+      <div class="atmika-chat-head">
+        <div>
+          <span class="eyebrow">Белый кролик онлайн</span>
+          <h2 id="atmika-chat-title">Диалог с проводником</h2>
+        </div>
+        <div class="atmika-chat-actions">
+          <button type="button" data-chat-share>Поделиться</button>
+          <button type="button" data-chat-close aria-label="Закрыть чат">×</button>
+        </div>
+      </div>
+      <div class="atmika-chat-share" data-chat-share-status aria-live="polite"></div>
+      <div class="atmika-chat-messages" data-chat-messages aria-live="polite"></div>
+      <form class="atmika-chat-form" data-chat-form>
+        <textarea name="message" rows="2" placeholder="Спросите про практики, форматы, состояние или первый шаг..." required></textarea>
+        <button type="submit">Отправить</button>
+      </form>
+    </div>
+  </div>
 `;
 
 const initMenu = () => {
@@ -287,12 +307,16 @@ const initMenu = () => {
   toggle.addEventListener('click', () => {
     const isOpen = document.body.classList.toggle('menu-open');
     toggle.setAttribute('aria-expanded', String(isOpen));
+    toggle.setAttribute('aria-label', isOpen
+      ? (content.header?.closeMenuLabel || 'Закрыть меню')
+      : (content.header?.openMenuLabel || 'Открыть меню'));
   });
 
   navEl.addEventListener('click', (event) => {
     if (event.target.closest('a')) {
       document.body.classList.remove('menu-open');
       toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', content.header?.openMenuLabel || 'Открыть меню');
     }
   });
 };
@@ -440,6 +464,180 @@ const initStackCarousel = ({
   restartAuto();
 };
 
+let openAtmikaChat = () => {};
+
+const initAtmikaChat = () => {
+  const dialog = document.querySelector('[data-chat-dialog]');
+  const closeButton = document.querySelector('[data-chat-close]');
+  const shareButton = document.querySelector('[data-chat-share]');
+  const shareStatus = document.querySelector('[data-chat-share-status]');
+  const messagesEl = document.querySelector('[data-chat-messages]');
+  const form = document.querySelector('[data-chat-form]');
+  const input = form?.querySelector('textarea[name="message"]');
+
+  if (!dialog || !form || !input || !messagesEl) {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  let chatId = params.get('chat_id') || localStorage.getItem('atmika_chat_id') || '';
+  let isReady = false;
+  let isSending = false;
+
+  const setStatus = (message) => {
+    if (shareStatus) {
+      shareStatus.textContent = message || '';
+    }
+  };
+
+  const chatLink = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('chat_id', chatId);
+    return url.toString();
+  };
+
+  const updateUrl = () => {
+    if (!chatId) {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('chat_id', chatId);
+    window.history.replaceState({}, '', url);
+  };
+
+  const renderMessages = (messages) => {
+    messagesEl.textContent = '';
+
+    if (!messages.length) {
+      const empty = document.createElement('div');
+      empty.className = 'atmika-chat-empty';
+      empty.textContent = 'Я рядом. Можно спросить про форматы работы, состояние, первый шаг или просто описать, что сейчас происходит.';
+      messagesEl.append(empty);
+      return;
+    }
+
+    messages.forEach((message) => {
+      const item = document.createElement('article');
+      item.className = `atmika-chat-message is-${message.role}`;
+      const label = document.createElement('span');
+      label.textContent = message.role === 'user' ? 'Вы' : 'Атмика';
+      const textEl = document.createElement('p');
+      textEl.textContent = message.content;
+      item.append(label, textEl);
+      messagesEl.append(item);
+    });
+
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  };
+
+  const loadChat = async () => {
+    const suffix = chatId ? `?chat_id=${encodeURIComponent(chatId)}` : '';
+    const response = await fetch(`/api/chat${suffix}`);
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || 'Не удалось открыть чат');
+    }
+
+    chatId = payload.chat_id;
+    localStorage.setItem('atmika_chat_id', chatId);
+    updateUrl();
+    renderMessages(payload.messages || []);
+    isReady = true;
+  };
+
+  openAtmikaChat = async () => {
+    dialog.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('chat-open');
+    input.focus();
+
+    if (!isReady) {
+      setStatus('Открываю пространство диалога...');
+      try {
+        await loadChat();
+        setStatus('');
+      } catch (error) {
+        setStatus(error.message || 'Чат временно недоступен');
+      }
+    }
+  };
+
+  const closeChat = () => {
+    dialog.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('chat-open');
+  };
+
+  closeButton?.addEventListener('click', closeChat);
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) {
+      closeChat();
+    }
+  });
+
+  shareButton?.addEventListener('click', async () => {
+    if (!isReady) {
+      await openAtmikaChat();
+    }
+
+    const link = chatLink();
+    await navigator.clipboard?.writeText(link).catch(() => {});
+    setStatus(`Ссылка на чат: ${link}`);
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (isSending) {
+      return;
+    }
+
+    const message = input.value.trim();
+
+    if (!message) {
+      return;
+    }
+
+    isSending = true;
+    input.value = '';
+    setStatus('Атмика отвечает...');
+    renderMessages([
+      ...[...messagesEl.querySelectorAll('.atmika-chat-message')].map((node) => ({
+        role: node.classList.contains('is-user') ? 'user' : 'assistant',
+        content: node.querySelector('p')?.textContent || '',
+      })),
+      { role: 'user', content: message },
+    ]);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, message }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Не удалось отправить сообщение');
+      }
+
+      chatId = payload.chat_id;
+      localStorage.setItem('atmika_chat_id', chatId);
+      updateUrl();
+      renderMessages(payload.messages || []);
+      setStatus('');
+    } catch (error) {
+      setStatus(error.message || 'Чат временно недоступен');
+    } finally {
+      isSending = false;
+    }
+  });
+
+  if (params.get('chat_id')) {
+    openAtmikaChat();
+  }
+};
+
 const initWhiteRabbit = () => {
   const rabbit = document.querySelector('[data-white-rabbit]');
 
@@ -448,7 +646,6 @@ const initWhiteRabbit = () => {
   }
 
   const bubble = rabbit.querySelector('.rabbit-bubble');
-  const sections = [...document.querySelectorAll('main section')];
   const phrases = [
     'Следуй за белым кроликом.',
     'Путь начинается там, где привычная карта заканчивается.',
@@ -515,8 +712,7 @@ const initWhiteRabbit = () => {
   };
 
   rabbit.addEventListener('click', () => {
-    const next = sections.find((section) => section.getBoundingClientRect().top > 120) || sections[0];
-    next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    openAtmikaChat();
   });
 
   window.addEventListener('scroll', update, { passive: true });
@@ -528,6 +724,7 @@ const initWhiteRabbit = () => {
 
 initMenu();
 initVideoPlayback();
+initAtmikaChat();
 initStackCarousel({
   carouselSelector: '[data-expedition-carousel]',
   itemSelector: '[data-expedition-item]',

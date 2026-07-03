@@ -11,6 +11,8 @@ const port = Number(process.env.PORT || 5174);
 const adminPassword = process.env.ATMIKA_ADMIN_PASSWORD || 'change-me-atmika';
 const sessionTtlMs = 1000 * 60 * 60 * 12;
 const sessions = new Map();
+const openRouterApiKey = process.env.OPENROUTER_API_KEY || '';
+const openRouterModel = process.env.OPENROUTER_MODEL || 'openai/gpt-oss-120b:free';
 
 const contentDir = process.env.ATMIKA_CONTENT_DIR
   ? path.resolve(process.env.ATMIKA_CONTENT_DIR)
@@ -18,6 +20,11 @@ const contentDir = process.env.ATMIKA_CONTENT_DIR
 const contentJsonPath = path.join(contentDir, 'content.json');
 const contentJsPath = path.join(contentDir, 'content.js');
 const backupDir = path.join(contentDir, 'backups');
+const chatDir = process.env.ATMIKA_CHAT_DIR
+  ? path.resolve(process.env.ATMIKA_CHAT_DIR)
+  : process.env.ATMIKA_CONTENT_DIR
+    ? path.join(contentDir, 'chats')
+    : path.join(root, '.data', 'chats');
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -111,6 +118,122 @@ const safeEqual = (left, right) => {
 
 const readContent = async () => JSON.parse(await readFile(contentJsonPath, 'utf8'));
 
+const createChatId = () => randomBytes(12).toString('base64url');
+const isSafeChatId = (id) => /^[a-zA-Z0-9_-]{8,64}$/.test(String(id || ''));
+const chatPath = (id) => path.join(chatDir, `${id}.json`);
+
+const normalizeChatMessages = (messages) => (
+  Array.isArray(messages)
+    ? messages
+      .filter((message) => message && ['user', 'assistant'].includes(message.role))
+      .map((message) => ({
+        role: message.role,
+        content: String(message.content || '').slice(0, 6000),
+        createdAt: message.createdAt || new Date().toISOString(),
+      }))
+      .slice(-40)
+    : []
+);
+
+const readChat = async (id) => {
+  const file = await readFile(chatPath(id), 'utf8').catch(() => '');
+
+  if (!file) {
+    const now = new Date().toISOString();
+    return { id, createdAt: now, updatedAt: now, messages: [] };
+  }
+
+  const chat = JSON.parse(file);
+  return {
+    id,
+    createdAt: chat.createdAt || new Date().toISOString(),
+    updatedAt: chat.updatedAt || new Date().toISOString(),
+    messages: normalizeChatMessages(chat.messages),
+  };
+};
+
+const writeChat = async (chat) => {
+  await mkdir(chatDir, { recursive: true });
+  const now = new Date().toISOString();
+  const nextChat = {
+    id: chat.id,
+    createdAt: chat.createdAt || now,
+    updatedAt: now,
+    messages: normalizeChatMessages(chat.messages),
+  };
+  const target = chatPath(nextChat.id);
+  const tmp = `${target}.tmp`;
+  await writeFile(tmp, `${JSON.stringify(nextChat, null, 2)}\n`, 'utf8');
+  await rename(tmp, target);
+  return nextChat;
+};
+
+const buildSiteContext = (content) => {
+  const parts = [
+    `Бренд: ${content.brand?.name || 'Атмика'} — ${content.brand?.subtitle || 'проводник сознания'}.`,
+    `Главный экран: ${content.hero?.title || ''}. ${content.hero?.text || ''}`,
+    `Идея сайта: ${(content.intro?.paragraphs || []).join(' ')}`,
+    `Форматы: ${(content.services || []).map((item) => `${item.title} (${item.tag}, ${item.price}): ${item.text}`).join(' | ')}`,
+    `Кому подходит: ${content.audience?.title || ''}. ${(content.audience?.items || []).join(' ')}`,
+    `Результаты: ${(content.outcomes?.items || []).join(' ')}`,
+    `Процесс: ${(content.process?.items || []).map((item, index) => `${index + 1}. ${item.title}: ${item.text}`).join(' ')}`,
+    `История: ${content.story?.title || ''}. ${(content.story?.paragraphs || []).join(' ')} ${content.story?.quote || ''}`,
+    `Контакты: ${content.contact?.primaryLabel || ''} ${content.contact?.primaryHref || ''}; ${content.contact?.secondaryLabel || ''}.`,
+  ];
+
+  return parts.join('\n').slice(0, 12000);
+};
+
+const buildChatSystemPrompt = async () => {
+  const content = await readContent().catch(() => ({}));
+  return [
+    'Ты чат-проводник сайта Атмики. Отвечай на русском мягко, ясно, живо и по делу.',
+    'Твоя задача: помогать посетителю понять подход Атмики, форматы работы, кому это подходит, как записаться, и бережно вести диалог в стиле сайта.',
+    'Не обещай исцеление, гарантированный результат или медицинскую, юридическую, финансовую помощь. Если вопрос про здоровье, травму или кризис — мягко предложи обратиться к профильному специалисту.',
+    'Если человек хочет записаться, веди к WhatsApp или email из контактов. Если спрашивают цену, называй цены из контекста.',
+    'Не выдумывай фактов о личной жизни Атмики вне контекста сайта. Если не знаешь — скажи честно и предложи уточнить напрямую.',
+    '',
+    'Контекст сайта:',
+    buildSiteContext(content),
+  ].join('\n');
+};
+
+const callOpenRouter = async (messages) => {
+  if (!openRouterApiKey) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${openRouterApiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://iam-atmika.com',
+      'X-Title': 'Atmika site chat',
+    },
+    body: JSON.stringify({
+      model: openRouterModel,
+      messages,
+      temperature: 0.72,
+      max_tokens: 900,
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error?.message || `OpenRouter request failed: ${response.status}`);
+  }
+
+  const answer = payload.choices?.[0]?.message?.content;
+
+  if (!answer) {
+    throw new Error('OpenRouter returned an empty response');
+  }
+
+  return String(answer).trim();
+};
+
 const writeContent = async (content) => {
   if (!content || typeof content !== 'object' || Array.isArray(content)) {
     throw new Error('Контент должен быть объектом');
@@ -193,6 +316,74 @@ const handleApi = async (request, response, url) => {
   }
 };
 
+const handleChatApi = async (request, response, url) => {
+  try {
+    if (url.pathname === '/api/chat' && request.method === 'GET') {
+      const requestedId = url.searchParams.get('chat_id');
+
+      if (requestedId && !isSafeChatId(requestedId)) {
+        json(response, 400, { error: 'Invalid chat_id' });
+        return;
+      }
+
+      const id = requestedId || createChatId();
+      const chat = await writeChat(await readChat(id));
+      json(response, 200, { chat_id: id, messages: chat.messages });
+      return;
+    }
+
+    if (url.pathname === '/api/chat' && request.method === 'POST') {
+      const body = JSON.parse(await readBody(request, 1024 * 128) || '{}');
+      const requestedId = body.chat_id;
+      const message = String(body.message || '').trim();
+
+      if (requestedId && !isSafeChatId(requestedId)) {
+        json(response, 400, { error: 'Invalid chat_id' });
+        return;
+      }
+
+      if (!message) {
+        json(response, 400, { error: 'Message is empty' });
+        return;
+      }
+
+      if (message.length > 4000) {
+        json(response, 400, { error: 'Message is too long' });
+        return;
+      }
+
+      const id = requestedId || createChatId();
+      let chat = await readChat(id);
+      chat.messages.push({
+        role: 'user',
+        content: message,
+        createdAt: new Date().toISOString(),
+      });
+      chat = await writeChat(chat);
+
+      const systemPrompt = await buildChatSystemPrompt();
+      const answer = await callOpenRouter([
+        { role: 'system', content: systemPrompt },
+        ...chat.messages.slice(-18).map(({ role, content }) => ({ role, content })),
+      ]);
+
+      chat.messages.push({
+        role: 'assistant',
+        content: answer,
+        createdAt: new Date().toISOString(),
+      });
+      chat = await writeChat(chat);
+
+      json(response, 200, { chat_id: id, messages: chat.messages, answer });
+      return;
+    }
+
+    json(response, 404, { error: 'Chat API endpoint not found' });
+  } catch (error) {
+    json(response, 500, { error: error.message || 'Chat server error' });
+  }
+};
+
 const serveStatic = async (request, response, url) => {
   const rawPath = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
   const normalized = path.normalize(rawPath).replace(/^(\.\.[/\\])+/, '');
@@ -251,6 +442,11 @@ createServer(async (request, response) => {
 
   if (url.pathname === '/public/content.json') {
     await serveManagedContent(response, contentJsonPath, 'application/json; charset=utf-8');
+    return;
+  }
+
+  if (url.pathname.startsWith('/api/chat')) {
+    await handleChatApi(request, response, url);
     return;
   }
 
