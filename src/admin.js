@@ -76,6 +76,7 @@ let isSaving = false;
 let chatAdmin = {
   chats: [],
   context: null,
+  search: '',
   selectedChat: null,
   isLoading: false,
   isSending: false,
@@ -441,6 +442,15 @@ const renderChatMessages = (messages = []) => {
 const renderChatAdmin = () => {
   const selected = chatAdmin.selectedChat;
   const selectedUrl = publicChatUrl(selected);
+  const search = chatAdmin.search.trim().toLowerCase();
+  const visibleChats = search
+    ? chatAdmin.chats.filter((chat) => [
+      chat.id,
+      chat.lastMessage,
+      chat.lastUserMessage,
+      chat.lastRole,
+    ].join(' ').toLowerCase().includes(search))
+    : chatAdmin.chats;
   const prompt = chatAdmin.context?.prompt || 'Контекст ещё не загружен.';
   const models = [
     chatAdmin.context?.model,
@@ -452,16 +462,24 @@ const renderChatAdmin = () => {
       <div class="chat-admin-grid">
         <aside class="chat-admin-list">
           <div class="chat-admin-list-head">
-            <h2>Все чаты</h2>
+            <div>
+              <h2>Все чаты</h2>
+              <p>${visibleChats.length} из ${chatAdmin.chats.length}</p>
+            </div>
             <button type="button" data-chat-refresh>${chatAdmin.isLoading ? 'Обновляю...' : 'Обновить'}</button>
           </div>
-          ${chatAdmin.chats.length ? chatAdmin.chats.map((chat) => `
+          <label class="chat-admin-search">
+            <span>Поиск</span>
+            <input type="search" data-chat-search placeholder="id, вопрос или ответ..." value="${escapeHtml(chatAdmin.search)}" autocomplete="off" />
+          </label>
+          ${visibleChats.length ? visibleChats.map((chat) => `
             <button type="button" class="chat-admin-card ${selected?.id === chat.id ? 'is-active' : ''}" data-chat-id="${escapeHtml(chat.id)}">
+              <span class="chat-admin-card-id">${escapeHtml(chat.id)}</span>
               <strong>${escapeHtml(chat.lastUserMessage || 'Новый чат')}</strong>
-              <span>${formatDate(chat.updatedAt)} · ${chat.messageCount} сообщ.</span>
+              <span class="chat-admin-card-meta">${formatDate(chat.updatedAt)} · ${chat.messageCount} сообщ.</span>
               <small>${escapeHtml(chat.lastMessage || 'Пока без сообщений')}</small>
             </button>
-          `).join('') : '<div class="chat-admin-empty">Чатов пока нет.</div>'}
+          `).join('') : '<div class="chat-admin-empty">Ничего не найдено.</div>'}
         </aside>
 
         <div class="chat-admin-detail">
@@ -502,6 +520,12 @@ const renderChatAdmin = () => {
 
 const bindChatAdminEvents = () => {
   root.querySelector('[data-chat-refresh]')?.addEventListener('click', () => loadChatAdmin(true));
+
+  root.querySelector('[data-chat-search]')?.addEventListener('input', (event) => {
+    chatAdmin.search = event.currentTarget.value;
+    renderApp();
+    root.querySelector('[data-chat-search]')?.focus();
+  });
 
   root.querySelectorAll('[data-chat-id]').forEach((button) => {
     button.addEventListener('click', () => selectAdminChat(button.dataset.chatId));

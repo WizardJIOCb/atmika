@@ -280,7 +280,7 @@ button {
 
 .chat-admin-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.36fr) minmax(0, 1fr);
+  grid-template-columns: minmax(360px, 0.34fr) minmax(0, 1fr);
   gap: 18px;
 }
 
@@ -301,7 +301,13 @@ button {
   overflow: auto;
 }
 
-.chat-admin-list-head,
+.chat-admin-list-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+}
+
 .chat-admin-detail-head {
   display: flex;
   align-items: flex-start;
@@ -329,17 +335,45 @@ button {
   font-weight: 800;
 }
 
+.chat-admin-search {
+  display: grid;
+  gap: 7px;
+}
+
+.chat-admin-search span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.chat-admin-search input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(8, 11, 13, 0.64);
+  color: var(--text);
+  outline: none;
+  padding: 0 12px;
+}
+
+.chat-admin-search input:focus {
+  border-color: rgba(217, 170, 97, 0.58);
+}
+
 .chat-admin-card {
   display: grid;
-  gap: 6px;
+  gap: 7px;
   width: 100%;
-  min-height: 0;
-  padding: 12px;
+  min-height: 118px;
+  align-content: start;
+  padding: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(247, 241, 229, 0.04);
   color: var(--text);
   text-align: left;
+  overflow: hidden;
 }
 
 .chat-admin-card.is-active {
@@ -347,7 +381,8 @@ button {
   background: rgba(217, 170, 97, 0.14);
 }
 
-.chat-admin-card span,
+.chat-admin-card-id,
+.chat-admin-card-meta,
 .chat-admin-card small,
 .chat-admin-link,
 .chat-admin-empty {
@@ -356,9 +391,33 @@ button {
   line-height: 1.45;
 }
 
+.chat-admin-card strong {
+  display: -webkit-box;
+  min-height: 44px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.chat-admin-card-id {
+  color: #f3c678;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+}
+
 .chat-admin-card small,
 .chat-admin-link {
   overflow-wrap: anywhere;
+}
+
+.chat-admin-card small {
+  display: -webkit-box;
+  min-height: 35px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .chat-admin-messages {
