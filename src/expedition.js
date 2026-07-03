@@ -107,6 +107,40 @@ app.innerHTML = `
           `;
         }).join('')}
       </div>
+      <div class="gallery-carousel work-mobile-carousel" data-work-carousel aria-label="${attr(content.servicesSection?.kicker || 'Formats')}">
+        <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="Предыдущий формат" data-work-prev>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <div class="gallery-stage">
+          ${services.map((service, index) => {
+            const media = gallery[index % gallery.length];
+            return `
+              <figure class="gallery-slide work-slide" data-work-item data-index="${index}">
+                <div class="gallery-media">
+                  ${mediaMarkup(media)}
+                </div>
+                <figcaption>
+                  <span>${html(service.tag)}</span>
+                  <strong>${html(service.title)}</strong>
+                  <em>${html(service.price)}</em>
+                </figcaption>
+              </figure>
+            `;
+          }).join('')}
+        </div>
+        <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="Следующий формат" data-work-next>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
+        <div class="gallery-dots" aria-label="Выбор формата">
+          ${services.map((service, index) => `
+            <button type="button" aria-label="Формат ${index + 1}" data-work-dot="${index}"></button>
+          `).join('')}
+        </div>
+      </div>
       <div class="service-list">
         ${services.map((service, index) => `
           <article class="service-line">
@@ -270,17 +304,23 @@ const initVideoPlayback = () => {
   });
 };
 
-const initMobileGalleryCarousel = () => {
-  const carousel = document.querySelector('[data-expedition-carousel]');
+const initStackCarousel = ({
+  carouselSelector,
+  itemSelector,
+  dotSelector,
+  prevSelector,
+  nextSelector
+}) => {
+  const carousel = document.querySelector(carouselSelector);
 
   if (!carousel) {
     return;
   }
 
-  const slides = [...carousel.querySelectorAll('[data-expedition-item]')];
-  const dots = [...carousel.querySelectorAll('[data-expedition-dot]')];
-  const prevButton = carousel.querySelector('[data-expedition-prev]');
-  const nextButton = carousel.querySelector('[data-expedition-next]');
+  const slides = [...carousel.querySelectorAll(itemSelector)];
+  const dots = [...carousel.querySelectorAll(dotSelector)];
+  const prevButton = carousel.querySelector(prevSelector);
+  const nextButton = carousel.querySelector(nextSelector);
   let activeIndex = 0;
   let autoTimer = 0;
   let pointerStartX = 0;
@@ -400,6 +440,106 @@ const initMobileGalleryCarousel = () => {
   restartAuto();
 };
 
+const initWhiteRabbit = () => {
+  const rabbit = document.querySelector('[data-white-rabbit]');
+
+  if (!rabbit) {
+    return;
+  }
+
+  const bubble = rabbit.querySelector('.rabbit-bubble');
+  const sections = [...document.querySelectorAll('main section')];
+  const phrases = [
+    'Следуй за белым кроликом.',
+    'Путь начинается там, где привычная карта заканчивается.',
+    'Смотри глубже: за шумом есть маршрут.',
+    'Тело знает пароль раньше ума.',
+    'Найди тишину между двумя мыслями.',
+    'Каждый шаг снимает один слой сценария.',
+    'Не ищи выход. Стань тем, кто выходит.',
+    'Там, где внимание живое, поле меняется.',
+    'Настоящий путь не шумит. Он зовет.',
+    'Верни внимание себе. Это главный ключ.',
+    'Если реальность мерцает, значит ты близко.',
+    'Не спорь с иллюзией. Увидь ее структуру.',
+    'Проводник рядом, но дверь открываешь ты.',
+    'Сверни туда, где становится яснее.',
+    'Выход начинается не с бунта, а с присутствия.'
+  ];
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let targetY = 0;
+  let currentY = 0;
+  let targetX = 0;
+  let currentX = 0;
+  let targetTilt = 0;
+  let currentTilt = 0;
+  let phraseIndex = -1;
+  let frame = 0;
+
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  const update = () => {
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const progress = clamp(window.scrollY / maxScroll, 0, 1);
+    const isCompact = window.matchMedia('(max-width: 640px)').matches;
+    const maxTravel = isCompact ? 0 : Math.max(0, window.innerHeight - rabbit.offsetHeight - 168);
+    const nextPhraseIndex = Math.min(phrases.length - 1, Math.floor(progress * phrases.length));
+
+    targetY = progress * maxTravel;
+    targetX = Math.sin(progress * Math.PI * 2.6) * (isCompact ? 4 : 9);
+    targetTilt = Math.sin(progress * Math.PI * 7) * (isCompact ? 2 : 4);
+    rabbit.style.opacity = String(0.78 + progress * 0.22);
+
+    if (nextPhraseIndex !== phraseIndex) {
+      phraseIndex = nextPhraseIndex;
+      bubble.textContent = phrases[phraseIndex];
+      rabbit.setAttribute('aria-label', phrases[phraseIndex]);
+      bubble.style.opacity = '0.35';
+      bubble.style.transform = 'translateX(8px)';
+      window.setTimeout(() => {
+        bubble.style.opacity = '1';
+        bubble.style.transform = 'translateX(0)';
+      }, 80);
+    }
+  };
+
+  const animate = () => {
+    const easing = prefersReducedMotion ? 1 : 0.11;
+    currentY += (targetY - currentY) * easing;
+    currentX += (targetX - currentX) * easing;
+    currentTilt += (targetTilt - currentTilt) * easing;
+    rabbit.style.setProperty('--rabbit-y', `${currentY.toFixed(2)}px`);
+    rabbit.style.setProperty('--rabbit-x', `${currentX.toFixed(2)}px`);
+    rabbit.style.setProperty('--rabbit-tilt', `${currentTilt.toFixed(2)}deg`);
+    frame = requestAnimationFrame(animate);
+  };
+
+  rabbit.addEventListener('click', () => {
+    const next = sections.find((section) => section.getBoundingClientRect().top > 120) || sections[0];
+    next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  window.addEventListener('pagehide', () => cancelAnimationFrame(frame), { once: true });
+  update();
+  animate();
+};
+
 initMenu();
 initVideoPlayback();
-initMobileGalleryCarousel();
+initStackCarousel({
+  carouselSelector: '[data-expedition-carousel]',
+  itemSelector: '[data-expedition-item]',
+  dotSelector: '[data-expedition-dot]',
+  prevSelector: '[data-expedition-prev]',
+  nextSelector: '[data-expedition-next]'
+});
+initStackCarousel({
+  carouselSelector: '[data-work-carousel]',
+  itemSelector: '[data-work-item]',
+  dotSelector: '[data-work-dot]',
+  prevSelector: '[data-work-prev]',
+  nextSelector: '[data-work-next]'
+});
+initWhiteRabbit();
