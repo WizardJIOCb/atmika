@@ -935,6 +935,55 @@ const initWhiteRabbit = () => {
   }
 
   const bubble = rabbit.querySelector('.rabbit-bubble');
+  const rabbitSource = rabbit.querySelector('[data-rabbit-source]');
+  const rabbitImage = rabbit.querySelector('[data-rabbit-image]');
+  const rabbitVariants = [
+    {
+      label: 'Original',
+      webp: 'public/images/atmika-rabbit-mascot.webp',
+      png: 'public/images/atmika-rabbit-mascot.png',
+    },
+    {
+      label: 'Cosmic oracle',
+      webp: 'public/images/atmika-rabbit-variant-02.webp',
+      png: 'public/images/atmika-rabbit-variant-02.png',
+    },
+    {
+      label: 'Quantum guide',
+      webp: 'public/images/atmika-rabbit-variant-03.webp',
+      png: 'public/images/atmika-rabbit-variant-03.png',
+    },
+    {
+      label: 'Zen healer',
+      webp: 'public/images/atmika-rabbit-variant-04.webp',
+      png: 'public/images/atmika-rabbit-variant-04.png',
+    },
+    {
+      label: 'Playful guide',
+      webp: 'public/images/atmika-rabbit-variant-05.webp',
+      png: 'public/images/atmika-rabbit-variant-05.png',
+    },
+    {
+      label: 'Crystal aura',
+      webp: 'public/images/atmika-rabbit-variant-06.webp',
+      png: 'public/images/atmika-rabbit-variant-06.png',
+    },
+    {
+      label: 'Moonlight guide',
+      webp: 'public/images/atmika-rabbit-variant-07.webp',
+      png: 'public/images/atmika-rabbit-variant-07.png',
+    },
+    {
+      label: 'Luminous guide',
+      webp: 'public/images/atmika-rabbit-variant-08.webp',
+      png: 'public/images/atmika-rabbit-variant-08.png',
+    },
+    {
+      label: 'Playful wink',
+      webp: 'public/images/atmika-rabbit-variant-09.webp',
+      png: 'public/images/atmika-rabbit-variant-09.png',
+    },
+  ];
   const phrases = [
     'Нажми на кролика — открою чат.',
     'Спросить про формат, цену или запись?',
@@ -965,6 +1014,41 @@ const initWhiteRabbit = () => {
   let frame = 0;
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const isFormField = (node) => {
+    const tagName = node?.tagName;
+
+    return node?.isContentEditable || tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT';
+  };
+
+  const setRabbitVariant = (variantNumber = 1) => {
+    const number = Number(variantNumber);
+    const index = Number.isFinite(number) ? Math.round(number) - 1 : 0;
+    const safeIndex = clamp(index, 0, rabbitVariants.length - 1);
+    const variant = rabbitVariants[safeIndex];
+
+    if (rabbitSource) {
+      rabbitSource.srcset = variant.webp;
+    }
+
+    if (rabbitImage) {
+      rabbitImage.src = variant.png;
+    }
+
+    rabbit.dataset.rabbitVariant = String(safeIndex + 1);
+    localStorage.setItem('atmika_rabbit_variant', String(safeIndex + 1));
+    console.info(`Atmika rabbit ${safeIndex + 1}: ${variant.label}`);
+
+    return safeIndex + 1;
+  };
+
+  window.atmikaRabbitVariants = rabbitVariants.map((variant, index) => ({
+    number: index + 1,
+    label: variant.label,
+    webp: variant.webp,
+    png: variant.png,
+  }));
+  window.setAtmikaRabbit = setRabbitVariant;
+  window.setAtmikaRabbitVariant = setRabbitVariant;
 
   const update = () => {
     const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -1006,9 +1090,29 @@ const initWhiteRabbit = () => {
     openAtmikaChat();
   });
 
+  window.addEventListener('keydown', (event) => {
+    if (
+      event.defaultPrevented ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      isFormField(document.activeElement)
+    ) {
+      return;
+    }
+
+    const variantNumber = Number(event.key);
+
+    if (variantNumber >= 1 && variantNumber <= rabbitVariants.length) {
+      setRabbitVariant(variantNumber);
+    }
+  });
+
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
   window.addEventListener('pagehide', () => cancelAnimationFrame(frame), { once: true });
+  setRabbitVariant(localStorage.getItem('atmika_rabbit_variant') || 1);
   update();
   animate();
 };
