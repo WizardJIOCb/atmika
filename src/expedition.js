@@ -13,6 +13,96 @@ const html = (value) => text(value)
   .replaceAll("'", '&#039;');
 const attr = html;
 
+const safeLink = (value) => {
+  const url = text(value).trim();
+  return /^(https?:|mailto:|tel:)/i.test(url) ? attr(url) : '#';
+};
+
+const renderInlineMarkdown = (value) => html(value)
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|mailto:[^)\s]+|tel:[^)\s]+)\)/g, (_, label, href) => (
+    `<a href="${safeLink(href)}" target="_blank" rel="noopener noreferrer">${label}</a>`
+  ))
+  .replace(/`([^`]+)`/g, '<code>$1</code>')
+  .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+  .replace(/~~([^~]+)~~/g, '<del>$1</del>')
+  .replace(/(^|[^\*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+  .replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>');
+
+const renderMarkdown = (value) => {
+  const lines = text(value).replace(/\r\n?/g, '\n').split('\n');
+  const blocks = [];
+  let paragraph = [];
+  let list = null;
+
+  const flushParagraph = () => {
+    if (!paragraph.length) {
+      return;
+    }
+
+    blocks.push(`<p>${paragraph.map(renderInlineMarkdown).join('<br>')}</p>`);
+    paragraph = [];
+  };
+
+  const flushList = () => {
+    if (!list) {
+      return;
+    }
+
+    blocks.push(`<${list.type}>${list.items.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</${list.type}>`);
+    list = null;
+  };
+
+  lines.forEach((line) => {
+    const unordered = line.match(/^\s*[-*]\s+(.+)$/);
+    const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+
+    if (!line.trim()) {
+      flushParagraph();
+      flushList();
+      return;
+    }
+
+    const heading = line.match(/^\s{0,3}#{1,4}\s+(.+)$/);
+    const quote = line.match(/^\s*>\s+(.+)$/);
+
+    if (heading) {
+      flushParagraph();
+      flushList();
+      blocks.push(`<h3>${renderInlineMarkdown(heading[1])}</h3>`);
+      return;
+    }
+
+    if (quote) {
+      flushParagraph();
+      flushList();
+      blocks.push(`<blockquote>${renderInlineMarkdown(quote[1])}</blockquote>`);
+      return;
+    }
+
+    if (unordered || ordered) {
+      flushParagraph();
+      const type = unordered ? 'ul' : 'ol';
+
+      if (!list || list.type !== type) {
+        flushList();
+        list = { type, items: [] };
+      }
+
+      list.items.push((unordered || ordered)[1]);
+      return;
+    }
+
+    flushList();
+    paragraph.push(line);
+  });
+
+  flushParagraph();
+  flushList();
+
+  return blocks.join('');
+};
+
 const app = document.querySelector('#expedition-app');
 const nav = content.navigation || [];
 const services = content.services || [];
@@ -483,6 +573,7 @@ const initAtmikaChat = () => {
   let chatId = params.get('chat_id') || localStorage.getItem('atmika_chat_id') || '';
   let isReady = false;
   let isSending = false;
+  let currentMessages = [];
 
   const setStatus = (message) => {
     if (shareStatus) {
@@ -508,6 +599,9 @@ const initAtmikaChat = () => {
 
   const renderMessages = (messages) => {
     messagesEl.textContent = '';
+    currentMessages = messages
+      .filter((message) => !message.pending)
+      .map(({ role, content, createdAt }) => ({ role, content, createdAt }));
 
     if (!messages.length) {
       const empty = document.createElement('div');
@@ -519,11 +613,12 @@ const initAtmikaChat = () => {
 
     messages.forEach((message) => {
       const item = document.createElement('article');
-      item.className = `atmika-chat-message is-${message.role}`;
+      item.className = `atmika-chat-message is-${message.role}${message.pending ? ' is-pending' : ''}`;
       const label = document.createElement('span');
       label.textContent = message.role === 'user' ? 'Вы' : 'Атмика';
-      const textEl = document.createElement('p');
-      textEl.textContent = message.content;
+      const textEl = document.createElement('div');
+      textEl.className = 'atmika-chat-content';
+      textEl.innerHTML = renderMarkdown(message.content);
       item.append(label, textEl);
       messagesEl.append(item);
     });
@@ -600,13 +695,11 @@ const initAtmikaChat = () => {
 
     isSending = true;
     input.value = '';
-    setStatus('Атмика отвечает...');
+    setStatus('');
     renderMessages([
-      ...[...messagesEl.querySelectorAll('.atmika-chat-message')].map((node) => ({
-        role: node.classList.contains('is-user') ? 'user' : 'assistant',
-        content: node.querySelector('p')?.textContent || '',
-      })),
+      ...currentMessages,
       { role: 'user', content: message },
+      { role: 'assistant', content: 'Атмика думает...', pending: true },
     ]);
 
     try {
@@ -627,7 +720,14 @@ const initAtmikaChat = () => {
       renderMessages(payload.messages || []);
       setStatus('');
     } catch (error) {
-      setStatus(error.message || 'Чат временно недоступен');
+      renderMessages([
+        ...currentMessages,
+        {
+          role: 'assistant',
+          content: error.message || 'Чат временно недоступен. Попробуйте ещё раз чуть позже.',
+        },
+      ]);
+      setStatus('');
     } finally {
       isSending = false;
     }
