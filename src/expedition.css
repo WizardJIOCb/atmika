@@ -848,6 +848,10 @@ blockquote {
   justify-self: start;
 }
 
+.atmika-chat-message.is-assistant:has(.atmika-chat-table-wrap) {
+  max-width: 100%;
+}
+
 .atmika-chat-message span {
   display: block;
   margin-bottom: 6px;
@@ -867,6 +871,11 @@ blockquote {
 .atmika-chat-content p + ol,
 .atmika-chat-content ul + p,
 .atmika-chat-content ol + p,
+.atmika-chat-content ol + .atmika-chat-table-wrap,
+.atmika-chat-content p + .atmika-chat-table-wrap,
+.atmika-chat-content .atmika-chat-table-wrap + p,
+.atmika-chat-content .atmika-chat-table-wrap + ul,
+.atmika-chat-content .atmika-chat-table-wrap + ol,
 .atmika-chat-content h3 + p,
 .atmika-chat-content blockquote + p {
   margin-top: 12px;
@@ -895,6 +904,50 @@ blockquote {
 
 .atmika-chat-content li + li {
   margin-top: 6px;
+}
+
+.atmika-chat-content li p {
+  margin: 8px 0 0;
+}
+
+.atmika-chat-table-wrap {
+  max-width: 100%;
+  margin-top: 10px;
+  overflow-x: auto;
+  border: 1px solid rgba(85, 247, 230, 0.18);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.atmika-chat-content table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.atmika-chat-content th,
+.atmika-chat-content td {
+  padding: 9px 10px;
+  border-right: 1px solid rgba(85, 247, 230, 0.13);
+  border-bottom: 1px solid rgba(85, 247, 230, 0.13);
+  text-align: left;
+  vertical-align: top;
+}
+
+.atmika-chat-content th {
+  color: var(--text);
+  background: rgba(85, 247, 230, 0.1);
+  font-weight: 900;
+}
+
+.atmika-chat-content tr:last-child td {
+  border-bottom: 0;
+}
+
+.atmika-chat-content th:last-child,
+.atmika-chat-content td:last-child {
+  border-right: 0;
 }
 
 .atmika-chat-content strong {
@@ -2026,6 +2079,15 @@ blockquote {
 
   .atmika-chat-form button {
     width: 100%;
+  }
+
+  .atmika-chat-message.is-assistant {
+    max-width: 96%;
+  }
+
+  .atmika-chat-content table {
+    min-width: 460px;
+    font-size: 13px;
   }
 }
 

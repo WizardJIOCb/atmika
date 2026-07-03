@@ -29,12 +29,77 @@ const renderInlineMarkdown = (value) => html(value)
   .replace(/(^|[^\*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
   .replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>');
 
+const isTableDivider = (line) => (
+  /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line)
+);
+
+const isTableRow = (line) => (
+  line.includes('|') && !isTableDivider(line)
+);
+
+const splitTableRow = (line) => line
+  .trim()
+  .replace(/^\|/, '')
+  .replace(/\|$/, '')
+  .split('|')
+  .map((cell) => cell.trim());
+
+const renderTable = (rows) => {
+  const [head, ...body] = rows.map(splitTableRow);
+  const width = Math.max(head.length, ...body.map((row) => row.length));
+  const pad = (row) => Array.from({ length: width }, (_, index) => row[index] || '');
+
+  return `
+    <div class="atmika-chat-table-wrap">
+      <table>
+        <thead>
+          <tr>${pad(head).map((cell) => `<th>${renderInlineMarkdown(cell)}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${body.map((row) => `<tr>${pad(row).map((cell) => `<td>${renderInlineMarkdown(cell)}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+};
+
+const renderListItem = (lines) => {
+  const paragraphs = [];
+  let current = [];
+
+  lines.forEach((line) => {
+    if (!line.trim()) {
+      if (current.length) {
+        paragraphs.push(current);
+        current = [];
+      }
+      return;
+    }
+
+    current.push(line.trim());
+  });
+
+  if (current.length) {
+    paragraphs.push(current);
+  }
+
+  if (!paragraphs.length) {
+    return '';
+  }
+
+  const [first, ...rest] = paragraphs;
+  return [
+    renderInlineMarkdown(first.join(' ')),
+    ...rest.map((paragraph) => `<p>${paragraph.map(renderInlineMarkdown).join('<br>')}</p>`),
+  ].join('');
+};
+
 const renderMarkdown = (value) => {
   const lines = text(value).replace(/\r\n?/g, '\n').split('\n');
   const blocks = [];
   let paragraph = [];
-  let list = null;
   let codeFence = null;
+  let index = 0;
 
   const flushParagraph = () => {
     if (!paragraph.length) {
@@ -45,16 +110,18 @@ const renderMarkdown = (value) => {
     paragraph = [];
   };
 
-  const flushList = () => {
-    if (!list) {
-      return;
-    }
-
-    blocks.push(`<${list.type}>${list.items.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</${list.type}>`);
-    list = null;
+  const listMarker = (line) => {
+    const unordered = line.match(/^\s*[-*]\s+(.+)$/);
+    const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+    return unordered
+      ? { type: 'ul', text: unordered[1] }
+      : ordered
+        ? { type: 'ol', text: ordered[1] }
+        : null;
   };
 
-  lines.forEach((line) => {
+  while (index < lines.length) {
+    const line = lines[index];
     const fence = line.match(/^\s*```/);
 
     if (fence) {
@@ -63,63 +130,114 @@ const renderMarkdown = (value) => {
         codeFence = null;
       } else {
         flushParagraph();
-        flushList();
         codeFence = [];
       }
 
-      return;
+      index += 1;
+      continue;
     }
 
     if (codeFence) {
       codeFence.push(line);
-      return;
+      index += 1;
+      continue;
     }
-
-    const unordered = line.match(/^\s*[-*]\s+(.+)$/);
-    const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/);
 
     if (!line.trim()) {
       flushParagraph();
-      flushList();
-      return;
+      index += 1;
+      continue;
+    }
+
+    if (isTableRow(line) && isTableDivider(lines[index + 1] || '')) {
+      flushParagraph();
+      const rows = [line];
+      index += 2;
+
+      while (index < lines.length && isTableRow(lines[index])) {
+        rows.push(lines[index]);
+        index += 1;
+      }
+
+      blocks.push(renderTable(rows));
+      continue;
     }
 
     const heading = line.match(/^\s{0,3}#{1,4}\s+(.+)$/);
     const quote = line.match(/^\s*>\s+(.+)$/);
+    const marker = listMarker(line);
 
     if (heading) {
       flushParagraph();
-      flushList();
       blocks.push(`<h3>${renderInlineMarkdown(heading[1])}</h3>`);
-      return;
+      index += 1;
+      continue;
     }
 
     if (quote) {
       flushParagraph();
-      flushList();
       blocks.push(`<blockquote>${renderInlineMarkdown(quote[1])}</blockquote>`);
-      return;
+      index += 1;
+      continue;
     }
 
-    if (unordered || ordered) {
+    if (marker) {
       flushParagraph();
-      const type = unordered ? 'ul' : 'ol';
+      const items = [];
+      const type = marker.type;
 
-      if (!list || list.type !== type) {
-        flushList();
-        list = { type, items: [] };
+      while (index < lines.length) {
+        const currentMarker = listMarker(lines[index]);
+
+        if (!currentMarker || currentMarker.type !== type) {
+          break;
+        }
+
+        index += 1;
+        const itemLines = [currentMarker.text];
+
+        while (index < lines.length) {
+          const nextMarker = listMarker(lines[index]);
+          const nextLine = lines[index];
+          const startsNewBlock = (
+            /^\s{0,3}#{1,4}\s+/.test(nextLine)
+            || /^\s*>\s+/.test(nextLine)
+            || /^\s*```/.test(nextLine)
+            || (isTableRow(nextLine) && isTableDivider(lines[index + 1] || ''))
+          );
+
+          if (nextMarker?.type === type) {
+            break;
+          }
+
+          if (startsNewBlock) {
+            break;
+          }
+
+          if (!nextLine.trim()) {
+            const followingMarker = listMarker(lines[index + 1] || '');
+            if (followingMarker?.type === type) {
+              index += 1;
+              break;
+            }
+          }
+
+          itemLines.push(nextLine);
+          index += 1;
+        }
+
+        items.push(itemLines);
       }
 
-      list.items.push((unordered || ordered)[1]);
-      return;
+      blocks.push(`<${type}>${items.map((item) => `<li>${renderListItem(item)}</li>`).join('')}</${type}>`);
+      continue;
     }
 
-    flushList();
     paragraph.push(line);
-  });
+    index += 1;
+  }
 
   flushParagraph();
-  flushList();
 
   if (codeFence) {
     blocks.push(`<pre><code>${html(codeFence.join('\n'))}</code></pre>`);
