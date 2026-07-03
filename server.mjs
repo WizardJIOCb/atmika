@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { createHash, randomBytes } from 'node:crypto';
-import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +24,7 @@ const contentDir = process.env.ATMIKA_CONTENT_DIR
   : path.join(root, 'public');
 const contentJsonPath = path.join(contentDir, 'content.json');
 const contentJsPath = path.join(contentDir, 'content.js');
+const chatPromptPath = path.join(contentDir, 'chat-prompt.txt');
 const backupDir = path.join(contentDir, 'backups');
 const chatDir = process.env.ATMIKA_CHAT_DIR
   ? path.resolve(process.env.ATMIKA_CHAT_DIR)
@@ -225,7 +226,7 @@ const buildSiteContext = (content) => {
   return parts.join('\n').slice(0, 12000);
 };
 
-const buildChatSystemPrompt = async () => {
+const buildDefaultChatSystemPrompt = async () => {
   const content = await readContent().catch(() => ({}));
   return [
     'Ты чат-проводник сайта Атмики. Отвечай на русском мягко, ясно, живо и по делу.',
@@ -241,6 +242,63 @@ const buildChatSystemPrompt = async () => {
     'Контекст сайта:',
     buildSiteContext(content),
   ].join('\n');
+};
+
+const readCustomChatPrompt = async () => {
+  const prompt = await readFile(chatPromptPath, 'utf8').catch(() => '');
+  return prompt.trim() ? prompt : '';
+};
+
+const buildChatSystemPrompt = async () => {
+  const customPrompt = await readCustomChatPrompt();
+  return customPrompt || (await buildDefaultChatSystemPrompt());
+};
+
+const writeChatSystemPrompt = async (prompt) => {
+  const normalizedPrompt = String(prompt || '').replace(/\r\n/g, '\n').trim();
+
+  if (!normalizedPrompt) {
+    const error = new Error('Промпт не может быть пустым');
+    error.status = 400;
+    throw error;
+  }
+
+  if (normalizedPrompt.length > 60000) {
+    const error = new Error('Промпт слишком длинный');
+    error.status = 400;
+    throw error;
+  }
+
+  await mkdir(contentDir, { recursive: true });
+  await mkdir(backupDir, { recursive: true });
+
+  const current = await readFile(chatPromptPath, 'utf8').catch(() => '');
+  if (current) {
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    await writeFile(path.join(backupDir, `chat-prompt-${stamp}.txt`), current, 'utf8');
+  }
+
+  const tmpPrompt = `${chatPromptPath}.tmp`;
+  await writeFile(tmpPrompt, `${normalizedPrompt}\n`, 'utf8');
+  await rename(tmpPrompt, chatPromptPath);
+
+  return normalizedPrompt;
+};
+
+const resetChatSystemPrompt = async () => {
+  const current = await readFile(chatPromptPath, 'utf8').catch(() => '');
+
+  if (current) {
+    await mkdir(backupDir, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    await writeFile(path.join(backupDir, `chat-prompt-${stamp}-reset.txt`), current, 'utf8');
+  }
+
+  await unlink(chatPromptPath).catch((error) => {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+  });
 };
 
 const callOpenRouterModel = async (model, messages) => {
@@ -455,10 +513,38 @@ const handleApi = async (request, response, url) => {
     }
 
     if (url.pathname === '/api/admin/chat-context' && request.method === 'GET') {
+      const customPrompt = await readCustomChatPrompt();
+      const defaultPrompt = await buildDefaultChatSystemPrompt();
+
       json(response, 200, {
         model: openRouterModel,
         fallbackModels: openRouterFallbackModels,
-        prompt: await buildChatSystemPrompt(),
+        prompt: customPrompt || defaultPrompt,
+        defaultPrompt,
+        isCustom: Boolean(customPrompt),
+      });
+      return;
+    }
+
+    if (url.pathname === '/api/admin/chat-context' && request.method === 'POST') {
+      const body = JSON.parse(await readBody(request, 1024 * 128) || '{}');
+
+      if (body.reset) {
+        await resetChatSystemPrompt();
+      } else {
+        await writeChatSystemPrompt(body.prompt);
+      }
+
+      const customPrompt = await readCustomChatPrompt();
+      const defaultPrompt = await buildDefaultChatSystemPrompt();
+
+      json(response, 200, {
+        ok: true,
+        model: openRouterModel,
+        fallbackModels: openRouterFallbackModels,
+        prompt: customPrompt || defaultPrompt,
+        defaultPrompt,
+        isCustom: Boolean(customPrompt),
       });
       return;
     }

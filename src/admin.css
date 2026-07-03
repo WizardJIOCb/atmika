@@ -467,6 +467,11 @@ button {
   gap: 10px;
 }
 
+.chat-admin-context-form {
+  display: grid;
+  gap: 12px;
+}
+
 .chat-admin-form textarea,
 .chat-admin-context textarea {
   width: 100%;

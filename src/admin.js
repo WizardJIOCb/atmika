@@ -78,8 +78,10 @@ let chatAdmin = {
   context: null,
   search: '',
   selectedChat: null,
+  contextDraft: '',
   isLoading: false,
   isSending: false,
+  isSavingContext: false,
   loaded: false,
 };
 
@@ -179,6 +181,7 @@ const loadChatAdmin = async (force = false) => {
 
     chatAdmin.chats = chatList.chats || [];
     chatAdmin.context = context;
+    chatAdmin.contextDraft = context.prompt || '';
 
     const nextChatId = chatAdmin.selectedChat?.id || chatAdmin.chats[0]?.id;
     if (nextChatId) {
@@ -235,6 +238,56 @@ const sendAdminChatMessage = async (message) => {
     notify(error.message, true);
   } finally {
     chatAdmin.isSending = false;
+    renderApp();
+  }
+};
+
+const saveChatContext = async (prompt) => {
+  if (chatAdmin.isSavingContext) {
+    return;
+  }
+
+  chatAdmin.isSavingContext = true;
+  notify('Сохраняю промпт чата...');
+  renderApp();
+
+  try {
+    const context = await requestJson(api.chatContext, {
+      method: 'POST',
+      body: JSON.stringify({ prompt }),
+    });
+    chatAdmin.context = context;
+    chatAdmin.contextDraft = context.prompt || '';
+    notify('Промпт чата сохранён. Новые ответы будут использовать его.');
+  } catch (error) {
+    notify(error.message, true);
+  } finally {
+    chatAdmin.isSavingContext = false;
+    renderApp();
+  }
+};
+
+const resetChatContext = async () => {
+  if (chatAdmin.isSavingContext) {
+    return;
+  }
+
+  chatAdmin.isSavingContext = true;
+  notify('Возвращаю автоконтекст...');
+  renderApp();
+
+  try {
+    const context = await requestJson(api.chatContext, {
+      method: 'POST',
+      body: JSON.stringify({ reset: true }),
+    });
+    chatAdmin.context = context;
+    chatAdmin.contextDraft = context.prompt || '';
+    notify('Автоконтекст восстановлен.');
+  } catch (error) {
+    notify(error.message, true);
+  } finally {
+    chatAdmin.isSavingContext = false;
     renderApp();
   }
 };
@@ -451,11 +504,12 @@ const renderChatAdmin = () => {
       chat.lastRole,
     ].join(' ').toLowerCase().includes(search))
     : chatAdmin.chats;
-  const prompt = chatAdmin.context?.prompt || 'Контекст ещё не загружен.';
+  const prompt = chatAdmin.contextDraft || chatAdmin.context?.prompt || 'Контекст ещё не загружен.';
   const models = [
     chatAdmin.context?.model,
     ...(chatAdmin.context?.fallbackModels || []),
   ].filter(Boolean).join(', ');
+  const contextMode = chatAdmin.context?.isCustom ? 'сохранён вручную' : 'автоконтекст из контента сайта';
 
   return `
     <section class="chat-admin">
@@ -510,9 +564,15 @@ const renderChatAdmin = () => {
       <section class="chat-admin-context">
         <div>
           <h2>Текущий контекст новых ответов</h2>
-          <p>Модели: ${escapeHtml(models || 'не настроены')}</p>
+          <p>Модели: ${escapeHtml(models || 'не настроены')} · ${escapeHtml(contextMode)}</p>
         </div>
-        <textarea readonly>${escapeHtml(prompt)}</textarea>
+        <form class="chat-admin-context-form" data-chat-context-form>
+          <textarea name="prompt" ${chatAdmin.isSavingContext ? 'disabled' : ''}>${escapeHtml(prompt)}</textarea>
+          <div class="action-row">
+            <button type="submit" class="primary" ${chatAdmin.isSavingContext ? 'disabled' : ''}>${chatAdmin.isSavingContext ? 'Сохраняю...' : 'Сохранить промпт'}</button>
+            <button type="button" data-chat-context-reset ${chatAdmin.isSavingContext ? 'disabled' : ''}>Вернуть автоконтекст</button>
+          </div>
+        </form>
       </section>
     </section>
   `;
@@ -550,6 +610,24 @@ const bindChatAdminEvents = () => {
     field.value = '';
     await sendAdminChatMessage(message);
   });
+
+  root.querySelector('[data-chat-context-form]')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const prompt = event.currentTarget.querySelector('textarea[name="prompt"]').value.trim();
+
+    if (!prompt) {
+      notify('Промпт не может быть пустым.', true);
+      return;
+    }
+
+    await saveChatContext(prompt);
+  });
+
+  root.querySelector('[data-chat-context-form] textarea[name="prompt"]')?.addEventListener('input', (event) => {
+    chatAdmin.contextDraft = event.currentTarget.value;
+  });
+
+  root.querySelector('[data-chat-context-reset]')?.addEventListener('click', () => resetChatContext());
 };
 
 const saveContent = async () => {
