@@ -359,7 +359,14 @@ p {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.matrix-gallery img {
   filter: saturate(0.88) hue-rotate(62deg) contrast(1.08);
+}
+
+.matrix-gallery video {
+  filter: none;
 }
 
 .matrix-gallery figcaption {
