@@ -148,16 +148,17 @@ body::after {
 
 .matrix-hero {
   display: grid;
-  align-items: end;
-  min-height: 100svh;
-  padding-top: 150px;
+  align-items: center;
+  min-height: min(820px, 100svh);
+  padding-top: 136px;
+  padding-bottom: 76px;
 }
 
 .hero-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.72fr);
   gap: 40px;
-  align-items: end;
+  align-items: center;
 }
 
 .terminal-card {
