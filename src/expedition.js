@@ -738,6 +738,13 @@ const initAtmikaChat = () => {
     setStatus(`Ссылка на чат: ${link}`);
   });
 
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
