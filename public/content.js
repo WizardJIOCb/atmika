@@ -10,7 +10,7 @@ window.ATMIKA_CONTENT = {
   },
   "brand": {
     "name": "АТМИКА",
-    "subtitle": "проводник сознания",
+    "subtitle": "проводник Высшего Сознания",
     "mark": "A",
     "ariaLabel": "Атмика"
   },

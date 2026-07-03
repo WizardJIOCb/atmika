@@ -1384,7 +1384,12 @@ blockquote {
   }
 
   .expedition-brand small {
-    display: none;
+    display: block;
+    margin-top: 2px;
+    font-size: 10px;
+    line-height: 1.15;
+    letter-spacing: 0;
+    white-space: nowrap;
   }
 
   .hero-expedition {
