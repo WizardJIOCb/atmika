@@ -305,6 +305,20 @@ h1 {
   background: rgba(0, 0, 0, 0.22);
 }
 
+.button-rabbit {
+  border-color: rgba(85, 247, 230, 0.42);
+  background:
+    radial-gradient(circle at 18% 50%, rgba(85, 247, 230, 0.16), transparent 34%),
+    rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.button-rabbit:hover {
+  box-shadow: 0 0 32px rgba(85, 247, 230, 0.16);
+}
+
 .route-strip {
   position: relative;
   z-index: 1;

@@ -383,6 +383,7 @@ app.innerHTML = `
       <div class="contact-panel">
         <a class="button button-primary" href="${attr(content.contact?.primaryHref)}" target="_blank" rel="noreferrer">${html(content.contact?.primaryLabel)}</a>
         <a class="button button-ghost" href="${attr(content.contact?.secondaryHref)}">${html(content.contact?.secondaryLabel)}</a>
+        <button class="button button-rabbit" type="button" data-contact-chat>Связаться с Кроликом</button>
         <div class="social-links">
           ${(content.contact?.socialLinks || []).map((item) => `<a href="${attr(item.href)}" target="_blank" rel="noreferrer">${html(item.label)}</a>`).join('')}
         </div>
@@ -795,6 +796,12 @@ const initAtmikaChat = () => {
   }
 };
 
+const initContactChatButton = () => {
+  document.querySelector('[data-contact-chat]')?.addEventListener('click', () => {
+    openAtmikaChat();
+  });
+};
+
 const initWhiteRabbit = () => {
   const rabbit = document.querySelector('[data-white-rabbit]');
 
@@ -882,6 +889,7 @@ const initWhiteRabbit = () => {
 initMenu();
 initVideoPlayback();
 initAtmikaChat();
+initContactChatButton();
 initStackCarousel({
   carouselSelector: '[data-expedition-carousel]',
   itemSelector: '[data-expedition-item]',
