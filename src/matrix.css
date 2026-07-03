@@ -20,11 +20,14 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
+  width: 100%;
   min-width: 320px;
+  max-width: 100%;
   overflow-x: hidden;
   background:
     radial-gradient(circle at 70% 15%, rgba(0, 255, 136, 0.14), transparent 28%),
@@ -894,8 +897,16 @@ p {
 }
 
 @media (max-width: 640px) {
+  #matrix-app,
+  main {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
   .matrix-section,
   .matrix-hero {
+    max-width: 100vw;
+    overflow-x: hidden;
     padding-right: 16px;
     padding-left: 16px;
   }
@@ -907,10 +918,10 @@ p {
 
   .gallery-stage {
     height: 520px;
-    width: 100vw;
+    width: calc(100vw - 32px);
     max-width: none;
-    margin-right: -16px;
-    margin-left: -16px;
+    margin-right: 0;
+    margin-left: 0;
   }
 
   .gallery-slide {
@@ -949,19 +960,25 @@ p {
   }
 
   .white-rabbit {
-    right: 4px;
+    right: 10px;
     top: auto;
-    bottom: 14px;
-    width: 118px;
-    height: 132px;
+    bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: min(330px, calc(100vw - 20px));
+    height: 74px;
+    padding: 0;
+    filter: drop-shadow(0 0 14px rgba(245, 255, 248, 0.22)) drop-shadow(0 0 20px rgba(0, 255, 136, 0.12));
   }
 
   .rabbit-bubble {
-    top: 10px;
-    right: 84px;
-    width: min(220px, calc(100vw - 118px));
-    min-height: 54px;
+    position: static;
+    width: min(220px, calc(100vw - 104px));
+    min-height: 46px;
     padding: 10px 12px;
+    border-radius: 12px;
     background:
       linear-gradient(135deg, rgba(245, 255, 248, 0.06), transparent),
       rgba(2, 8, 5, 0.94);
@@ -970,45 +987,56 @@ p {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   }
 
+  .rabbit-bubble::after {
+    right: -7px;
+    bottom: 16px;
+    width: 12px;
+    height: 12px;
+    transform: rotate(-45deg);
+  }
+
   .rabbit-body {
-    width: 58px;
-    height: 70px;
-    margin-top: 48px;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 54px;
+    margin: 16px 4px 0 0;
   }
 
   .rabbit-head {
-    top: -27px;
-    left: 13px;
-    width: 40px;
-    height: 38px;
+    top: -21px;
+    left: 9px;
+    width: 32px;
+    height: 31px;
   }
 
   .rabbit-ear {
-    top: -55px;
-    width: 14px;
-    height: 52px;
+    top: -45px;
+    width: 11px;
+    height: 42px;
   }
 
   .rabbit-ear-left {
-    left: 16px;
+    left: 12px;
   }
 
   .rabbit-ear-right {
-    right: 9px;
-    height: 48px;
+    right: 7px;
+    height: 39px;
   }
 
   .rabbit-eye {
-    top: 14px;
-    right: 11px;
-    width: 5px;
-    height: 5px;
-    box-shadow: -16px -1px 0 #050907, 0 0 8px rgba(0, 255, 136, 0.36);
+    top: 11px;
+    right: 9px;
+    width: 4px;
+    height: 4px;
+    box-shadow: -13px -1px 0 #050907, 0 0 8px rgba(0, 255, 136, 0.36);
   }
 
   .rabbit-nose {
     right: 1px;
-    bottom: 10px;
+    bottom: 8px;
+    width: 5px;
+    height: 4px;
   }
 }
 
