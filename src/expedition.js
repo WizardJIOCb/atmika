@@ -65,6 +65,51 @@ const ATMIKA_RABBIT_VARIANTS = [
     webp: 'public/images/atmika-rabbit-variant-09.webp',
     png: 'public/images/atmika-rabbit-variant-09.png',
   },
+  {
+    label: 'Космический лис',
+    webp: 'public/images/atmika-rabbit-variant-10.webp',
+    png: 'public/images/atmika-rabbit-variant-10.png',
+  },
+  {
+    label: 'Кот-медитатор',
+    webp: 'public/images/atmika-rabbit-variant-11.webp',
+    png: 'public/images/atmika-rabbit-variant-11.png',
+  },
+  {
+    label: 'Сова-оракул',
+    webp: 'public/images/atmika-rabbit-variant-12.webp',
+    png: 'public/images/atmika-rabbit-variant-12.png',
+  },
+  {
+    label: 'Грибной шаман',
+    webp: 'public/images/atmika-rabbit-variant-13.webp',
+    png: 'public/images/atmika-rabbit-variant-13.png',
+  },
+  {
+    label: 'Робот-гуру',
+    webp: 'public/images/atmika-rabbit-variant-14.webp',
+    png: 'public/images/atmika-rabbit-variant-14.png',
+  },
+  {
+    label: 'Аксолотль-целитель',
+    webp: 'public/images/atmika-rabbit-variant-15.webp',
+    png: 'public/images/atmika-rabbit-variant-15.png',
+  },
+  {
+    label: 'Лунная медуза',
+    webp: 'public/images/atmika-rabbit-variant-16.webp',
+    png: 'public/images/atmika-rabbit-variant-16.png',
+  },
+  {
+    label: 'Облачный мудрец',
+    webp: 'public/images/atmika-rabbit-variant-17.webp',
+    png: 'public/images/atmika-rabbit-variant-17.png',
+  },
+  {
+    label: 'Кристальная звезда',
+    webp: 'public/images/atmika-rabbit-variant-18.webp',
+    png: 'public/images/atmika-rabbit-variant-18.png',
+  },
 ];
 
 const renderInlineMarkdown = (value) => html(value)
@@ -1078,6 +1123,8 @@ const initWhiteRabbit = () => {
   let currentTilt = 0;
   let phraseIndex = -1;
   let frame = 0;
+  let variantKeyBuffer = '';
+  let variantKeyTimer = 0;
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const isFormField = (node) => {
@@ -1174,11 +1221,38 @@ const initWhiteRabbit = () => {
       return;
     }
 
-    const variantNumber = Number(event.key);
+    if (!/^\d$/.test(event.key)) {
+      return;
+    }
+
+    window.clearTimeout(variantKeyTimer);
+    variantKeyBuffer = `${variantKeyBuffer}${event.key}`.replace(/^0+/, '');
+
+    if (!variantKeyBuffer) {
+      return;
+    }
+
+    const variantNumber = Number(variantKeyBuffer);
+    const hasContinuation = rabbitVariants.some((_, index) => {
+      const optionNumber = String(index + 1);
+
+      return optionNumber.startsWith(variantKeyBuffer) && optionNumber !== variantKeyBuffer;
+    });
 
     if (variantNumber >= 1 && variantNumber <= rabbitVariants.length) {
-      setRabbitVariant(variantNumber);
+      if (hasContinuation) {
+        variantKeyTimer = window.setTimeout(() => {
+          setRabbitVariant(variantNumber);
+          variantKeyBuffer = '';
+        }, 450);
+      } else {
+        setRabbitVariant(variantNumber);
+        variantKeyBuffer = '';
+      }
+      return;
     }
+
+    variantKeyBuffer = '';
   });
 
   window.addEventListener('scroll', update, { passive: true });
