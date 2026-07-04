@@ -18,6 +18,55 @@ const safeLink = (value) => {
   return /^(https?:|mailto:|tel:)/i.test(url) ? attr(url) : '#';
 };
 
+const RABBIT_VARIANT_STORAGE_KEY = 'atmika_rabbit_variant';
+const ATMIKA_RABBIT_VARIANTS = [
+  {
+    label: 'Исходный',
+    webp: 'public/images/atmika-rabbit-mascot.webp',
+    png: 'public/images/atmika-rabbit-mascot.png',
+  },
+  {
+    label: 'Космический проводник',
+    webp: 'public/images/atmika-rabbit-variant-02.webp',
+    png: 'public/images/atmika-rabbit-variant-02.png',
+  },
+  {
+    label: 'Квантовый гид',
+    webp: 'public/images/atmika-rabbit-variant-03.webp',
+    png: 'public/images/atmika-rabbit-variant-03.png',
+  },
+  {
+    label: 'Дзен-целитель',
+    webp: 'public/images/atmika-rabbit-variant-04.webp',
+    png: 'public/images/atmika-rabbit-variant-04.png',
+  },
+  {
+    label: 'Игривый проводник',
+    webp: 'public/images/atmika-rabbit-variant-05.webp',
+    png: 'public/images/atmika-rabbit-variant-05.png',
+  },
+  {
+    label: 'Кристальная аура',
+    webp: 'public/images/atmika-rabbit-variant-06.webp',
+    png: 'public/images/atmika-rabbit-variant-06.png',
+  },
+  {
+    label: 'Лунный проводник',
+    webp: 'public/images/atmika-rabbit-variant-07.webp',
+    png: 'public/images/atmika-rabbit-variant-07.png',
+  },
+  {
+    label: 'Световой гид',
+    webp: 'public/images/atmika-rabbit-variant-08.webp',
+    png: 'public/images/atmika-rabbit-variant-08.png',
+  },
+  {
+    label: 'Подмигивающий',
+    webp: 'public/images/atmika-rabbit-variant-09.webp',
+    png: 'public/images/atmika-rabbit-variant-09.png',
+  },
+];
+
 const renderInlineMarkdown = (value) => html(value)
   .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|mailto:[^)\s]+|tel:[^)\s]+)\)/g, (_, label, href) => (
     `<a href="${safeLink(href)}" target="_blank" rel="noopener noreferrer">${label}</a>`
@@ -518,8 +567,28 @@ app.innerHTML = `
         </div>
         <div class="atmika-chat-actions">
           <button type="button" data-chat-share>Поделиться</button>
+          <button type="button" data-rabbit-den-toggle aria-expanded="false">Нора</button>
           <button type="button" data-chat-new>Новый</button>
           <button type="button" data-chat-close aria-label="Закрыть чат">×</button>
+        </div>
+      </div>
+      <div class="atmika-rabbit-den" data-rabbit-den hidden>
+        <div class="atmika-rabbit-den-head">
+          <strong>Скины кролика</strong>
+          <span>Выбор сохранится для следующих визитов.</span>
+        </div>
+        <div class="rabbit-skin-list" data-rabbit-skins>
+          ${ATMIKA_RABBIT_VARIANTS.map((variant, index) => `
+            <button class="rabbit-skin" type="button" data-rabbit-skin="${index + 1}" aria-pressed="false">
+              <span class="rabbit-skin-preview">
+                <img src="${attr(variant.webp)}" alt="" loading="lazy" />
+              </span>
+              <span class="rabbit-skin-copy">
+                <strong>${String(index + 1).padStart(2, '0')}</strong>
+                <em>${html(variant.label)}</em>
+              </span>
+            </button>
+          `).join('')}
         </div>
       </div>
       <div class="atmika-chat-share" data-chat-share-status aria-live="polite"></div>
@@ -713,6 +782,9 @@ const initAtmikaChat = () => {
   const closeButton = document.querySelector('[data-chat-close]');
   const newButton = document.querySelector('[data-chat-new]');
   const shareButton = document.querySelector('[data-chat-share]');
+  const denButton = document.querySelector('[data-rabbit-den-toggle]');
+  const denPanel = document.querySelector('[data-rabbit-den]');
+  const skinButtons = [...document.querySelectorAll('[data-rabbit-skin]')];
   const shareStatus = document.querySelector('[data-chat-share-status]');
   const messagesEl = document.querySelector('[data-chat-messages]');
   const form = document.querySelector('[data-chat-form]');
@@ -731,6 +803,29 @@ const initAtmikaChat = () => {
   const setStatus = (message) => {
     if (shareStatus) {
       shareStatus.textContent = message || '';
+    }
+  };
+
+  const setActiveSkinButton = (variantNumber) => {
+    skinButtons.forEach((button) => {
+      const isActive = Number(button.dataset.rabbitSkin) === Number(variantNumber);
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    });
+  };
+
+  const toggleRabbitDen = (forceOpen) => {
+    if (!denButton || !denPanel) {
+      return;
+    }
+
+    const isOpen = forceOpen ?? denPanel.hidden;
+    denPanel.hidden = !isOpen;
+    denButton.setAttribute('aria-expanded', String(isOpen));
+    denButton.classList.toggle('is-active', isOpen);
+
+    if (isOpen) {
+      setActiveSkinButton(localStorage.getItem(RABBIT_VARIANT_STORAGE_KEY) || 1);
     }
   };
 
@@ -846,6 +941,23 @@ const initAtmikaChat = () => {
 
   newButton?.addEventListener('click', startNewChat);
 
+  denButton?.addEventListener('click', () => {
+    toggleRabbitDen();
+  });
+
+  skinButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const variantNumber = Number(button.dataset.rabbitSkin);
+      const selected = window.setAtmikaRabbit?.(variantNumber) || variantNumber;
+
+      setActiveSkinButton(selected);
+    });
+  });
+
+  window.addEventListener('atmika:rabbit-variant', (event) => {
+    setActiveSkinButton(event.detail?.variant || 1);
+  });
+
   shareButton?.addEventListener('click', async () => {
     if (!isReady) {
       await openAtmikaChat();
@@ -937,53 +1049,7 @@ const initWhiteRabbit = () => {
   const bubble = rabbit.querySelector('.rabbit-bubble');
   const rabbitSource = rabbit.querySelector('[data-rabbit-source]');
   const rabbitImage = rabbit.querySelector('[data-rabbit-image]');
-  const rabbitVariants = [
-    {
-      label: 'Original',
-      webp: 'public/images/atmika-rabbit-mascot.webp',
-      png: 'public/images/atmika-rabbit-mascot.png',
-    },
-    {
-      label: 'Cosmic oracle',
-      webp: 'public/images/atmika-rabbit-variant-02.webp',
-      png: 'public/images/atmika-rabbit-variant-02.png',
-    },
-    {
-      label: 'Quantum guide',
-      webp: 'public/images/atmika-rabbit-variant-03.webp',
-      png: 'public/images/atmika-rabbit-variant-03.png',
-    },
-    {
-      label: 'Zen healer',
-      webp: 'public/images/atmika-rabbit-variant-04.webp',
-      png: 'public/images/atmika-rabbit-variant-04.png',
-    },
-    {
-      label: 'Playful guide',
-      webp: 'public/images/atmika-rabbit-variant-05.webp',
-      png: 'public/images/atmika-rabbit-variant-05.png',
-    },
-    {
-      label: 'Crystal aura',
-      webp: 'public/images/atmika-rabbit-variant-06.webp',
-      png: 'public/images/atmika-rabbit-variant-06.png',
-    },
-    {
-      label: 'Moonlight guide',
-      webp: 'public/images/atmika-rabbit-variant-07.webp',
-      png: 'public/images/atmika-rabbit-variant-07.png',
-    },
-    {
-      label: 'Luminous guide',
-      webp: 'public/images/atmika-rabbit-variant-08.webp',
-      png: 'public/images/atmika-rabbit-variant-08.png',
-    },
-    {
-      label: 'Playful wink',
-      webp: 'public/images/atmika-rabbit-variant-09.webp',
-      png: 'public/images/atmika-rabbit-variant-09.png',
-    },
-  ];
+  const rabbitVariants = ATMIKA_RABBIT_VARIANTS;
   const phrases = [
     'Нажми на кролика — открою чат.',
     'Спросить про формат, цену или запись?',
@@ -1035,7 +1101,13 @@ const initWhiteRabbit = () => {
     }
 
     rabbit.dataset.rabbitVariant = String(safeIndex + 1);
-    localStorage.setItem('atmika_rabbit_variant', String(safeIndex + 1));
+    localStorage.setItem(RABBIT_VARIANT_STORAGE_KEY, String(safeIndex + 1));
+    window.dispatchEvent(new CustomEvent('atmika:rabbit-variant', {
+      detail: {
+        variant: safeIndex + 1,
+        label: variant.label,
+      },
+    }));
     console.info(`Atmika rabbit ${safeIndex + 1}: ${variant.label}`);
 
     return safeIndex + 1;
@@ -1112,7 +1184,7 @@ const initWhiteRabbit = () => {
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
   window.addEventListener('pagehide', () => cancelAnimationFrame(frame), { once: true });
-  setRabbitVariant(localStorage.getItem('atmika_rabbit_variant') || 1);
+  setRabbitVariant(localStorage.getItem(RABBIT_VARIANT_STORAGE_KEY) || 1);
   update();
   animate();
 };
