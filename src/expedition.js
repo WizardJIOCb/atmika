@@ -1097,7 +1097,7 @@ const initWhiteRabbit = () => {
   const rabbitImage = rabbit.querySelector('[data-rabbit-image]');
   const rabbitVariants = ATMIKA_RABBIT_VARIANTS;
   const phrases = [
-    'Нажми на кролика — открою чат.',
+    'Поговорим?',
     'Спросить про формат, цену или запись?',
     'Я рядом: помогу выбрать маршрут.',
     'Путь начинается там, где привычная карта заканчивается.',
