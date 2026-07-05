@@ -750,6 +750,65 @@ const initMenu = () => {
   });
 };
 
+const getHashTarget = (hashValue) => {
+  const hash = text(hashValue).trim();
+
+  if (!hash.startsWith('#') || hash.length <= 1) {
+    return null;
+  }
+
+  try {
+    return document.getElementById(decodeURIComponent(hash.slice(1)));
+  } catch {
+    return document.getElementById(hash.slice(1));
+  }
+};
+
+const scrollToHashTarget = (hashValue, behavior = 'smooth') => {
+  const target = getHashTarget(hashValue);
+
+  if (!target) {
+    return false;
+  }
+
+  target.scrollIntoView({ behavior, block: 'start' });
+  return true;
+};
+
+const initHashNavigation = () => {
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a[href^="#"]');
+
+    if (!link) {
+      return;
+    }
+
+    const hash = link.getAttribute('href');
+
+    if (!scrollToHashTarget(hash)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (window.location.hash !== hash) {
+      history.pushState(null, '', hash);
+    }
+  });
+
+  window.addEventListener('hashchange', () => {
+    scrollToHashTarget(window.location.hash);
+  });
+
+  if (window.location.hash) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        scrollToHashTarget(window.location.hash, 'auto');
+      });
+    });
+  }
+};
+
 const initVideoPlayback = () => {
   document.querySelectorAll('video').forEach((video) => {
     video.muted = true;
@@ -1337,6 +1396,7 @@ const initWhiteRabbit = () => {
 };
 
 initMenu();
+initHashNavigation();
 initVideoPlayback();
 initAtmikaChat();
 initContactChatButton();

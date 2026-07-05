@@ -361,6 +361,7 @@ h1 {
   width: min(1160px, calc(100% - 40px));
   margin: 0 auto;
   padding: 96px 0;
+  scroll-margin-top: 96px;
 }
 
 .intro-section,
