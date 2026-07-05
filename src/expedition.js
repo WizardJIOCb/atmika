@@ -19,6 +19,7 @@ const safeLink = (value) => {
 };
 
 const RABBIT_VARIANT_STORAGE_KEY = 'atmika_rabbit_variant';
+const DEFAULT_RABBIT_VARIANT = 17;
 const ATMIKA_RABBIT_VARIANTS = [
   {
     label: 'Исходный',
@@ -870,7 +871,7 @@ const initAtmikaChat = () => {
     denButton.classList.toggle('is-active', isOpen);
 
     if (isOpen) {
-      setActiveSkinButton(localStorage.getItem(RABBIT_VARIANT_STORAGE_KEY) || 1);
+      setActiveSkinButton(localStorage.getItem(RABBIT_VARIANT_STORAGE_KEY) || DEFAULT_RABBIT_VARIANT);
     }
   };
 
@@ -1000,7 +1001,7 @@ const initAtmikaChat = () => {
   });
 
   window.addEventListener('atmika:rabbit-variant', (event) => {
-    setActiveSkinButton(event.detail?.variant || 1);
+    setActiveSkinButton(event.detail?.variant || DEFAULT_RABBIT_VARIANT);
   });
 
   shareButton?.addEventListener('click', async () => {
@@ -1133,7 +1134,7 @@ const initWhiteRabbit = () => {
     return node?.isContentEditable || tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT';
   };
 
-  const setRabbitVariant = (variantNumber = 1) => {
+  const setRabbitVariant = (variantNumber = DEFAULT_RABBIT_VARIANT) => {
     const number = Number(variantNumber);
     const index = Number.isFinite(number) ? Math.round(number) - 1 : 0;
     const safeIndex = clamp(index, 0, rabbitVariants.length - 1);
@@ -1258,7 +1259,7 @@ const initWhiteRabbit = () => {
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
   window.addEventListener('pagehide', () => cancelAnimationFrame(frame), { once: true });
-  setRabbitVariant(localStorage.getItem(RABBIT_VARIANT_STORAGE_KEY) || 1);
+  setRabbitVariant(localStorage.getItem(RABBIT_VARIANT_STORAGE_KEY) || DEFAULT_RABBIT_VARIANT);
   update();
   animate();
 };
