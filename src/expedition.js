@@ -597,7 +597,7 @@ app.innerHTML = `
       </div>
     </section>
 
-    <section class="section bottom-gallery-section" aria-label="Видеоритм практик">
+    <section class="section bottom-gallery-section" id="state-video" aria-label="Видеоритм практик">
       <div class="center-head bottom-gallery-head">
         <span class="eyebrow">После сессии</span>
         <h2>Когда состояние становится видимым</h2>

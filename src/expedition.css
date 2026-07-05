@@ -1867,8 +1867,12 @@ blockquote {
     animation-delay: 360ms;
   }
 
-  body.menu-open .expedition-nav button:nth-child(6) {
+  body.menu-open .expedition-nav a:nth-child(6) {
     animation-delay: 420ms;
+  }
+
+  body.menu-open .expedition-nav button:nth-child(7) {
+    animation-delay: 480ms;
   }
 
   @keyframes menu-glint {

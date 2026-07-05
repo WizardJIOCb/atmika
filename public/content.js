@@ -20,8 +20,12 @@ window.ATMIKA_CONTENT = {
       "href": "#work"
     },
     {
-      "label": "Галерея",
+      "label": "Ритм",
       "href": "#gallery"
+    },
+    {
+      "label": "Состояние",
+      "href": "#state-video"
     },
     {
       "label": "Кому подходит",
