@@ -125,31 +125,31 @@ window.ATMIKA_CONTENT = {
     "items": [
       {
         "type": "video",
-        "src": "public/gallery/video5314648452544629298.mp4",
+        "src": "public/gallery/compressed/visual-rhythm-01.mp4",
         "title": "Тонкое поле",
         "tag": "Видео"
       },
       {
         "type": "video",
-        "src": "public/gallery/video5343562412899475796.mp4",
+        "src": "public/gallery/compressed/visual-rhythm-02.mp4",
         "title": "Практика состояния",
         "tag": "Видео"
       },
       {
         "type": "video",
-        "src": "public/gallery/generated_video (26).mp4",
+        "src": "public/gallery/compressed/visual-rhythm-03.mp4",
         "title": "Алхимия внимания",
         "tag": "Видео"
       },
       {
         "type": "video",
-        "src": "public/gallery/video5343562412899475797.mp4",
+        "src": "public/gallery/compressed/visual-rhythm-04.mp4",
         "title": "Глубина процесса",
         "tag": "Видео"
       },
       {
         "type": "video",
-        "src": "public/gallery/generated_video (25).mp4",
+        "src": "public/gallery/compressed/visual-rhythm-05.mp4",
         "title": "Светлая трансформация",
         "tag": "Видео"
       }

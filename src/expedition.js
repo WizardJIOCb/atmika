@@ -349,6 +349,41 @@ const audience = content.audience?.items || [];
 const outcomes = content.outcomes?.items || [];
 const process = content.process?.items || [];
 const heroMedia = gallery.find((item) => item.type === 'video') || gallery[0];
+const bottomGallery = [
+  {
+    fileName: 'state-visible-01.mp4',
+    title: 'Дыхание поля',
+  },
+  {
+    fileName: 'state-visible-02.mp4',
+    title: 'Тишина внутри движения',
+  },
+  {
+    fileName: 'state-visible-03.mp4',
+    title: 'Световой переход',
+  },
+  {
+    fileName: 'state-visible-04.mp4',
+    title: 'Встреча с состоянием',
+  },
+  {
+    fileName: 'state-visible-05.mp4',
+    title: 'Пульс присутствия',
+  },
+  {
+    fileName: 'state-visible-06.mp4',
+    title: 'Мягкая настройка',
+  },
+  {
+    fileName: 'state-visible-07.mp4',
+    title: 'Маршрут к ясности',
+  },
+].map((item) => ({
+  type: 'video',
+  src: `public/gallery/compressed/${item.fileName}`,
+  title: item.title,
+  tag: 'Ритм',
+}));
 
 const mediaMarkup = (item, className = '') => {
   if (!item) {
@@ -559,6 +594,43 @@ app.innerHTML = `
             <p>${html(item)}</p>
           </article>
         `).join('')}
+      </div>
+    </section>
+
+    <section class="section bottom-gallery-section" aria-label="Видеоритм практик">
+      <div class="center-head bottom-gallery-head">
+        <span class="eyebrow">После сессии</span>
+        <h2>Когда состояние становится видимым</h2>
+      </div>
+      <div class="gallery-carousel bottom-video-carousel" data-bottom-gallery-carousel aria-label="Видеоритм практик">
+        <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="Предыдущее видео" data-bottom-gallery-prev>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <div class="gallery-stage">
+          ${bottomGallery.map((item, index) => `
+            <figure class="gallery-slide" data-bottom-gallery-item data-index="${index}">
+              <div class="gallery-media">
+                <video src="${attr(item.src)}" muted loop playsinline autoplay preload="metadata"></video>
+              </div>
+              <figcaption class="gallery-caption">
+                <span>${html(item.tag)}</span>
+                <strong>${html(item.title)}</strong>
+              </figcaption>
+            </figure>
+          `).join('')}
+        </div>
+        <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="Следующее видео" data-bottom-gallery-next>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
+        <div class="gallery-dots" aria-label="Выбор видео">
+          ${bottomGallery.map((item, index) => `
+            <button type="button" aria-label="Видео ${index + 1}" data-bottom-gallery-dot="${index}"></button>
+          `).join('')}
+        </div>
       </div>
     </section>
 
@@ -1281,5 +1353,12 @@ initStackCarousel({
   dotSelector: '[data-work-dot]',
   prevSelector: '[data-work-prev]',
   nextSelector: '[data-work-next]'
+});
+initStackCarousel({
+  carouselSelector: '[data-bottom-gallery-carousel]',
+  itemSelector: '[data-bottom-gallery-item]',
+  dotSelector: '[data-bottom-gallery-dot]',
+  prevSelector: '[data-bottom-gallery-prev]',
+  nextSelector: '[data-bottom-gallery-next]'
 });
 initWhiteRabbit();
