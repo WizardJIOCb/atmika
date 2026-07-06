@@ -397,6 +397,142 @@ const mediaMarkup = (item, className = '') => {
   return `<img class="${attr(className)}" src="${attr(item.src)}" alt="${attr(item.title)}" loading="lazy" />`;
 };
 
+const serviceDetails = [
+  {
+    label: 'Подробнее о программе',
+    lead: 'Это не набор разовых практик, а последовательный путь возвращения к себе: к первозданной силе, ясности и своему свету. Работа идет глубоко, но бережно, в темпе вашей Души и готовности сознания.',
+    sections: [
+      {
+        title: 'Что происходит в процессе',
+        items: [
+          'очищается многомерная структура: энергетические тела, чакры, тор, сушумна, каналы Ида и Пингала, следы прошлых воплощений;',
+          'обнуляются кармические программы и матричные подключения, которые держат внимание в страхе, вине, долге и чужих сценариях;',
+          'восстанавливается связь с Источником, Высшим Я и ясным пониманием того, кто вы на самом деле;',
+          'возвращаются сила, энергия, утраченные потенциалы и способность творить свою реальность из осознанности.'
+        ],
+      },
+      {
+        title: 'Как выстроена работа',
+        items: [
+          'связь и сопровождение 7 дней в неделю;',
+          'практики идут последовательно, без перегруза и гонки за результатом;',
+          'обычно закладываются две квантовые сессии в месяц, чтобы изменения успевали проявиться в теле, состоянии и материи;',
+          'главный фокус - подготовить сознание к настоящему выходу из Матрицы и самостоятельному контакту с глубиной мироздания.'
+        ],
+      },
+    ],
+    result: 'В итоге вы не просто «понимаете» себя лучше, а начинаете собираться целиком: освобождаетесь от иллюзий, возвращаете внутреннюю опору и меняете реальность из собственного состояния.',
+  },
+  {
+    label: 'Подробнее о чистке',
+    lead: 'Глубокая квантовая чистка поля Души - это фундаментальная работа с многомерной структурой человека. Она подходит тем, кто уже чувствует: старые сценарии, родовые следы, страхи и энергетическая тяжесть мешают идти дальше.',
+    sections: [
+      {
+        title: 'Этапы работы',
+        items: [
+          'общая чистка энергетических тел, поля, чужих влияний, контрактов, кармических узлов и программ подчинения;',
+          'настройка чакральной системы по естественным частотам: очищение, восстановление вращения, снятие перекосов и блоков;',
+          'выравнивание Сушумны, Иды и Пингалы, баланс мужского и женского потоков, восстановление свободного движения энергии;',
+          'очищение родовой линии до истока: страхи, ограничения, чужие судьбы, клятвы, обеты и запреты.'
+        ],
+      },
+      {
+        title: 'Что может проявиться',
+        items: [
+          'возвращается фокус внимания, внутренняя тишина и опора на себя;',
+          'тело становится живее, эмоции меньше цепляют, появляется честность с собой;',
+          'уходит внутренний конфликт, появляется спокойная сила и присутствие в теле;',
+          'вы перестаете нести лишний груз рода и легче входите в новый этап жизни.'
+        ],
+      },
+    ],
+    result: 'После прохождения этапов человек чувствует больше целостности, свободного движения энергии и ясности. Если база уже выстроена, можно переходить к программе «Осознанный выход из Матрицы».',
+  },
+];
+
+const renderServiceDetailBody = (detail, service) => `
+  <div class="service-detail-body">
+    <p class="service-detail-lead">${html(detail.lead)}</p>
+    <div class="service-detail-columns">
+      ${detail.sections.map((section) => `
+        <div class="service-detail-column">
+          <h4>${html(section.title)}</h4>
+          <ul>
+            ${section.items.map((item) => `<li>${html(item)}</li>`).join('')}
+          </ul>
+        </div>
+      `).join('')}
+    </div>
+    <p class="service-detail-result">${html(detail.result)}</p>
+    <a class="service-detail-cta" href="#contact">${html(service.price)} · записаться</a>
+  </div>
+`;
+
+const renderTourCard = (service, index, media) => {
+  const detail = serviceDetails[index];
+  const title = html(service.title);
+  const route = `Route ${String(index + 1).padStart(2, '0')}`;
+
+  if (!detail) {
+    return `
+      <a class="tour-card" href="#contact" aria-label="${attr(`${service.title}: перейти к контактам`)}">
+        <div class="tour-media">${mediaMarkup(media)}</div>
+        <span>${route}</span>
+        <h3>${title}</h3>
+        <p>${html(service.tag)}</p>
+        <strong>${html(service.price)}</strong>
+      </a>
+    `;
+  }
+
+  return `
+    <details class="tour-card tour-card-expandable">
+      <summary aria-label="${attr(`${service.title}: раскрыть описание`)}">
+        <div class="tour-media">${mediaMarkup(media)}</div>
+        <span>${route}</span>
+        <h3>${title}</h3>
+        <p>${html(service.tag)}</p>
+        <strong>${html(service.price)}</strong>
+        <em>${html(detail.label)}</em>
+      </summary>
+      ${renderServiceDetailBody(detail, service)}
+    </details>
+  `;
+};
+
+const renderServiceLine = (service, index) => {
+  const detail = serviceDetails[index];
+  const number = String(index + 1).padStart(2, '0');
+
+  if (!detail) {
+    return `
+      <a class="service-line" href="#contact" aria-label="${attr(`${service.title}: перейти к контактам`)}">
+        <span>${number}</span>
+        <div>
+          <h3>${html(service.title)}</h3>
+          <p>${html(service.text)}</p>
+        </div>
+        <strong>${html(service.price)}</strong>
+      </a>
+    `;
+  }
+
+  return `
+    <details class="service-line service-line-expandable" id="work-service-${number}">
+      <summary aria-label="${attr(`${service.title}: раскрыть описание`)}">
+        <span>${number}</span>
+        <div>
+          <h3>${html(service.title)}</h3>
+          <p>${html(service.text)}</p>
+        </div>
+        <strong>${html(service.price)}</strong>
+        <em>${html(detail.label)}</em>
+      </summary>
+      ${renderServiceDetailBody(detail, service)}
+    </details>
+  `;
+};
+
 app.innerHTML = `
   <header class="expedition-header">
     <a class="expedition-brand" href="#top" aria-label="${attr(content.brand?.ariaLabel)}">
@@ -460,15 +596,7 @@ app.innerHTML = `
       <div class="tour-row">
         ${services.slice(0, 4).map((service, index) => {
           const media = gallery[index % gallery.length];
-          return `
-            <a class="tour-card" href="#contact" aria-label="${attr(`${service.title}: перейти к контактам`)}">
-              <div class="tour-media">${mediaMarkup(media)}</div>
-              <span>Route ${String(index + 1).padStart(2, '0')}</span>
-              <h3>${html(service.title)}</h3>
-              <p>${html(service.tag)}</p>
-              <strong>${html(service.price)}</strong>
-            </a>
-          `;
+          return renderTourCard(service, index, media);
         }).join('')}
       </div>
       <div class="gallery-carousel work-mobile-carousel" data-work-carousel aria-label="${attr(content.servicesSection?.kicker || 'Formats')}">
@@ -506,16 +634,7 @@ app.innerHTML = `
         </div>
       </div>
       <div class="service-list">
-        ${services.map((service, index) => `
-          <a class="service-line" href="#contact" aria-label="${attr(`${service.title}: перейти к контактам`)}">
-            <span>${String(index + 1).padStart(2, '0')}</span>
-            <div>
-              <h3>${html(service.title)}</h3>
-              <p>${html(service.text)}</p>
-            </div>
-            <strong>${html(service.price)}</strong>
-          </a>
-        `).join('')}
+        ${services.map(renderServiceLine).join('')}
       </div>
     </section>
 
@@ -816,6 +935,121 @@ const initVideoPlayback = () => {
   });
 };
 
+let openVideoLightbox = () => {};
+
+const initVideoLightbox = () => {
+  const lightbox = document.createElement('div');
+  lightbox.className = 'video-lightbox';
+  lightbox.setAttribute('aria-hidden', 'true');
+  lightbox.innerHTML = `
+    <div class="video-lightbox-panel" role="dialog" aria-modal="true" aria-label="Просмотр видео">
+      <button class="video-lightbox-close" type="button" aria-label="Закрыть видео">×</button>
+      <video class="video-lightbox-media" controls playsinline></video>
+      <div class="video-lightbox-caption"></div>
+    </div>
+  `;
+  document.body.append(lightbox);
+
+  const panel = lightbox.querySelector('.video-lightbox-panel');
+  const video = lightbox.querySelector('.video-lightbox-media');
+  const caption = lightbox.querySelector('.video-lightbox-caption');
+  const closeButton = lightbox.querySelector('.video-lightbox-close');
+  let restoreScrollY = 0;
+  let previousBodyStyle = {};
+
+  const lockPageScroll = () => {
+    previousBodyStyle = {
+      position: document.body.style.position,
+      top: document.body.style.top,
+      left: document.body.style.left,
+      right: document.body.style.right,
+      width: document.body.style.width,
+    };
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${restoreScrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+  };
+
+  const unlockPageScroll = () => {
+    document.body.style.position = previousBodyStyle.position || '';
+    document.body.style.top = previousBodyStyle.top || '';
+    document.body.style.left = previousBodyStyle.left || '';
+    document.body.style.right = previousBodyStyle.right || '';
+    document.body.style.width = previousBodyStyle.width || '';
+  };
+
+  const restoreScroll = () => {
+    window.scrollTo({ top: restoreScrollY, left: 0, behavior: 'auto' });
+  };
+
+  const close = () => {
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('video-lightbox-open');
+    unlockPageScroll();
+    restoreScroll();
+    requestAnimationFrame(restoreScroll);
+    window.setTimeout(restoreScroll, 80);
+    window.setTimeout(restoreScroll, 180);
+  };
+
+  openVideoLightbox = (sourceVideo, title = '') => {
+    const source = sourceVideo?.currentSrc || sourceVideo?.getAttribute('src') || '';
+
+    if (!source) {
+      return;
+    }
+
+    caption.textContent = title;
+    caption.hidden = !title;
+    restoreScrollY = window.scrollY;
+    lockPageScroll();
+    video.src = source;
+    video.muted = false;
+    video.volume = 1;
+
+    try {
+      video.currentTime = sourceVideo.currentTime || 0;
+    } catch {}
+
+    document.body.classList.add('video-lightbox-open');
+    lightbox.setAttribute('aria-hidden', 'false');
+    video.play().catch(() => {});
+  };
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('.video-lightbox, .gallery-arrow, .gallery-dots button')) {
+      return;
+    }
+
+    const card = event.target.closest('.mosaic-card, .gallery-slide');
+    const sourceVideo = card?.querySelector('video');
+
+    if (!card || !sourceVideo) {
+      return;
+    }
+
+    event.preventDefault();
+    openVideoLightbox(sourceVideo, card.querySelector('.gallery-caption strong, figcaption strong')?.textContent?.trim() || '');
+  });
+
+  closeButton.addEventListener('click', close);
+  lightbox.addEventListener('click', (event) => {
+    if (event.target === lightbox || event.target === panel) {
+      close();
+    }
+  });
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && lightbox.getAttribute('aria-hidden') === 'false') {
+      close();
+    }
+  });
+};
+
 const initStackCarousel = ({
   carouselSelector,
   itemSelector,
@@ -837,6 +1071,8 @@ const initStackCarousel = ({
   let autoTimer = 0;
   let pointerStartX = 0;
   let pointerDeltaX = 0;
+  let pointerStartY = 0;
+  let suppressClick = false;
 
   const normalizeOffset = (index) => {
     let offset = index - activeIndex;
@@ -916,6 +1152,7 @@ const initStackCarousel = ({
     }
 
     pointerStartX = event.clientX;
+    pointerStartY = event.clientY;
     pointerDeltaX = 0;
     carousel.setPointerCapture(event.pointerId);
   });
@@ -928,20 +1165,43 @@ const initStackCarousel = ({
     pointerDeltaX = event.clientX - pointerStartX;
   });
 
-  carousel.addEventListener('pointerup', () => {
+  carousel.addEventListener('pointerup', (event) => {
+    const pointerDeltaY = event.clientY - pointerStartY;
+    const isTap = pointerStartX && Math.abs(pointerDeltaX) < 10 && Math.abs(pointerDeltaY) < 10;
+
     if (Math.abs(pointerDeltaX) > 44) {
       goTo(activeIndex + (pointerDeltaX < 0 ? 1 : -1));
       restartAuto();
+    } else if (isTap) {
+      const slide = event.target.closest(itemSelector);
+      const video = event.target.closest('video') || event.target.closest('.gallery-media')?.querySelector('video');
+
+      if (slide && video) {
+        suppressClick = true;
+        window.setTimeout(() => {
+          suppressClick = false;
+        }, 250);
+        openVideoLightbox(video, slide.querySelector('.gallery-caption strong, figcaption strong')?.textContent?.trim() || '');
+      }
     }
 
     pointerStartX = 0;
+    pointerStartY = 0;
     pointerDeltaX = 0;
   });
 
   carousel.addEventListener('pointercancel', () => {
     pointerStartX = 0;
+    pointerStartY = 0;
     pointerDeltaX = 0;
   });
+
+  carousel.addEventListener('click', (event) => {
+    if (suppressClick) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }, true);
 
   carousel.addEventListener('mouseenter', () => window.clearInterval(autoTimer));
   carousel.addEventListener('mouseleave', restartAuto);
@@ -1398,6 +1658,7 @@ const initWhiteRabbit = () => {
 initMenu();
 initHashNavigation();
 initVideoPlayback();
+initVideoLightbox();
 initAtmikaChat();
 initContactChatButton();
 initStackCarousel({
