@@ -932,6 +932,11 @@ blockquote,
   object-fit: cover;
 }
 
+.bottom-video-carousel .gallery-slide-fill-height .gallery-media video {
+  transform: scale(1.14);
+  transform-origin: center;
+}
+
 .bottom-video-carousel .gallery-slide::before,
 .bottom-video-carousel .gallery-slide::after {
   position: absolute;

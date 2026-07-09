@@ -357,6 +357,7 @@ const bottomGallery = [
   {
     fileName: 'state-visible-02.mp4',
     title: 'Тишина внутри движения',
+    className: 'gallery-slide-fill-height',
   },
   {
     fileName: 'state-visible-03.mp4',
@@ -383,6 +384,7 @@ const bottomGallery = [
   src: `public/gallery/compressed/${item.fileName}`,
   title: item.title,
   tag: 'Ритм',
+  className: item.className || '',
 }));
 
 const mediaMarkup = (item, className = '') => {
@@ -729,7 +731,7 @@ app.innerHTML = `
         </button>
         <div class="gallery-stage">
           ${bottomGallery.map((item, index) => `
-            <figure class="gallery-slide" data-bottom-gallery-item data-index="${index}">
+            <figure class="gallery-slide ${attr(item.className || '')}" data-bottom-gallery-item data-index="${index}">
               <div class="gallery-media">
                 <video src="${attr(item.src)}" muted loop playsinline autoplay preload="metadata"></video>
               </div>
