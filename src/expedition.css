@@ -428,13 +428,6 @@ h1 {
     transform 180ms ease;
 }
 
-.tour-card:nth-child(2) {
-  border-color: var(--line-bright);
-  box-shadow:
-    var(--shadow),
-    0 0 0 1px rgba(85, 247, 230, 0.16) inset;
-}
-
 .tour-card:hover,
 .tour-card:focus-visible {
   border-color: var(--line-bright);
