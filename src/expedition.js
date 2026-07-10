@@ -560,6 +560,35 @@ app.innerHTML = `
       <div class="hero-backdrop">
         ${mediaMarkup(heroMedia, 'hero-video')}
       </div>
+      <canvas class="hero-matrix" data-hero-matrix aria-hidden="true"></canvas>
+      <div class="hero-geometry" aria-hidden="true">
+        <svg viewBox="0 0 600 600" role="presentation">
+          <g class="geometry-orbits">
+            <circle cx="300" cy="300" r="224" />
+            <circle cx="300" cy="300" r="184" />
+            <circle cx="300" cy="300" r="138" />
+            <path d="M300 76 494 188 494 412 300 524 106 412 106 188Z" />
+            <path d="M300 76 300 524M106 188 494 412M494 188 106 412" />
+          </g>
+          <g class="geometry-flower">
+            <circle cx="300" cy="300" r="84" />
+            <circle cx="300" cy="216" r="84" />
+            <circle cx="373" cy="258" r="84" />
+            <circle cx="373" cy="342" r="84" />
+            <circle cx="300" cy="384" r="84" />
+            <circle cx="227" cy="342" r="84" />
+            <circle cx="227" cy="258" r="84" />
+          </g>
+          <g class="geometry-core">
+            <path d="M300 132 446 216 446 384 300 468 154 384 154 216Z" />
+            <path d="M300 132 446 384 154 384ZM154 216 446 216 300 468Z" />
+            <circle cx="300" cy="300" r="18" />
+            <circle cx="300" cy="300" r="7" />
+          </g>
+        </svg>
+        <span class="geometry-label geometry-label-top">CONSCIOUSNESS / 01</span>
+        <span class="geometry-label geometry-label-bottom">ATMIKA FIELD</span>
+      </div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <span class="eyebrow">${html(content.hero?.eyebrow)}</span>
@@ -839,6 +868,88 @@ app.innerHTML = `
     </div>
   </div>
 `;
+
+const initHeroMatrix = () => {
+  const canvas = document.querySelector('[data-hero-matrix]');
+
+  if (!canvas) {
+    return;
+  }
+
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    return;
+  }
+
+  const glyphs = '010101<>/{}+=*';
+  const fontSize = 18;
+  let columns = [];
+  let width = 0;
+  let height = 0;
+  let animationFrame = 0;
+  let isVisible = true;
+  let lastFrame = 0;
+
+  const resize = () => {
+    const bounds = canvas.getBoundingClientRect();
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+
+    width = Math.max(1, bounds.width);
+    height = Math.max(1, bounds.height);
+    canvas.width = Math.round(width * pixelRatio);
+    canvas.height = Math.round(height * pixelRatio);
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    columns = Array.from({ length: Math.ceil(width / fontSize) }, () => (
+      Math.random() * (height / fontSize)
+    ));
+  };
+
+  const draw = () => {
+    context.clearRect(0, 0, width, height);
+    context.font = `600 ${fontSize}px "SFMono-Regular", Consolas, monospace`;
+    context.textAlign = 'center';
+
+    columns.forEach((drop, column) => {
+      for (let trail = 0; trail < 7; trail += 1) {
+        const glyph = glyphs[(column * 3 + trail + Math.floor(drop)) % glyphs.length];
+        const alpha = Math.max(0, 0.38 - trail * 0.052);
+        context.fillStyle = trail === 0
+          ? 'rgba(218, 255, 221, 0.72)'
+          : `rgba(89, 238, 141, ${alpha})`;
+        context.fillText(glyph, column * fontSize + fontSize / 2, (drop - trail) * fontSize);
+      }
+
+      columns[column] = drop * fontSize > height + 140 && Math.random() > 0.985
+        ? -Math.random() * 18
+        : drop + 0.13 + (column % 4) * 0.012;
+    });
+  };
+
+  const render = (time = 0) => {
+    if (isVisible && time - lastFrame > 42) {
+      draw();
+      lastFrame = time;
+    }
+
+    animationFrame = requestAnimationFrame(render);
+  };
+
+  new ResizeObserver(resize).observe(canvas);
+  new IntersectionObserver(([entry]) => {
+    isVisible = entry.isIntersecting;
+  }, { threshold: 0.02 }).observe(canvas);
+
+  resize();
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    draw();
+    return;
+  }
+
+  render();
+  window.addEventListener('pagehide', () => cancelAnimationFrame(animationFrame), { once: true });
+};
 
 const initMenu = () => {
   const toggle = document.querySelector('[data-menu-toggle]');
@@ -1658,6 +1769,7 @@ const initWhiteRabbit = () => {
 };
 
 initMenu();
+initHeroMatrix();
 initHashNavigation();
 initVideoPlayback();
 initVideoLightbox();
