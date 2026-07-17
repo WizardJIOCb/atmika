@@ -832,7 +832,6 @@ app.innerHTML = `
     <div class="atmika-chat-panel" role="dialog" aria-modal="true" aria-labelledby="atmika-chat-title">
       <div class="atmika-chat-head">
         <div>
-          <span class="eyebrow">Белый кролик онлайн</span>
           <h2 id="atmika-chat-title">ИИ Помощник</h2>
         </div>
         <div class="atmika-chat-actions">
