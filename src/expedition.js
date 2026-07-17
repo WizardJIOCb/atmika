@@ -547,7 +547,11 @@ app.innerHTML = `
       ${nav.map((item) => `<a href="${attr(item.href)}">${html(item.label)}</a>`).join('')}
       <button type="button" data-menu-chat>Чат с кроликом</button>
     </nav>
-    <a class="header-cta" href="${attr(content.header?.ctaHref || '#contact')}">${html(content.header?.ctaLabel)}</a>
+    <a class="header-cta" href="${attr(content.header?.ctaHref || '#contact')}">
+      <span class="header-cta-pulse" aria-hidden="true"></span>
+      <span class="header-cta-label">${html(content.header?.ctaLabel)}</span>
+      <span class="header-cta-arrow" aria-hidden="true">↗</span>
+    </a>
     <button class="menu-toggle" type="button" aria-label="${attr(content.header?.openMenuLabel || 'Open menu')}" aria-expanded="false" data-menu-toggle>
       <span></span>
       <span></span>
