@@ -419,6 +419,12 @@ const leadSummary = (lead) => [
   'Всё верно? Напишите «Да», и я отправлю заявку Атмике в Telegram. Если нужно исправить — напишите «Изменить».',
 ].join('\n');
 
+const escapeTelegramHtml = (value) => String(value)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;');
+
 const sendLeadToTelegram = async (chat) => {
   if (!isTelegramLeadConfigured || !chat.lead) {
     throw new Error('Telegram lead delivery is not configured');
@@ -428,11 +434,11 @@ const sendLeadToTelegram = async (chat) => {
   const text = [
     '✨ Новая заявка с сайта Атмики',
     '',
-    `Имя: ${chat.lead.name}`,
-    `Контакт: ${chat.lead.contact}`,
-    `Запрос: ${chat.lead.request}`,
+    `Имя: ${escapeTelegramHtml(chat.lead.name)}`,
+    `Контакт: ${escapeTelegramHtml(chat.lead.contact)}`,
+    `Запрос: ${escapeTelegramHtml(chat.lead.request)}`,
     '',
-    `Диалог: ${chatUrl}`,
+    `Диалог: <a href="${escapeTelegramHtml(chatUrl)}">https://iam-atmika.com</a>`,
     `Время: ${new Date().toISOString()}`,
   ].join('\n');
 
@@ -444,6 +450,7 @@ const sendLeadToTelegram = async (chat) => {
       body: JSON.stringify({
         chat_id: telegramLeadChatId,
         text,
+        parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
     });
