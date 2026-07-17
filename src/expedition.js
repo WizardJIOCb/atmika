@@ -545,7 +545,7 @@ app.innerHTML = `
     </a>
     <nav class="expedition-nav" aria-label="Site navigation">
       ${nav.map((item) => `<a href="${attr(item.href)}">${html(item.label)}</a>`).join('')}
-      <button type="button" data-menu-chat>Чат с кроликом</button>
+      <button type="button" data-menu-chat>ИИ Помощник</button>
     </nav>
     <a class="header-cta" href="${attr(content.header?.ctaHref || '#contact')}">
       <span class="header-cta-pulse" aria-hidden="true"></span>
@@ -820,7 +820,7 @@ app.innerHTML = `
       <div class="contact-panel">
         <a class="button button-primary" href="${attr(content.contact?.primaryHref)}" target="_blank" rel="noreferrer">${html(content.contact?.primaryLabel)}</a>
         <a class="button button-ghost" href="${attr(content.contact?.secondaryHref)}">${html(content.contact?.secondaryLabel)}</a>
-        <button class="button button-rabbit" type="button" data-contact-chat>Связаться с Кроликом</button>
+        <button class="button button-rabbit" type="button" data-contact-chat>ИИ Помощник</button>
         <div class="social-links">
           ${(content.contact?.socialLinks || []).map((item) => `<a href="${attr(item.href)}" target="_blank" rel="noreferrer">${html(item.label)}</a>`).join('')}
         </div>
