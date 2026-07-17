@@ -863,7 +863,7 @@ app.innerHTML = `
       <div class="atmika-chat-share" data-chat-share-status aria-live="polite"></div>
       <div class="atmika-chat-messages" data-chat-messages aria-live="polite"></div>
       <form class="atmika-chat-form" data-chat-form>
-        <textarea name="message" rows="1" placeholder="Напишите сообщение…" required></textarea>
+        <textarea name="message" rows="1" placeholder="Напишите сообщение… Ctrl+Enter — отправить" required></textarea>
         <button type="submit" aria-label="Отправить сообщение" title="Отправить">
           <span class="atmika-chat-send-label">Отправить</span>
           <span class="atmika-chat-send-icon" aria-hidden="true">↑</span>
