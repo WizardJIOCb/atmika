@@ -19,6 +19,15 @@ const openRouterFallbackModels = (process.env.OPENROUTER_FALLBACK_MODELS
   .map((model) => model.trim())
   .filter(Boolean);
 const retryableOpenRouterStatuses = new Set([404, 408, 429, 502, 503, 504]);
+const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || '';
+const telegramLeadChatId = process.env.TELEGRAM_LEAD_CHAT_ID || '';
+const telegramBotApiBaseUrl = (process.env.TELEGRAM_BOT_API_BASE_URL || 'https://api.telegram.org')
+  .replace(/\/+$/, '');
+const publicSiteUrl = (process.env.ATMIKA_PUBLIC_URL || 'https://iam-atmika.com').replace(/\/+$/, '');
+const isTelegramLeadConfigured = (
+  /^\d+:[a-zA-Z0-9_-]+$/.test(telegramBotToken)
+  && /^-?\d+$/.test(telegramLeadChatId)
+);
 
 const contentDir = process.env.ATMIKA_CONTENT_DIR
   ? path.resolve(process.env.ATMIKA_CONTENT_DIR)
@@ -128,6 +137,28 @@ const readContent = async () => JSON.parse(await readFile(contentJsonPath, 'utf8
 const createChatId = () => randomBytes(12).toString('base64url');
 const isSafeChatId = (id) => /^[a-zA-Z0-9_-]{8,64}$/.test(String(id || ''));
 const chatPath = (id) => path.join(chatDir, `${id}.json`);
+const leadStages = new Set(['name', 'contact', 'request', 'confirm', 'submitted']);
+const leadIntentPattern = /(записаться|запись на (?:сессию|консультацию)|оставить заявку|оформить заявку|хочу консультацию|нужна консультация|хочу работать с атмикой|связаться с атмикой)/i;
+const leadCancelPattern = /^(отмена|отменить|стоп|не хочу|не надо)$/i;
+const leadConfirmPattern = /^(да|верно|вс[её] верно|подтверждаю|отправить|отправляй|ок|окей)$/i;
+const leadEditPattern = /^(нет|изменить|неверно|заново|назад)$/i;
+const contactPattern = /(?:@[a-zA-Z0-9_]{5,}|\+?\d[\d\s()-]{6,}\d|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
+
+const normalizeLead = (lead) => {
+  if (!lead || typeof lead !== 'object' || !leadStages.has(lead.stage)) {
+    return null;
+  }
+
+  return {
+    stage: lead.stage,
+    name: String(lead.name || '').slice(0, 120),
+    contact: String(lead.contact || '').slice(0, 240),
+    request: String(lead.request || '').slice(0, 2000),
+    startedAt: lead.startedAt || new Date().toISOString(),
+    submittedAt: lead.submittedAt || '',
+    telegramMessageId: String(lead.telegramMessageId || '').slice(0, 40),
+  };
+};
 
 const normalizeChatMessages = (messages) => (
   Array.isArray(messages)
@@ -156,6 +187,7 @@ const readChat = async (id) => {
     createdAt: chat.createdAt || new Date().toISOString(),
     updatedAt: chat.updatedAt || new Date().toISOString(),
     messages: normalizeChatMessages(chat.messages),
+    lead: normalizeLead(chat.lead),
   };
 };
 
@@ -167,6 +199,7 @@ const writeChat = async (chat) => {
     createdAt: chat.createdAt || now,
     updatedAt: now,
     messages: normalizeChatMessages(chat.messages),
+    lead: normalizeLead(chat.lead),
   };
   const target = chatPath(nextChat.id);
   const tmp = `${target}.tmp`;
@@ -187,6 +220,7 @@ const chatPreview = (chat) => {
     lastRole: lastMessage?.role || '',
     lastMessage: String(lastMessage?.content || '').slice(0, 180),
     lastUserMessage: String(lastUserMessage?.content || '').slice(0, 180),
+    leadStage: chat.lead?.stage || '',
     url: `/?chat_id=${encodeURIComponent(chat.id)}`,
   };
 };
@@ -237,7 +271,9 @@ const buildDefaultChatSystemPrompt = async () => {
     'Если спрашивают про Морфиуса, не говори, что ничего не знаешь. Ответь как внутренняя шутка сайта: Морфиус условно жив, пьёт чай где-то между красной таблеткой и календарём записей, но главный проводник здесь — Атмика. Затем предложи помощь по форматам, состоянию, запросу или записи.',
     'Если спрашивают “Что ты можешь?”, перечисли: объяснить подход Атмики, подобрать формат, рассказать цены и кому подходит, помочь сформулировать запрос, дать контакты, создать/сохранить ссылку на диалог. Отвечай компактно, можно списком.',
     'Не обещай исцеление, гарантированный результат или медицинскую, юридическую, финансовую помощь. Если вопрос про здоровье, травму или кризис — мягко предложи обратиться к профильному специалисту.',
-    'Если человек хочет записаться, веди к WhatsApp или email из контактов. Если спрашивают цену, называй цены из контекста.',
+    isTelegramLeadConfigured
+      ? 'Если человек хочет записаться, предложи написать “хочу записаться”: сайт запустит короткий сценарий заявки с подтверждением перед отправкой. Если спрашивают цену, называй цены из контекста.'
+      : 'Если человек хочет записаться, веди к WhatsApp или email из контактов. Если спрашивают цену, называй цены из контекста.',
     'Не выдумывай фактов о личной жизни Атмики вне контекста сайта. Если не знаешь — скажи честно и предложи уточнить напрямую.',
     '',
     'Контекст сайта:',
@@ -363,6 +399,150 @@ const callOpenRouter = async (messages) => {
   throw lastError || new Error('OpenRouter request failed');
 };
 
+const createLead = () => ({
+  stage: 'name',
+  name: '',
+  contact: '',
+  request: '',
+  startedAt: new Date().toISOString(),
+  submittedAt: '',
+  telegramMessageId: '',
+});
+
+const leadSummary = (lead) => [
+  'Проверьте заявку:',
+  '',
+  `Имя: ${lead.name}`,
+  `Контакт: ${lead.contact}`,
+  `Запрос: ${lead.request}`,
+  '',
+  'Всё верно? Напишите «Да», и я отправлю заявку Атмике в Telegram. Если нужно исправить — напишите «Изменить».',
+].join('\n');
+
+const sendLeadToTelegram = async (chat) => {
+  if (!isTelegramLeadConfigured || !chat.lead) {
+    throw new Error('Telegram lead delivery is not configured');
+  }
+
+  const chatUrl = `${publicSiteUrl}/?chat_id=${encodeURIComponent(chat.id)}`;
+  const text = [
+    '✨ Новая заявка с сайта Атмики',
+    '',
+    `Имя: ${chat.lead.name}`,
+    `Контакт: ${chat.lead.contact}`,
+    `Запрос: ${chat.lead.request}`,
+    '',
+    `Диалог: ${chatUrl}`,
+    `Время: ${new Date().toISOString()}`,
+  ].join('\n');
+
+  let response;
+  try {
+    response = await fetch(`${telegramBotApiBaseUrl}/bot${telegramBotToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: telegramLeadChatId,
+        text,
+        disable_web_page_preview: true,
+      }),
+    });
+  } catch {
+    throw new Error('Telegram request failed');
+  }
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.ok) {
+    const error = new Error(payload.description || `Telegram request failed: ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+
+  return String(payload.result?.message_id || '');
+};
+
+const handleLeadMessage = async (chat, message) => {
+  if (!isTelegramLeadConfigured) {
+    return null;
+  }
+
+  const normalizedReply = message.toLocaleLowerCase('ru-RU').trim().replace(/[.!]+$/, '');
+  const currentLead = normalizeLead(chat.lead);
+
+  if (currentLead && currentLead.stage !== 'submitted' && leadCancelPattern.test(normalizedReply)) {
+    chat.lead = null;
+    return 'Хорошо, заявку отменил. Можем просто продолжить разговор.';
+  }
+
+  if ((!currentLead || currentLead.stage === 'submitted') && leadIntentPattern.test(message)) {
+    chat.lead = createLead();
+    return 'Конечно. Я соберу короткую заявку и передам её Атмике в Telegram только после вашего подтверждения. Как к вам обращаться?';
+  }
+
+  if (!currentLead || currentLead.stage === 'submitted') {
+    return null;
+  }
+
+  chat.lead = currentLead;
+
+  if (currentLead.stage === 'name') {
+    if (message.length < 2 || message.length > 120) {
+      return 'Напишите, пожалуйста, ваше имя — от 2 до 120 символов.';
+    }
+
+    chat.lead.name = message;
+    chat.lead.stage = 'contact';
+    return 'Спасибо. Оставьте удобный контакт: @username в Telegram, номер телефона или email.';
+  }
+
+  if (currentLead.stage === 'contact') {
+    if (!contactPattern.test(message)) {
+      return 'Не вижу контакта. Пришлите @username в Telegram, номер телефона или email.';
+    }
+
+    chat.lead.contact = message;
+    chat.lead.stage = 'request';
+    return 'Коротко опишите, с каким запросом вы хотите обратиться к Атмике.';
+  }
+
+  if (currentLead.stage === 'request') {
+    if (message.length < 5) {
+      return 'Добавьте, пожалуйста, немного деталей — хотя бы несколько слов о вашем запросе.';
+    }
+
+    chat.lead.request = message;
+    chat.lead.stage = 'confirm';
+    return leadSummary(chat.lead);
+  }
+
+  if (currentLead.stage === 'confirm') {
+    if (leadEditPattern.test(normalizedReply)) {
+      chat.lead = createLead();
+      return 'Хорошо, заполним заново. Как к вам обращаться?';
+    }
+
+    if (!leadConfirmPattern.test(normalizedReply)) {
+      return 'Чтобы отправить заявку, напишите «Да». Чтобы заполнить заново — «Изменить», чтобы отменить — «Отмена».';
+    }
+
+    try {
+      chat.lead.telegramMessageId = await sendLeadToTelegram(chat);
+      chat.lead.stage = 'submitted';
+      chat.lead.submittedAt = new Date().toISOString();
+      return 'Готово ✨ Заявка отправлена Атмике. Она свяжется с вами по указанному контакту.';
+    } catch (error) {
+      console.error('Telegram lead delivery failed', {
+        chatId: chat.id,
+        status: error.status || 0,
+        message: error.message,
+      });
+      return 'Сейчас не получилось отправить заявку в Telegram. Данные сохранены — попробуйте ещё раз написать «Да» чуть позже.';
+    }
+  }
+
+  return null;
+};
+
 const appendChatMessageAndAnswer = async (requestedId, message) => {
   if (requestedId && !isSafeChatId(requestedId)) {
     const error = new Error('Invalid chat_id');
@@ -391,6 +571,18 @@ const appendChatMessageAndAnswer = async (requestedId, message) => {
     content: normalizedMessage,
     createdAt: new Date().toISOString(),
   });
+
+  const leadAnswer = await handleLeadMessage(chat, normalizedMessage);
+  if (leadAnswer) {
+    chat.messages.push({
+      role: 'assistant',
+      content: leadAnswer,
+      createdAt: new Date().toISOString(),
+    });
+    chat = await writeChat(chat);
+    return { id, chat, answer: leadAnswer };
+  }
+
   chat = await writeChat(chat);
 
   const systemPrompt = await buildChatSystemPrompt();
