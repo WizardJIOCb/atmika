@@ -348,7 +348,6 @@ const gallery = content.gallery?.items || [];
 const audience = content.audience?.items || [];
 const outcomes = content.outcomes?.items || [];
 const process = content.process?.items || [];
-const heroMedia = gallery.find((item) => item.type === 'video') || gallery[0];
 const bottomGallery = [
   {
     fileName: 'state-visible-01.mp4',
@@ -556,68 +555,67 @@ app.innerHTML = `
   </header>
 
   <main id="top">
-    <section class="hero-expedition">
-      <div class="hero-backdrop">
-        ${mediaMarkup(heroMedia, 'hero-video')}
-      </div>
-      <canvas class="hero-matrix" data-hero-matrix aria-hidden="true"></canvas>
-      <div class="hero-geometry" aria-hidden="true">
-        <svg viewBox="0 0 600 600" role="presentation">
-          <g class="geometry-orbits">
-            <circle cx="300" cy="300" r="224" />
-            <circle cx="300" cy="300" r="184" />
-            <circle cx="300" cy="300" r="138" />
-            <path d="M300 76 494 188 494 412 300 524 106 412 106 188Z" />
-            <path d="M300 76 300 524M106 188 494 412M494 188 106 412" />
-          </g>
-          <g class="geometry-flower">
-            <circle cx="300" cy="300" r="84" />
-            <circle cx="300" cy="216" r="84" />
-            <circle cx="373" cy="258" r="84" />
-            <circle cx="373" cy="342" r="84" />
-            <circle cx="300" cy="384" r="84" />
-            <circle cx="227" cy="342" r="84" />
-            <circle cx="227" cy="258" r="84" />
-          </g>
-          <g class="geometry-core">
-            <path d="M300 132 446 216 446 384 300 468 154 384 154 216Z" />
-            <path d="M300 132 446 384 154 384ZM154 216 446 216 300 468Z" />
-            <circle cx="300" cy="300" r="18" />
-            <circle cx="300" cy="300" r="7" />
-          </g>
-        </svg>
-        <span class="geometry-label geometry-label-top">CONSCIOUSNESS / 01</span>
-        <span class="geometry-label geometry-label-bottom">ATMIKA FIELD</span>
-      </div>
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <span class="eyebrow">${html(content.hero?.eyebrow)}</span>
-        <h1>${html(content.hero?.title)}</h1>
-        <p>${html(content.hero?.text)}</p>
-        <div class="hero-actions">
-          <a class="button button-primary" href="${attr(content.hero?.primaryHref)}">${html(content.hero?.primaryLabel)}</a>
-          <a class="button button-ghost" href="#gallery">${html(content.hero?.secondaryLabel)}</a>
+    <div class="top-image-field">
+      <section class="hero-expedition">
+        <canvas class="hero-matrix" data-hero-matrix aria-hidden="true"></canvas>
+        <div class="hero-geometry" aria-hidden="true">
+          <svg viewBox="0 0 600 600" role="presentation">
+            <g class="geometry-orbits">
+              <circle cx="300" cy="300" r="224" />
+              <circle cx="300" cy="300" r="184" />
+              <circle cx="300" cy="300" r="138" />
+              <path d="M300 76 494 188 494 412 300 524 106 412 106 188Z" />
+              <path d="M300 76 300 524M106 188 494 412M494 188 106 412" />
+            </g>
+            <g class="geometry-flower">
+              <circle cx="300" cy="300" r="84" />
+              <circle cx="300" cy="216" r="84" />
+              <circle cx="373" cy="258" r="84" />
+              <circle cx="373" cy="342" r="84" />
+              <circle cx="300" cy="384" r="84" />
+              <circle cx="227" cy="342" r="84" />
+              <circle cx="227" cy="258" r="84" />
+            </g>
+            <g class="geometry-core">
+              <path d="M300 132 446 216 446 384 300 468 154 384 154 216Z" />
+              <path d="M300 132 446 384 154 384ZM154 216 446 216 300 468Z" />
+              <circle cx="300" cy="300" r="18" />
+              <circle cx="300" cy="300" r="7" />
+            </g>
+          </svg>
+          <span class="geometry-label geometry-label-top">CONSCIOUSNESS / 01</span>
+          <span class="geometry-label geometry-label-bottom">ATMIKA FIELD</span>
         </div>
-      </div>
-      <div class="route-strip" aria-label="${attr(content.hero?.panelAriaLabel)}">
-        ${(content.hero?.panel || []).map((item, index) => `
-          <a href="#work">
-            <span>${String(index + 1).padStart(2, '0')}</span>
-            <strong>${html(item)}</strong>
-          </a>
-        `).join('')}
-      </div>
-    </section>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <span class="eyebrow">${html(content.hero?.eyebrow)}</span>
+          <h1>${html(content.hero?.title)}</h1>
+          <p>${html(content.hero?.text)}</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="${attr(content.hero?.primaryHref)}">${html(content.hero?.primaryLabel)}</a>
+            <a class="button button-ghost" href="#gallery">${html(content.hero?.secondaryLabel)}</a>
+          </div>
+        </div>
+        <div class="route-strip" aria-label="${attr(content.hero?.panelAriaLabel)}">
+          ${(content.hero?.panel || []).map((item, index) => `
+            <a href="#work">
+              <span>${String(index + 1).padStart(2, '0')}</span>
+              <strong>${html(item)}</strong>
+            </a>
+          `).join('')}
+        </div>
+      </section>
 
-    <section class="section intro-section" id="intro-expedition">
-      <div class="section-copy">
-        <span class="eyebrow">${html(content.intro?.kicker)}</span>
-        <h2>${html(content.intro?.title)}</h2>
-      </div>
-      <div class="prose">
-        ${(content.intro?.paragraphs || []).map((paragraph) => `<p>${html(paragraph)}</p>`).join('')}
-      </div>
-    </section>
+      <section class="section intro-section" id="intro-expedition">
+        <div class="section-copy">
+          <span class="eyebrow">${html(content.intro?.kicker)}</span>
+          <h2>${html(content.intro?.title)}</h2>
+        </div>
+        <div class="prose">
+          ${(content.intro?.paragraphs || []).map((paragraph) => `<p>${html(paragraph)}</p>`).join('')}
+        </div>
+      </section>
+    </div>
 
     <section class="section" id="work">
       <div class="center-head">
