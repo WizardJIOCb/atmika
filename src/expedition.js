@@ -1416,8 +1416,25 @@ const initAtmikaChat = () => {
 
     if (!messages.length) {
       const empty = document.createElement('div');
+      const signupLink = document.createElement('button');
       empty.className = 'atmika-chat-empty';
-      empty.textContent = 'Я рядом. Можно спросить про форматы работы, состояние или первый шаг. Чтобы записаться, напишите «хочу записаться» — я задам несколько вопросов, покажу итог и после вашего подтверждения отправлю заявку Атмике в Telegram.';
+      signupLink.type = 'button';
+      signupLink.className = 'atmika-chat-signup-link';
+      signupLink.textContent = 'хочу записаться';
+      signupLink.addEventListener('click', () => {
+        if (isSending) {
+          return;
+        }
+
+        input.value = signupLink.textContent;
+        resizeInput();
+        form.requestSubmit();
+      });
+      empty.append(
+        document.createTextNode('Я рядом. Можно спросить про форматы работы, состояние или первый шаг. Чтобы записаться, нажмите «'),
+        signupLink,
+        document.createTextNode('» — я задам несколько вопросов, покажу итог и после вашего подтверждения отправлю заявку Атмике в Telegram.'),
+      );
       messagesEl.append(empty);
       return;
     }

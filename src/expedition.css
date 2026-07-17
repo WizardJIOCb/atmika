@@ -1756,6 +1756,30 @@ blockquote {
   max-width: 100%;
 }
 
+.atmika-chat-signup-link {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--aqua);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.atmika-chat-signup-link:hover {
+  color: var(--cyan);
+}
+
+.atmika-chat-signup-link:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--aqua);
+  outline-offset: 3px;
+}
+
 .atmika-chat-message.is-user {
   justify-self: end;
   border-color: rgba(128, 217, 255, 0.3);
