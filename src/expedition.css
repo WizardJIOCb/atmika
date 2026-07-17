@@ -251,6 +251,43 @@ body.menu-open .menu-toggle span:last-child {
   );
 }
 
+#work {
+  position: relative;
+  isolation: isolate;
+}
+
+#work::before,
+#work::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  pointer-events: none;
+  transform: translateX(-50%);
+  content: "";
+}
+
+#work::before {
+  z-index: -2;
+  background: url('../public/images/top-image.png') center 58% / cover no-repeat;
+  filter: brightness(0.58) contrast(1.08) saturate(0.82);
+}
+
+#work::after {
+  z-index: -1;
+  background:
+    linear-gradient(
+      180deg,
+      #030707 0%,
+      rgba(3, 7, 7, 0.7) 7%,
+      rgba(3, 7, 7, 0.34) 22%,
+      rgba(3, 7, 7, 0.52) 78%,
+      #030707 100%
+    ),
+    linear-gradient(90deg, rgba(3, 7, 7, 0.42), transparent 46%, rgba(3, 7, 7, 0.46));
+}
+
 .hero-expedition {
   position: relative;
   isolation: isolate;
@@ -270,7 +307,7 @@ body.menu-open .menu-toggle span:last-child {
   z-index: -1;
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.91) 0%, rgba(0, 0, 0, 0.58) 39%, rgba(0, 0, 0, 0.08) 73%, rgba(0, 0, 0, 0.48) 100%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0%, rgba(3, 7, 7, 0.18) 58%, #030707 98%);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0%, rgba(3, 7, 7, 0.18) 58%, rgba(3, 7, 7, 0.46) 98%);
 }
 
 .hero-matrix {
@@ -483,6 +520,7 @@ h1 {
   gap: 18px;
   border-top: 1px solid var(--line);
   padding-top: 22px;
+  background: rgba(3, 7, 7, 0.08);
 }
 
 .route-strip a {
@@ -2355,6 +2393,24 @@ blockquote {
     );
   }
 
+  #work::before {
+    background-position: 50% center;
+    filter: brightness(0.52) contrast(1.08) saturate(0.86);
+  }
+
+  #work::after {
+    background:
+      linear-gradient(
+        180deg,
+        #030707 0%,
+        rgba(3, 7, 7, 0.76) 6%,
+        rgba(3, 7, 7, 0.38) 18%,
+        rgba(3, 7, 7, 0.58) 84%,
+        #030707 100%
+      ),
+      linear-gradient(90deg, rgba(3, 7, 7, 0.42), transparent 50%, rgba(3, 7, 7, 0.48));
+  }
+
   .expedition-header {
     top: 0;
     left: 0;
@@ -2398,7 +2454,7 @@ blockquote {
 
   .hero-overlay {
     background:
-      linear-gradient(180deg, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.2) 35%, rgba(0, 0, 0, 0.82) 70%, #030707 98%),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.2) 35%, rgba(0, 0, 0, 0.62) 70%, rgba(3, 7, 7, 0.42) 98%),
       linear-gradient(90deg, rgba(0, 0, 0, 0.58), transparent 62%, rgba(0, 0, 0, 0.35));
   }
 
