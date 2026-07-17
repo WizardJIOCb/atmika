@@ -833,7 +833,7 @@ app.innerHTML = `
       <div class="atmika-chat-head">
         <div>
           <span class="eyebrow">Белый кролик онлайн</span>
-          <h2 id="atmika-chat-title">Диалог с проводником</h2>
+          <h2 id="atmika-chat-title">ИИ Помощник</h2>
         </div>
         <div class="atmika-chat-actions">
           <button type="button" data-chat-share>Поделиться</button>
@@ -1358,7 +1358,9 @@ const initAtmikaChat = () => {
 
   const resizeInput = () => {
     input.style.height = 'auto';
-    input.style.height = `${Math.min(input.scrollHeight, 112)}px`;
+    const contentHeight = input.scrollHeight;
+    input.style.height = `${Math.min(contentHeight, 112)}px`;
+    input.style.overflowY = contentHeight > 112 ? 'auto' : 'hidden';
   };
 
   const setStatus = (message) => {

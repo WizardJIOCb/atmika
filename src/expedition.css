@@ -3225,13 +3225,28 @@ blockquote {
     min-height: 48px;
     max-height: 112px;
     resize: none;
-    overflow-y: auto;
+    overflow-y: hidden;
     border-color: rgba(85, 247, 230, 0.3);
     border-radius: 24px;
     background: rgba(255, 255, 255, 0.045);
     padding: 12px 16px;
     font-size: 16px;
     line-height: 1.45;
+    scrollbar-color: rgba(85, 247, 230, 0.38) transparent;
+    scrollbar-width: thin;
+  }
+
+  .atmika-chat-form textarea::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .atmika-chat-form textarea::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .atmika-chat-form textarea::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(85, 247, 230, 0.38);
   }
 
   .atmika-chat-form button {
