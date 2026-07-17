@@ -1417,7 +1417,7 @@ const initAtmikaChat = () => {
     if (!messages.length) {
       const empty = document.createElement('div');
       empty.className = 'atmika-chat-empty';
-      empty.textContent = 'Я рядом. Можно спросить про форматы работы, состояние, первый шаг или просто описать, что сейчас происходит.';
+      empty.textContent = 'Я рядом. Можно спросить про форматы работы, состояние или первый шаг. Чтобы записаться, напишите «хочу записаться» — я задам несколько вопросов, покажу итог и после вашего подтверждения отправлю заявку Атмике в Telegram.';
       messagesEl.append(empty);
       return;
     }
