@@ -419,28 +419,23 @@ const leadSummary = (lead) => [
   'Всё верно? Напишите «Да», и я отправлю заявку Атмике в Telegram. Если нужно исправить — напишите «Изменить».',
 ].join('\n');
 
-const escapeTelegramHtml = (value) => String(value)
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;');
-
 const sendLeadToTelegram = async (chat) => {
   if (!isTelegramLeadConfigured || !chat.lead) {
     throw new Error('Telegram lead delivery is not configured');
   }
 
   const chatUrl = `${publicSiteUrl}/?chat_id=${encodeURIComponent(chat.id)}`;
-  const text = [
+  const chatLinkLabel = 'https://iam-atmika.com';
+  const textBeforeChatLink = [
     '✨ Новая заявка с сайта Атмики',
     '',
-    `Имя: ${escapeTelegramHtml(chat.lead.name)}`,
-    `Контакт: ${escapeTelegramHtml(chat.lead.contact)}`,
-    `Запрос: ${escapeTelegramHtml(chat.lead.request)}`,
+    `Имя: ${chat.lead.name}`,
+    `Контакт: ${chat.lead.contact}`,
+    `Запрос: ${chat.lead.request}`,
     '',
-    `Диалог: <a href="${escapeTelegramHtml(chatUrl)}">https://iam-atmika.com</a>`,
-    `Время: ${new Date().toISOString()}`,
+    'Диалог: ',
   ].join('\n');
+  const text = `${textBeforeChatLink}${chatLinkLabel}\nВремя: ${new Date().toISOString()}`;
 
   let response;
   try {
@@ -450,7 +445,12 @@ const sendLeadToTelegram = async (chat) => {
       body: JSON.stringify({
         chat_id: telegramLeadChatId,
         text,
-        parse_mode: 'HTML',
+        entities: [{
+          type: 'text_link',
+          offset: textBeforeChatLink.length,
+          length: chatLinkLabel.length,
+          url: chatUrl,
+        }],
         disable_web_page_preview: true,
       }),
     });
