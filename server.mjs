@@ -12,12 +12,13 @@ const adminPassword = process.env.ATMIKA_ADMIN_PASSWORD || 'change-me-atmika';
 const sessionTtlMs = 1000 * 60 * 60 * 12;
 const sessions = new Map();
 const openRouterApiKey = process.env.OPENROUTER_API_KEY || '';
-const openRouterModel = process.env.OPENROUTER_MODEL || 'openai/gpt-oss-120b:free';
+const openRouterModel = process.env.OPENROUTER_MODEL || 'openrouter/free';
 const openRouterFallbackModels = (process.env.OPENROUTER_FALLBACK_MODELS
-  || 'openai/gpt-oss-20b:free,meta-llama/llama-3.3-70b-instruct:free')
+  || 'openrouter/free')
   .split(',')
   .map((model) => model.trim())
   .filter(Boolean);
+const retryableOpenRouterStatuses = new Set([404, 408, 429, 502, 503, 504]);
 
 const contentDir = process.env.ATMIKA_CONTENT_DIR
   ? path.resolve(process.env.ATMIKA_CONTENT_DIR)
@@ -352,7 +353,8 @@ const callOpenRouter = async (messages) => {
     } catch (error) {
       lastError = error;
 
-      if (error.status !== 429 && error.code !== 429) {
+      if (!retryableOpenRouterStatuses.has(error.status)
+        && !retryableOpenRouterStatuses.has(error.code)) {
         break;
       }
     }

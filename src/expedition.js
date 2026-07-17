@@ -864,8 +864,11 @@ app.innerHTML = `
       <div class="atmika-chat-share" data-chat-share-status aria-live="polite"></div>
       <div class="atmika-chat-messages" data-chat-messages aria-live="polite"></div>
       <form class="atmika-chat-form" data-chat-form>
-        <textarea name="message" rows="2" placeholder="Спросите про практики, форматы, состояние или первый шаг..." required></textarea>
-        <button type="submit">Отправить</button>
+        <textarea name="message" rows="1" placeholder="Напишите сообщение…" required></textarea>
+        <button type="submit" aria-label="Отправить сообщение" title="Отправить">
+          <span class="atmika-chat-send-label">Отправить</span>
+          <span class="atmika-chat-send-icon" aria-hidden="true">↑</span>
+        </button>
       </form>
     </div>
   </div>
@@ -1341,6 +1344,7 @@ const initAtmikaChat = () => {
   const messagesEl = document.querySelector('[data-chat-messages]');
   const form = document.querySelector('[data-chat-form]');
   const input = form?.querySelector('textarea[name="message"]');
+  const submitButton = form?.querySelector('button[type="submit"]');
 
   if (!dialog || !form || !input || !messagesEl) {
     return;
@@ -1351,6 +1355,11 @@ const initAtmikaChat = () => {
   let isReady = false;
   let isSending = false;
   let currentMessages = [];
+
+  const resizeInput = () => {
+    input.style.height = 'auto';
+    input.style.height = `${Math.min(input.scrollHeight, 112)}px`;
+  };
 
   const setStatus = (message) => {
     if (shareStatus) {
@@ -1526,6 +1535,7 @@ const initAtmikaChat = () => {
       form.requestSubmit();
     }
   });
+  input.addEventListener('input', resizeInput);
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -1541,7 +1551,12 @@ const initAtmikaChat = () => {
     }
 
     isSending = true;
+    form.setAttribute('aria-busy', 'true');
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
     input.value = '';
+    resizeInput();
     setStatus('');
     renderMessages([
       ...currentMessages,
@@ -1577,6 +1592,10 @@ const initAtmikaChat = () => {
       setStatus('');
     } finally {
       isSending = false;
+      form.removeAttribute('aria-busy');
+      if (submitButton) {
+        submitButton.disabled = false;
+      }
     }
   });
 
