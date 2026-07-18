@@ -868,12 +868,14 @@ app.innerHTML = `
     </section>
 
     <section class="section story-section" id="story">
-      <div class="story-card">
-        <span class="eyebrow">${html(content.story?.kicker)}</span>
-        <h2>${html(content.story?.title)}</h2>
-        ${(content.story?.paragraphs || []).map((paragraph) => `<p>${html(paragraph)}</p>`).join('')}
-      </div>
-      <blockquote>${html(content.story?.quote)}</blockquote>
+      <article class="story-card">
+        <div class="story-copy">
+          <span class="eyebrow">${html(content.story?.kicker)}</span>
+          <h2>${html(content.story?.title)}</h2>
+          ${(content.story?.paragraphs || []).map((paragraph) => `<p>${html(paragraph)}</p>`).join('')}
+        </div>
+        <blockquote>${html(content.story?.quote)}</blockquote>
+      </article>
     </section>
 
     <section class="contact-section" id="contact">
