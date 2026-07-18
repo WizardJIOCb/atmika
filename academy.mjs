@@ -7,6 +7,19 @@ const now = () => new Date().toISOString();
 const bool = (value) => (value ? 1 : 0);
 const trim = (value, max = 5000) => String(value ?? '').trim().slice(0, max);
 const legalDocumentVersion = '18.07.2026';
+const operatorIdentityVersion = 'pankratova-2026-07-18';
+const operatorIdentitySettings = {
+  sellerName: 'Атмика',
+  sellerLegalName: 'ИП Панкратова Оксана Сергеевна',
+  sellerStatus: 'Индивидуальный предприниматель',
+  inn: '236504298920',
+  ogrn: '326237500235369',
+  legalAddress: '',
+  postalAddress: '',
+  phone: '',
+  email: 'magicscar8@gmail.com',
+  supportEmail: 'magicscar8@gmail.com',
+};
 const safeJson = (value, fallback) => {
   try {
     return JSON.parse(value);
@@ -48,16 +61,8 @@ const defaultSettings = {
   title: 'Курсы Атмики',
   eyebrow: 'Пространство обучения',
   description: 'Практики, программы и материалы для самостоятельного прохождения.',
-  sellerName: 'Атмика',
-  sellerLegalName: 'ИП Панкратова Оксана Сергеевна',
-  sellerStatus: 'Индивидуальный предприниматель',
-  inn: '236504298920',
-  ogrn: '326237500235369',
-  legalAddress: '',
-  postalAddress: '',
-  phone: '',
-  email: 'eygru@proton.me',
-  supportEmail: 'eygru@proton.me',
+  ...operatorIdentitySettings,
+  operatorIdentityVersion,
   accessInstructions: 'После успешной оплаты доступ откроется в личном кабинете на iam-atmika.com.',
   refundSummary: 'Для возврата напишите на электронную почту поддержки. Условия и срок возврата определяются офертой и применимым законодательством.',
   offerHtml: '',
@@ -323,10 +328,20 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
       CREATE INDEX IF NOT EXISTS academy_entitlements_user_idx ON academy_entitlements(user_id);
       CREATE INDEX IF NOT EXISTS academy_legal_acceptances_user_idx ON academy_legal_acceptances(user_id, created_at DESC);
     `);
-    const settings = db.prepare('SELECT id FROM academy_settings WHERE id = 1').get();
+    const settings = db.prepare('SELECT value_json FROM academy_settings WHERE id = 1').get();
     if (!settings) {
       db.prepare('INSERT INTO academy_settings (id, value_json, updated_at) VALUES (1, ?, ?)')
         .run(JSON.stringify(defaultSettings), now());
+    } else {
+      const storedSettings = safeJson(settings.value_json, {});
+      if (storedSettings.operatorIdentityVersion !== operatorIdentityVersion) {
+        db.prepare('UPDATE academy_settings SET value_json = ?, updated_at = ? WHERE id = 1')
+          .run(JSON.stringify({
+            ...storedSettings,
+            ...operatorIdentitySettings,
+            operatorIdentityVersion,
+          }), now());
+      }
     }
   };
 
