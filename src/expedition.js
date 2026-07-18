@@ -904,6 +904,7 @@ app.innerHTML = `
     </section>
   </main>
   <footer class="site-commerce-footer" data-academy-footer>
+    <div class="site-commerce-footer-grid"><div class="site-commerce-footer-brand"><strong>АТМИКА</strong><p>ИП Панкратова Оксана Сергеевна</p><span>ИНН 236504298920 · ОГРНИП 326237500235369</span></div><div><strong>Документы</strong><a href="/legal/privacy/">Политика оператора в отношении обработки персональных данных</a><a href="/legal/consent/">Согласие на обработку персональных данных</a><button class="site-privacy-settings" type="button" data-privacy-settings>Настройки cookies</button></div></div>
     <div class="site-commerce-footer-bottom"><span>© ${new Date().getFullYear()} Атмика</span><span>iam-atmika.com</span></div>
   </footer>
   <div class="atmika-chat" data-chat-dialog aria-hidden="true">
@@ -942,6 +943,7 @@ app.innerHTML = `
       <div class="atmika-chat-share" data-chat-share-status aria-live="polite"></div>
       <div class="atmika-chat-messages" data-chat-messages aria-live="polite"></div>
       <form class="atmika-chat-form" data-chat-form>
+        <label class="atmika-chat-consent"><input type="checkbox" name="personalDataConsent" required /><span>Я отдельно даю <a href="/legal/consent/" target="_blank">согласие на обработку персональных данных</a> и ознакомлен(а) с <a href="/legal/privacy/" target="_blank">Политикой оператора</a>. Не отправляйте в чат чувствительные данные.</span></label>
         <textarea name="message" rows="1" placeholder="Напишите сообщение… Ctrl+Enter — отправить" required></textarea>
         <button type="submit" aria-label="Отправить сообщение" title="Отправить">
           <span class="atmika-chat-send-label">Отправить</span>
@@ -1429,6 +1431,7 @@ const initAtmikaChat = () => {
   const messagesEl = document.querySelector('[data-chat-messages]');
   const form = document.querySelector('[data-chat-form]');
   const input = form?.querySelector('textarea[name="message"]');
+  const consentInput = form?.querySelector('input[name="personalDataConsent"]');
   const submitButton = form?.querySelector('button[type="submit"]');
 
   if (!dialog || !form || !input || !messagesEl) {
@@ -1661,7 +1664,7 @@ const initAtmikaChat = () => {
 
     const message = input.value.trim();
 
-    if (!message) {
+    if (!message || !consentInput?.checked) {
       return;
     }
 
@@ -1683,7 +1686,7 @@ const initAtmikaChat = () => {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, message }),
+        body: JSON.stringify({ chat_id: chatId, message, personal_data_consent: true }),
       });
       const payload = await response.json();
 

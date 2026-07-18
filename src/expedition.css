@@ -1188,6 +1188,8 @@ h1 {
 .site-commerce-footer-grid span,
 .site-commerce-footer-grid a { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
 .site-commerce-footer-grid a:hover { color: var(--aqua); }
+.site-privacy-settings { margin: 0; padding: 0; border: 0; background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: 12px; line-height: 1.55; text-align: left; }
+.site-privacy-settings:hover { color: var(--aqua); }
 .site-commerce-footer-bottom { display: flex; justify-content: space-between; gap: 20px; margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--dim); font-size: 10px; text-transform: uppercase; }
 
 .check-grid,
@@ -2083,6 +2085,30 @@ blockquote {
   gap: 12px;
   padding: 18px 24px 24px;
   border-top: 1px solid rgba(85, 247, 230, 0.16);
+}
+
+.atmika-chat-consent {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 9px;
+  align-items: start;
+  color: rgba(239, 250, 246, 0.58);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.atmika-chat-consent input {
+  width: 17px;
+  height: 17px;
+  margin: 1px 0 0;
+  accent-color: var(--aqua);
+}
+
+.atmika-chat-consent a {
+  color: var(--aqua);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .atmika-chat-form textarea {

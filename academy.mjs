@@ -6,6 +6,7 @@ import path from 'node:path';
 const now = () => new Date().toISOString();
 const bool = (value) => (value ? 1 : 0);
 const trim = (value, max = 5000) => String(value ?? '').trim().slice(0, max);
+const legalDocumentVersion = '18.07.2026';
 const safeJson = (value, fallback) => {
   try {
     return JSON.parse(value);
@@ -47,11 +48,11 @@ const defaultSettings = {
   title: 'Курсы Атмики',
   eyebrow: 'Пространство обучения',
   description: 'Практики, программы и материалы для самостоятельного прохождения.',
-  sellerName: '',
-  sellerLegalName: '',
-  sellerStatus: '',
-  inn: '',
-  ogrn: '',
+  sellerName: 'Атмика',
+  sellerLegalName: 'ИП Панкратова Оксана Сергеевна',
+  sellerStatus: 'Индивидуальный предприниматель',
+  inn: '236504298920',
+  ogrn: '326237500235369',
   legalAddress: '',
   postalAddress: '',
   phone: '',
@@ -61,6 +62,7 @@ const defaultSettings = {
   refundSummary: 'Для возврата напишите на электронную почту поддержки. Условия и срок возврата определяются офертой и применимым законодательством.',
   offerHtml: '',
   privacyHtml: '',
+  consentHtml: '',
   paymentHtml: '',
   vatCode: '1',
 };
@@ -276,6 +278,14 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
         created_at TEXT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES academy_users(id) ON DELETE CASCADE
       );
+      CREATE TABLE IF NOT EXISTS academy_legal_acceptances (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        document_version TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES academy_users(id) ON DELETE CASCADE
+      );
       CREATE TABLE IF NOT EXISTS academy_payments (
         id TEXT PRIMARY KEY,
         yookassa_id TEXT UNIQUE,
@@ -311,6 +321,7 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
       CREATE INDEX IF NOT EXISTS academy_materials_course_idx ON academy_materials(course_id, position);
       CREATE INDEX IF NOT EXISTS academy_payments_created_idx ON academy_payments(created_at DESC);
       CREATE INDEX IF NOT EXISTS academy_entitlements_user_idx ON academy_entitlements(user_id);
+      CREATE INDEX IF NOT EXISTS academy_legal_acceptances_user_idx ON academy_legal_acceptances(user_id, created_at DESC);
     `);
     const settings = db.prepare('SELECT id FROM academy_settings WHERE id = 1').get();
     if (!settings) {
@@ -322,10 +333,16 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
   const ready = initialize();
   const ensureReady = async () => ready;
 
-  const getSettings = () => ({
-    ...defaultSettings,
-    ...safeJson(db.prepare('SELECT value_json FROM academy_settings WHERE id = 1').get()?.value_json, {}),
-  });
+  const getSettings = () => {
+    const settings = {
+      ...defaultSettings,
+      ...safeJson(db.prepare('SELECT value_json FROM academy_settings WHERE id = 1').get()?.value_json, {}),
+    };
+    ['sellerName', 'sellerLegalName', 'sellerStatus', 'inn', 'ogrn', 'email', 'supportEmail'].forEach((key) => {
+      if (!trim(settings[key])) settings[key] = defaultSettings[key];
+    });
+    return settings;
+  };
 
   const publicSettings = () => {
     const settings = getSettings();
@@ -343,6 +360,7 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
       phone: settings.phone,
       email: settings.email,
       supportEmail: settings.supportEmail,
+      legalDocumentVersion,
       accessInstructions: settings.accessInstructions,
       refundSummary: settings.refundSummary,
     };
@@ -418,6 +436,13 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
     return { id, email: normalizedEmail, name: trim(name, 180) };
   };
 
+  const recordLegalAcceptance = (userId, kind) => {
+    db.prepare(`
+      INSERT INTO academy_legal_acceptances (id, user_id, kind, document_version, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(randomUUID(), userId, trim(kind, 80), legalDocumentVersion, now());
+  };
+
   const userEntitlements = (userId) => new Set(
     userId
       ? db.prepare('SELECT target_type, target_id FROM academy_entitlements WHERE user_id = ?').all(userId)
@@ -459,10 +484,13 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
       ? settings.offerHtml
       : type === 'privacy'
         ? settings.privacyHtml
-        : settings.paymentHtml;
+        : type === 'consent'
+          ? settings.consentHtml
+          : settings.paymentHtml;
     return {
       type,
       html: trim(custom, 200_000),
+      documentVersion: legalDocumentVersion,
       settings: publicSettings(),
     };
   };
@@ -483,7 +511,7 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
       ...(payload?.settings && typeof payload.settings === 'object' ? payload.settings : {}),
     };
     Object.keys(defaultSettings).forEach((key) => {
-      settings[key] = trim(settings[key], ['offerHtml', 'privacyHtml', 'paymentHtml'].includes(key) ? 200_000 : 5000);
+      settings[key] = trim(settings[key], ['offerHtml', 'privacyHtml', 'consentHtml', 'paymentHtml'].includes(key) ? 200_000 : 5000);
     });
 
     const stamp = now();
@@ -780,7 +808,7 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
       return true;
     }
     if (url.pathname === '/api/academy/legal' && request.method === 'GET') {
-      const type = ['offer', 'privacy', 'payment'].includes(url.searchParams.get('type'))
+      const type = ['offer', 'privacy', 'consent', 'payment'].includes(url.searchParams.get('type'))
         ? url.searchParams.get('type')
         : 'payment';
       json(response, 200, legalDocument(type));
@@ -792,7 +820,12 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
     }
     if (url.pathname === '/api/academy/register' && request.method === 'POST') {
       const body = await readJsonBody(request);
+      if (!body.personalDataConsent) {
+        json(response, 400, { error: 'Подтвердите отдельное согласие на обработку персональных данных' });
+        return true;
+      }
       const user = createUser(body.name, body.email, body.password);
+      recordLegalAcceptance(user.id, 'registration-personal-data-consent');
       const headers = {};
       createSession(request, headers, user.id);
       json(response, 201, { user }, headers);
@@ -897,8 +930,12 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
     }
     if (url.pathname === '/api/academy/checkout' && request.method === 'POST') {
       const body = await readJsonBody(request);
-      if (!body.accepted) {
-        json(response, 400, { error: 'Подтвердите согласие с офертой и политикой конфиденциальности' });
+      if (!body.acceptedOffer) {
+        json(response, 400, { error: 'Подтвердите принятие публичной оферты' });
+        return true;
+      }
+      if (!body.personalDataConsent) {
+        json(response, 400, { error: 'Подтвердите отдельное согласие на обработку персональных данных' });
         return true;
       }
       const target = paymentTarget(body.targetType, trim(body.targetId, 80));
@@ -922,6 +959,8 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
         }
         createSession(request, headers, user.id);
       }
+      recordLegalAcceptance(user.id, 'checkout-offer-acceptance');
+      recordLegalAcceptance(user.id, 'checkout-personal-data-consent');
       const owned = userEntitlements(user.id);
       if (owned.has(`${target.type}:${target.id}`)) {
         json(response, 200, {
