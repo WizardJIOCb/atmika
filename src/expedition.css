@@ -689,7 +689,6 @@ h1 {
 }
 
 .intro-section,
-.story-section,
 .contact-section {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -1482,6 +1481,53 @@ blockquote,
   padding: clamp(28px, 4vw, 48px);
 }
 
+.story-section {
+  display: block;
+}
+
+.story-card {
+  position: relative;
+  width: min(880px, 100%);
+  margin: 0 auto;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 100%, rgba(85, 247, 230, 0.08), transparent 36%),
+    linear-gradient(145deg, rgba(8, 20, 20, 0.92), rgba(4, 12, 12, 0.9));
+}
+
+.story-card h2 {
+  max-width: 620px;
+  margin: 18px 0 24px;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.04;
+}
+
+.story-copy {
+  max-width: 740px;
+}
+
+.story-card p {
+  max-width: 700px;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.story-card p:last-child {
+  margin-bottom: 0;
+}
+
+.story-card blockquote {
+  max-width: 760px;
+  margin: clamp(30px, 4vw, 46px) 0 0;
+  padding: clamp(26px, 3vw, 36px) 0 0;
+  border: 0;
+  border-top: 1px solid rgba(85, 247, 230, 0.24);
+  background: none;
+  box-shadow: none;
+  font-size: clamp(24px, 2.7vw, 38px);
+  line-height: 1.18;
+}
+
 blockquote {
   margin: 0;
   color: var(--aqua);
@@ -1493,6 +1539,12 @@ blockquote {
 .contact-section {
   align-items: stretch;
   padding-bottom: 120px;
+}
+
+.contact-section h2 {
+  max-width: 620px;
+  font-size: clamp(30px, 3.4vw, 48px);
+  line-height: 1.05;
 }
 
 .contact-panel {
