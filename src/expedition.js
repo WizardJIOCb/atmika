@@ -30,6 +30,14 @@ const telegramBookingUrl = (service) => {
   return `https://t.me/${TELEGRAM_BOOKING_USERNAME}?text=${encodeURIComponent(draft)}`;
 };
 
+const serviceCourseSlug = (service) => text(service?.courseSlug).trim().replace(/[^a-z0-9-]/gi, '');
+const serviceDestination = (service) => {
+  const slug = serviceCourseSlug(service);
+  return slug ? `/course/${slug}/` : telegramBookingUrl(service);
+};
+const serviceTargetAttributes = (service) => serviceCourseSlug(service) ? '' : ' target="_blank" rel="noreferrer"';
+const serviceActionLabel = (service) => serviceCourseSlug(service) ? 'открыть курс' : 'записаться в Telegram';
+
 const RABBIT_VARIANT_STORAGE_KEY = 'atmika_rabbit_variant';
 const RABBIT_DEFAULT_MIGRATION_KEY = 'atmika_lumi_default_v1';
 const PREVIOUS_DEFAULT_RABBIT_VARIANT = 17;
@@ -523,7 +531,7 @@ const renderServiceDetailBody = (detail, service) => `
       `).join('')}
     </div>
     <p class="service-detail-result">${html(detail.result)}</p>
-    <a class="service-detail-cta" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer">${html(service.price)} · записаться в Telegram</a>
+    <a class="service-detail-cta" href="${attr(serviceDestination(service))}"${serviceTargetAttributes(service)}>${html(service.price)} · ${html(serviceActionLabel(service))}</a>
   </div>
 `;
 
@@ -534,7 +542,7 @@ const renderTourCard = (service, index, media) => {
 
   if (!detail) {
     return `
-      <a class="tour-card" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" aria-label="${attr(`${service.title}: записаться в Telegram`)}">
+      <a class="tour-card" href="${attr(serviceDestination(service))}"${serviceTargetAttributes(service)} aria-label="${attr(`${service.title}: ${serviceActionLabel(service)}`)}">
         <div class="tour-media">${mediaMarkup(media)}</div>
         <span>${route}</span>
         <h3>${title}</h3>
@@ -547,7 +555,7 @@ const renderTourCard = (service, index, media) => {
   return `
     <details class="tour-card tour-card-expandable">
       <summary aria-label="${attr(`${service.title}: раскрыть описание`)}">
-        <a class="service-booking-overlay" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" data-service-booking-link aria-label="${attr(`${service.title}: записаться в Telegram`)}"></a>
+        <a class="service-booking-overlay" href="${attr(serviceDestination(service))}"${serviceTargetAttributes(service)} data-service-booking-link aria-label="${attr(`${service.title}: ${serviceActionLabel(service)}`)}"></a>
         <div class="tour-media">${mediaMarkup(media)}</div>
         <span>${route}</span>
         <h3>${title}</h3>
@@ -566,7 +574,7 @@ const renderServiceLine = (service, index) => {
 
   if (!detail) {
     return `
-      <a class="service-line" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" aria-label="${attr(`${service.title}: записаться в Telegram`)}">
+      <a class="service-line" href="${attr(serviceDestination(service))}"${serviceTargetAttributes(service)} aria-label="${attr(`${service.title}: ${serviceActionLabel(service)}`)}">
         <span>${number}</span>
         <div>
           <h3>${html(service.title)}</h3>
@@ -580,7 +588,7 @@ const renderServiceLine = (service, index) => {
   return `
     <details class="service-line service-line-expandable" id="work-service-${number}">
       <summary aria-label="${attr(`${service.title}: раскрыть описание`)}">
-        <a class="service-booking-overlay" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" data-service-booking-link aria-label="${attr(`${service.title}: записаться в Telegram`)}"></a>
+        <a class="service-booking-overlay" href="${attr(serviceDestination(service))}"${serviceTargetAttributes(service)} data-service-booking-link aria-label="${attr(`${service.title}: ${serviceActionLabel(service)}`)}"></a>
         <span>${number}</span>
         <div>
           <h3>${html(service.title)}</h3>
@@ -703,7 +711,7 @@ app.innerHTML = `
           ${services.map((service, index) => {
             const media = serviceMedia(index);
             return `
-              <a class="gallery-slide work-slide" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" data-work-item data-index="${index}" aria-label="${attr(`${service.title}: записаться в Telegram`)}">
+              <a class="gallery-slide work-slide" href="${attr(serviceDestination(service))}"${serviceTargetAttributes(service)} data-work-item data-index="${index}" aria-label="${attr(`${service.title}: ${serviceActionLabel(service)}`)}">
                 <div class="gallery-media">
                   ${mediaMarkup(media)}
                 </div>
