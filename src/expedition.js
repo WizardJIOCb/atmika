@@ -904,7 +904,7 @@ app.innerHTML = `
     </section>
   </main>
   <footer class="site-commerce-footer" data-academy-footer>
-    <div class="site-commerce-footer-grid"><div class="site-commerce-footer-brand"><strong>АТМИКА</strong><p>ИП Панкратова Оксана Сергеевна</p><span>ИНН 236504298920 · ОГРНИП 326237500235369</span></div><div><strong>Документы</strong><a href="/legal/privacy/">Политика оператора в отношении обработки персональных данных</a><a href="/legal/consent/">Согласие на обработку персональных данных</a><button class="site-privacy-settings" type="button" data-privacy-settings>Настройки cookies</button></div></div>
+    <div class="site-commerce-footer-grid"><div class="site-commerce-footer-brand"><strong>АТМИКА</strong><p>ИП Панкратова Оксана Сергеевна</p><span>ИНН 236504298920 · ОГРНИП 326237500235369</span></div><div><strong>Документы</strong><a href="/legal/privacy/">Политика оператора в отношении обработки персональных данных</a><a href="/legal/consent/">Согласие на обработку персональных данных</a></div></div>
     <div class="site-commerce-footer-bottom"><span>© ${new Date().getFullYear()} Атмика</span><span>iam-atmika.com</span></div>
   </footer>
   <div class="atmika-chat" data-chat-dialog aria-hidden="true">

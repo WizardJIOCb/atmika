@@ -6,7 +6,7 @@ import path from 'node:path';
 const now = () => new Date().toISOString();
 const bool = (value) => (value ? 1 : 0);
 const trim = (value, max = 5000) => String(value ?? '').trim().slice(0, max);
-const legalDocumentVersion = '18.07.2026';
+const legalDocumentVersion = '18.07.2026-r2';
 const operatorIdentityVersion = 'pankratova-2026-07-18';
 const operatorIdentitySettings = {
   sellerName: 'Атмика',
