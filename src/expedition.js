@@ -18,6 +18,18 @@ const safeLink = (value) => {
   return /^(https?:|mailto:|tel:)/i.test(url) ? attr(url) : '#';
 };
 
+const TELEGRAM_BOOKING_USERNAME = 'Eygru9';
+
+const telegramBookingUrl = (service) => {
+  const draft = [
+    'Здравствуйте! Хочу записаться на выбранный формат:',
+    `«${text(service?.title)}» — ${text(service?.price)}.`,
+    'Подскажите, пожалуйста, какие следующие шаги?',
+  ].join('\n');
+
+  return `https://t.me/${TELEGRAM_BOOKING_USERNAME}?text=${encodeURIComponent(draft)}`;
+};
+
 const RABBIT_VARIANT_STORAGE_KEY = 'atmika_rabbit_variant';
 const RABBIT_DEFAULT_MIGRATION_KEY = 'atmika_lumi_default_v1';
 const PREVIOUS_DEFAULT_RABBIT_VARIANT = 17;
@@ -489,7 +501,7 @@ const renderServiceDetailBody = (detail, service) => `
       `).join('')}
     </div>
     <p class="service-detail-result">${html(detail.result)}</p>
-    <a class="service-detail-cta" href="#contact">${html(service.price)} · записаться</a>
+    <a class="service-detail-cta" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer">${html(service.price)} · записаться в Telegram</a>
   </div>
 `;
 
@@ -500,7 +512,7 @@ const renderTourCard = (service, index, media) => {
 
   if (!detail) {
     return `
-      <a class="tour-card" href="#contact" aria-label="${attr(`${service.title}: перейти к контактам`)}">
+      <a class="tour-card" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" aria-label="${attr(`${service.title}: записаться в Telegram`)}">
         <div class="tour-media">${mediaMarkup(media)}</div>
         <span>${route}</span>
         <h3>${title}</h3>
@@ -513,6 +525,7 @@ const renderTourCard = (service, index, media) => {
   return `
     <details class="tour-card tour-card-expandable">
       <summary aria-label="${attr(`${service.title}: раскрыть описание`)}">
+        <a class="service-booking-overlay" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" data-service-booking-link aria-label="${attr(`${service.title}: записаться в Telegram`)}"></a>
         <div class="tour-media">${mediaMarkup(media)}</div>
         <span>${route}</span>
         <h3>${title}</h3>
@@ -531,7 +544,7 @@ const renderServiceLine = (service, index) => {
 
   if (!detail) {
     return `
-      <a class="service-line" href="#contact" aria-label="${attr(`${service.title}: перейти к контактам`)}">
+      <a class="service-line" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" aria-label="${attr(`${service.title}: записаться в Telegram`)}">
         <span>${number}</span>
         <div>
           <h3>${html(service.title)}</h3>
@@ -545,6 +558,7 @@ const renderServiceLine = (service, index) => {
   return `
     <details class="service-line service-line-expandable" id="work-service-${number}">
       <summary aria-label="${attr(`${service.title}: раскрыть описание`)}">
+        <a class="service-booking-overlay" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" data-service-booking-link aria-label="${attr(`${service.title}: записаться в Telegram`)}"></a>
         <span>${number}</span>
         <div>
           <h3>${html(service.title)}</h3>
@@ -666,7 +680,7 @@ app.innerHTML = `
           ${services.map((service, index) => {
             const media = gallery[index % gallery.length];
             return `
-              <a class="gallery-slide work-slide" href="#contact" data-work-item data-index="${index}" aria-label="${attr(`${service.title}: перейти к контактам`)}">
+              <a class="gallery-slide work-slide" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" data-work-item data-index="${index}" aria-label="${attr(`${service.title}: записаться в Telegram`)}">
                 <div class="gallery-media">
                   ${mediaMarkup(media)}
                 </div>
@@ -1070,6 +1084,12 @@ const initHashNavigation = () => {
   }
 };
 
+const initServiceBookingLinks = () => {
+  document.querySelectorAll('[data-service-booking-link]').forEach((link) => {
+    link.addEventListener('click', (event) => event.stopPropagation());
+  });
+};
+
 const initVideoPlayback = () => {
   document.querySelectorAll('video').forEach((video) => {
     video.muted = true;
@@ -1197,7 +1217,8 @@ const initStackCarousel = ({
   itemSelector,
   dotSelector,
   prevSelector,
-  nextSelector
+  nextSelector,
+  openVideoOnTap = true,
 }) => {
   const carousel = document.querySelector(carouselSelector);
 
@@ -1314,7 +1335,7 @@ const initStackCarousel = ({
     if (Math.abs(pointerDeltaX) > 44) {
       goTo(activeIndex + (pointerDeltaX < 0 ? 1 : -1));
       restartAuto();
-    } else if (isTap) {
+    } else if (isTap && openVideoOnTap) {
       const slide = event.target.closest(itemSelector);
       const video = event.target.closest('video') || event.target.closest('.gallery-media')?.querySelector('video');
 
@@ -1846,6 +1867,7 @@ const initWhiteRabbit = () => {
 initMenu();
 initHeroMatrix();
 initHashNavigation();
+initServiceBookingLinks();
 initVideoPlayback();
 initVideoLightbox();
 initAtmikaChat();
@@ -1862,7 +1884,8 @@ initStackCarousel({
   itemSelector: '[data-work-item]',
   dotSelector: '[data-work-dot]',
   prevSelector: '[data-work-prev]',
-  nextSelector: '[data-work-next]'
+  nextSelector: '[data-work-next]',
+  openVideoOnTap: false,
 });
 initStackCarousel({
   carouselSelector: '[data-bottom-gallery-carousel]',

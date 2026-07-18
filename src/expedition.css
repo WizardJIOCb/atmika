@@ -842,11 +842,22 @@ h1 {
   padding: 22px;
 }
 
+.service-booking-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.service-booking-overlay:focus-visible {
+  outline: 2px solid rgba(85, 247, 230, 0.72);
+  outline-offset: -4px;
+}
+
 .tour-card-expandable:not([open]) summary {
   min-height: 358px;
 }
 
-.tour-card-expandable summary > *:not(.tour-media) {
+.tour-card-expandable summary > *:not(.tour-media):not(.service-booking-overlay):not(em) {
   position: relative;
   z-index: 1;
 }
@@ -858,6 +869,8 @@ h1 {
 
 .tour-card-expandable summary em,
 .service-line-expandable summary em {
+  position: relative;
+  z-index: 3;
   color: var(--aqua);
   font-size: 12px;
   font-style: normal;
@@ -942,6 +955,7 @@ h1 {
 }
 
 .service-line-expandable summary {
+  position: relative;
   display: grid;
   grid-template-columns: 52px 1fr auto;
   gap: 22px;
