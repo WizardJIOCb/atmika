@@ -388,9 +388,13 @@ const renderMarkdown = (value) => {
 };
 
 const app = document.querySelector('#expedition-app');
-const nav = content.navigation || [];
+const SHOW_RHYTHM_GALLERY = false;
+const nav = (content.navigation || []).filter(
+  (item) => SHOW_RHYTHM_GALLERY || item.href !== '#gallery',
+);
 const services = content.services || [];
 const gallery = content.gallery?.items || [];
+const FIRST_SERVICE_MEDIA_SRC = 'public/gallery/compressed/visual-rhythm-05.mp4';
 const audience = content.audience?.items || [];
 const outcomes = content.outcomes?.items || [];
 const process = content.process?.items || [];
@@ -442,6 +446,14 @@ const mediaMarkup = (item, className = '') => {
   }
 
   return `<img class="${attr(className)}" src="${attr(item.src)}" alt="${attr(item.title)}" loading="lazy" />`;
+};
+
+const serviceMedia = (index) => {
+  const media = gallery[index % gallery.length];
+
+  return index === 0
+    ? { ...media, type: 'video', src: FIRST_SERVICE_MEDIA_SRC }
+    : media;
 };
 
 const serviceDetails = [
@@ -646,7 +658,7 @@ app.innerHTML = `
           <p>${html(content.hero?.text)}</p>
           <div class="hero-actions">
             <a class="button button-primary" href="${attr(content.hero?.primaryHref)}">${html(content.hero?.primaryLabel)}</a>
-            <a class="button button-ghost" href="#gallery">${html(content.hero?.secondaryLabel)}</a>
+            <a class="button button-ghost" href="${attr(content.hero?.secondaryHref || '#work')}">${html(content.hero?.secondaryLabel)}</a>
           </div>
         </div>
         <div class="route-strip" aria-label="${attr(content.hero?.panelAriaLabel)}">
@@ -677,7 +689,7 @@ app.innerHTML = `
       </div>
       <div class="tour-row">
         ${services.slice(0, 4).map((service, index) => {
-          const media = gallery[index % gallery.length];
+          const media = serviceMedia(index);
           return renderTourCard(service, index, media);
         }).join('')}
       </div>
@@ -689,7 +701,7 @@ app.innerHTML = `
         </button>
         <div class="gallery-stage">
           ${services.map((service, index) => {
-            const media = gallery[index % gallery.length];
+            const media = serviceMedia(index);
             return `
               <a class="gallery-slide work-slide" href="${attr(telegramBookingUrl(service))}" target="_blank" rel="noreferrer" data-work-item data-index="${index}" aria-label="${attr(`${service.title}: записаться в Telegram`)}">
                 <div class="gallery-media">
@@ -720,7 +732,7 @@ app.innerHTML = `
       </div>
     </section>
 
-    <section class="discover-section" id="gallery">
+    ${SHOW_RHYTHM_GALLERY ? `<section class="discover-section" id="gallery">
       <div class="discover-copy">
         <span class="eyebrow">${html(content.gallery?.kicker)}</span>
         <h2>${html(content.gallery?.title)}</h2>
@@ -770,7 +782,7 @@ app.innerHTML = `
           `).join('')}
         </div>
       </div>
-    </section>
+    </section>` : ''}
 
     <section class="section home-academy-section" id="courses" data-academy-home>
       <div class="home-academy-empty">Загружаем категории курсов…</div>

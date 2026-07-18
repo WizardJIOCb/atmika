@@ -689,13 +689,25 @@ h1 {
 }
 
 .intro-section,
-.split-section,
 .story-section,
 .contact-section {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: clamp(34px, 7vw, 92px);
   align-items: start;
+}
+
+.split-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 48px);
+  align-items: start;
+}
+
+.split-section .section-copy h2,
+.process-section .section-copy h2 {
+  max-width: none;
+  font-size: clamp(30px, 2.5vw, 38px);
 }
 
 .section-copy h2,
@@ -1453,8 +1465,8 @@ blockquote,
 
 .process-section {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  gap: clamp(34px, 7vw, 84px);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 48px);
 }
 
 .process-track article {
