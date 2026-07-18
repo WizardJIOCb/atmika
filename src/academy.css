@@ -370,9 +370,9 @@ img, video { display: block; max-width: 100%; }
 .article-image figcaption,
 .article-video figcaption { margin-top: 10px; color: var(--academy-muted); font-size: 12px; text-align: center; }
 
-.article-quote { margin: 0; padding: clamp(28px, 5vw, 56px); border: 1px solid rgba(226, 191, 115, 0.34); background: radial-gradient(circle at 10% 0, rgba(226, 191, 115, 0.12), transparent 44%), var(--academy-panel); }
-.article-quote p { margin: 0; color: var(--academy-gold); font-family: Georgia, serif; font-size: clamp(26px, 4vw, 42px); line-height: 1.32; }
-.article-quote cite { display: block; margin-top: 20px; color: var(--academy-muted); font-style: normal; }
+.article-quote { margin: 0; padding: clamp(22px, 3vw, 36px); border: 1px solid rgba(226, 191, 115, 0.34); background: radial-gradient(circle at 10% 0, rgba(226, 191, 115, 0.12), transparent 44%), var(--academy-panel); }
+.article-quote p { margin: 0; color: var(--academy-gold); font-family: Georgia, serif; font-size: clamp(18px, 2vw, 24px); line-height: 1.5; }
+.article-quote cite { display: block; margin-top: 14px; color: var(--academy-muted); font-size: 13px; font-style: normal; }
 
 .article-audio { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 0.7fr); gap: 24px; align-items: center; padding: 26px; border: 1px solid var(--academy-line); background: var(--academy-panel); }
 .article-audio span { color: var(--academy-aqua); font-size: 10px; font-weight: 900; text-transform: uppercase; }
