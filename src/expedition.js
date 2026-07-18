@@ -19,7 +19,9 @@ const safeLink = (value) => {
 };
 
 const RABBIT_VARIANT_STORAGE_KEY = 'atmika_rabbit_variant';
-const DEFAULT_RABBIT_VARIANT = 17;
+const RABBIT_DEFAULT_MIGRATION_KEY = 'atmika_lumi_default_v1';
+const PREVIOUS_DEFAULT_RABBIT_VARIANT = 17;
+const DEFAULT_RABBIT_VARIANT = 19;
 const ATMIKA_RABBIT_VARIANTS = [
   {
     label: 'Исходный',
@@ -111,7 +113,29 @@ const ATMIKA_RABBIT_VARIANTS = [
     webp: 'public/images/atmika-rabbit-variant-18.webp',
     png: 'public/images/atmika-rabbit-variant-18.png',
   },
+  {
+    label: 'Люми · лесной проводник',
+    badge: 'Новый',
+    webp: 'public/images/atmika-rabbit-variant-19.webp',
+    png: 'public/images/atmika-rabbit-variant-19.png',
+  },
 ];
+
+const getPreferredRabbitVariant = () => {
+  const storedVariant = localStorage.getItem(RABBIT_VARIANT_STORAGE_KEY);
+  const hasAppliedLumiDefault = localStorage.getItem(RABBIT_DEFAULT_MIGRATION_KEY) === '1';
+
+  if (!hasAppliedLumiDefault) {
+    localStorage.setItem(RABBIT_DEFAULT_MIGRATION_KEY, '1');
+
+    if (!storedVariant || Number(storedVariant) === PREVIOUS_DEFAULT_RABBIT_VARIANT) {
+      localStorage.setItem(RABBIT_VARIANT_STORAGE_KEY, String(DEFAULT_RABBIT_VARIANT));
+      return DEFAULT_RABBIT_VARIANT;
+    }
+  }
+
+  return storedVariant || DEFAULT_RABBIT_VARIANT;
+};
 
 const renderInlineMarkdown = (value) => html(value)
   .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|mailto:[^)\s]+|tel:[^)\s]+)\)/g, (_, label, href) => (
@@ -836,15 +860,15 @@ app.innerHTML = `
         </div>
         <div class="atmika-chat-actions">
           <button type="button" data-chat-share>Поделиться</button>
-          <button type="button" data-rabbit-den-toggle aria-expanded="false">Нора</button>
+          <button type="button" data-rabbit-den-toggle aria-expanded="false">Помощники</button>
           <button type="button" data-chat-new>Новый</button>
           <button type="button" data-chat-close aria-label="Закрыть чат">×</button>
         </div>
       </div>
       <div class="atmika-rabbit-den" data-rabbit-den hidden>
         <div class="atmika-rabbit-den-head">
-          <strong>Скины кролика</strong>
-          <span>Выбор сохранится для следующих визитов.</span>
+          <strong>Выберите помощника</strong>
+          <span>Выбранный облик сохранится для следующих визитов.</span>
         </div>
         <div class="rabbit-skin-list" data-rabbit-skins>
           ${ATMIKA_RABBIT_VARIANTS.map((variant, index) => `
@@ -855,6 +879,7 @@ app.innerHTML = `
               <span class="rabbit-skin-copy">
                 <strong>${String(index + 1).padStart(2, '0')}</strong>
                 <em>${html(variant.label)}</em>
+                ${variant.badge ? `<small>${html(variant.badge)}</small>` : ''}
               </span>
             </button>
           `).join('')}
@@ -1369,11 +1394,19 @@ const initAtmikaChat = () => {
   };
 
   const setActiveSkinButton = (variantNumber) => {
+    let activeButton = null;
+
     skinButtons.forEach((button) => {
       const isActive = Number(button.dataset.rabbitSkin) === Number(variantNumber);
       button.classList.toggle('is-active', isActive);
       button.setAttribute('aria-pressed', String(isActive));
+
+      if (isActive) {
+        activeButton = button;
+      }
     });
+
+    return activeButton;
   };
 
   const toggleRabbitDen = (forceOpen) => {
@@ -1387,7 +1420,10 @@ const initAtmikaChat = () => {
     denButton.classList.toggle('is-active', isOpen);
 
     if (isOpen) {
-      setActiveSkinButton(localStorage.getItem(RABBIT_VARIANT_STORAGE_KEY) || DEFAULT_RABBIT_VARIANT);
+      const activeButton = setActiveSkinButton(
+        getPreferredRabbitVariant(),
+      );
+      requestAnimationFrame(() => activeButton?.scrollIntoView({ block: 'nearest' }));
     }
   };
 
@@ -1802,7 +1838,7 @@ const initWhiteRabbit = () => {
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
   window.addEventListener('pagehide', () => cancelAnimationFrame(frame), { once: true });
-  setRabbitVariant(localStorage.getItem(RABBIT_VARIANT_STORAGE_KEY) || DEFAULT_RABBIT_VARIANT);
+  setRabbitVariant(getPreferredRabbitVariant());
   update();
   animate();
 };

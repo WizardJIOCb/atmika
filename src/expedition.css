@@ -1719,6 +1719,18 @@ blockquote {
   overflow-wrap: anywhere;
 }
 
+.rabbit-skin-copy small {
+  width: max-content;
+  padding: 2px 6px;
+  border: 1px solid rgba(226, 191, 115, 0.5);
+  color: var(--gold);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
 .atmika-chat-share {
   grid-area: share;
   min-height: 24px;
@@ -3174,7 +3186,7 @@ blockquote {
   }
 
   .atmika-chat-actions [data-rabbit-den-toggle]::before {
-    content: "Нора";
+    content: "Облики";
     font-size: 12px;
   }
 
