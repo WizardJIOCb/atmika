@@ -329,7 +329,9 @@
 
   const renderSettings = () => {
     const s = data.settings;
-    const required = [['sellerLegalName', 'Наименование'], ['inn', 'ИНН'], ['ogrn', 'ОГРН/ОГРНИП'], ['legalAddress', 'Адрес'], ['phone', 'Телефон'], ['email', 'Email']];
+    const isSelfEmployed = /самозан|нпд/i.test(String(s.sellerStatus || ''));
+    const required = [['sellerLegalName', 'Наименование'], ['sellerStatus', 'Статус'], ['inn', 'ИНН'], ['legalAddress', 'Адрес'], ['phone', 'Телефон'], ['email', 'Email']];
+    if (!isSelfEmployed) required.splice(3, 0, ['ogrn', 'ОГРН/ОГРНИП']);
     const missing = required.filter(([key]) => !String(s[key] || '').trim()).map(([, label]) => label);
     return `
       <div class="academy-editor-head"><div><span>Настройки школы</span><h2>Реквизиты и документы</h2></div></div>
@@ -341,9 +343,10 @@
       </div></section>
       <section class="academy-form-section"><div class="academy-section-title"><h3>Продавец и контакты</h3><span>Эти данные появятся в подвале и документах</span></div><div class="academy-field-grid">
         <label class="academy-field"><span>Публичное имя</span><input data-setting="sellerName" value="${escapeHtml(s.sellerName || '')}" placeholder="Атмика" /></label>
-        <label class="academy-field"><span>Полное наименование ИП/юрлица</span><input data-setting="sellerLegalName" value="${escapeHtml(s.sellerLegalName || '')}" /></label>
+        <label class="academy-field"><span>ФИО / полное наименование</span><input data-setting="sellerLegalName" value="${escapeHtml(s.sellerLegalName || '')}" /></label>
+        <label class="academy-field"><span>Статус продавца</span><input data-setting="sellerStatus" value="${escapeHtml(s.sellerStatus || '')}" placeholder="Самозанятый / ИП / ООО" /></label>
         <label class="academy-field"><span>ИНН</span><input data-setting="inn" value="${escapeHtml(s.inn || '')}" /></label>
-        <label class="academy-field"><span>ОГРН / ОГРНИП</span><input data-setting="ogrn" value="${escapeHtml(s.ogrn || '')}" /></label>
+        <label class="academy-field"><span>ОГРН / ОГРНИП</span><input data-setting="ogrn" value="${escapeHtml(s.ogrn || '')}" /><small>Для самозанятого без статуса ИП не требуется.</small></label>
         <label class="academy-field academy-field-wide"><span>Юридический адрес</span><input data-setting="legalAddress" value="${escapeHtml(s.legalAddress || '')}" /></label>
         <label class="academy-field academy-field-wide"><span>Почтовый / фактический адрес</span><input data-setting="postalAddress" value="${escapeHtml(s.postalAddress || '')}" /></label>
         <label class="academy-field"><span>Телефон</span><input data-setting="phone" value="${escapeHtml(s.phone || '')}" /></label>
