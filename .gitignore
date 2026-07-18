@@ -6,3 +6,8 @@ dist/
 info/
 data/
 .data/
+.env
+.env.local
+.env.production
+!.env.example
+public/uploads/academy/

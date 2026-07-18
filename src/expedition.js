@@ -593,6 +593,7 @@ app.innerHTML = `
     </a>
     <nav class="expedition-nav" aria-label="Site navigation">
       ${nav.map((item) => `<a href="${attr(item.href)}">${html(item.label)}</a>`).join('')}
+      <a href="#courses">Курсы</a>
       <button type="button" data-menu-chat>ИИ Помощник</button>
     </nav>
     <a class="header-cta" href="${attr(content.header?.ctaHref || '#contact')}">
@@ -771,6 +772,10 @@ app.innerHTML = `
       </div>
     </section>
 
+    <section class="section home-academy-section" id="courses" data-academy-home>
+      <div class="home-academy-empty">Загружаем категории курсов…</div>
+    </section>
+
     <section class="section split-section" id="for-whom">
       <div class="section-copy">
         <span class="eyebrow">${html(content.audience?.kicker)}</span>
@@ -876,6 +881,9 @@ app.innerHTML = `
       </div>
     </section>
   </main>
+  <footer class="site-commerce-footer" data-academy-footer>
+    <div class="site-commerce-footer-bottom"><span>© ${new Date().getFullYear()} Атмика</span><span>iam-atmika.com</span></div>
+  </footer>
   <div class="atmika-chat" data-chat-dialog aria-hidden="true">
     <div class="atmika-chat-panel" role="dialog" aria-modal="true" aria-labelledby="atmika-chat-title">
       <div class="atmika-chat-head">

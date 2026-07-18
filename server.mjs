@@ -4,6 +4,7 @@ import { mkdir, readdir, readFile, rename, stat, unlink, writeFile } from 'node:
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createAcademy } from './academy.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = __dirname;
@@ -50,6 +51,12 @@ const mimeTypes = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg',
+  '.wav': 'audio/wav',
+  '.pdf': 'application/pdf',
+  '.zip': 'application/zip',
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
   '.webp': 'image/webp',
@@ -116,6 +123,8 @@ const isSecureRequest = (request) => (
   request.headers['x-forwarded-proto'] === 'https'
   || process.env.NODE_ENV === 'production'
 );
+
+const academy = createAcademy({ root, publicSiteUrl, isSecureRequest });
 
 const sessionCookie = (request, token) => [
   `atmika_admin_session=${encodeURIComponent(token)}`,
@@ -673,6 +682,10 @@ const handleApi = async (request, response, url) => {
       return;
     }
 
+    if (await academy.handleAdmin(request, response, url, { json })) {
+      return;
+    }
+
     if (url.pathname === '/api/admin/content' && request.method === 'GET') {
       json(response, 200, { content: await readContent() });
       return;
@@ -786,10 +799,10 @@ const handleChatApi = async (request, response, url) => {
   }
 };
 
-const serveStatic = async (request, response, url) => {
+const serveStatic = async (request, response, url, overridePath = '') => {
   const rawPath = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
   const normalized = path.normalize(rawPath).replace(/^(\.\.[/\\])+/, '');
-  const filePath = path.join(root, normalized);
+  const filePath = overridePath || path.join(root, normalized);
 
   if (!filePath.startsWith(root)) {
     response.writeHead(403);
@@ -854,6 +867,25 @@ createServer(async (request, response) => {
 
   if (url.pathname.startsWith('/api/admin/')) {
     await handleApi(request, response, url);
+    return;
+  }
+
+  if (url.pathname.startsWith('/api/academy/') || url.pathname === '/api/yookassa/webhook') {
+    try {
+      if (await academy.handlePublic(request, response, url, { json })) {
+        return;
+      }
+      json(response, 404, { error: 'Academy API endpoint not found' });
+    } catch (error) {
+      console.error('Academy API error', error);
+      json(response, error.status || 500, { error: error.message || 'Academy server error' });
+    }
+    return;
+  }
+
+  const academyPage = academy.resolvePage(url.pathname);
+  if (academyPage) {
+    await serveStatic(request, response, url, academyPage);
     return;
   }
 

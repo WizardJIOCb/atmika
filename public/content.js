@@ -4,7 +4,7 @@ window.ATMIKA_CONTENT = {
     "description": "Атмика: я помогаю через духовные и квантовые практики осознанности, трансформационные сессии и программы работы с сознанием.",
     "ogTitle": "Атмика | Осознанный выход из Матрицы",
     "ogDescription": "Квантовые сессии, программы самоисследования, практики осознанности и трансформационные ретриты.",
-    "ogUrl": "https://atmika.xedoc.ru",
+    "ogUrl": "https://iam-atmika.com/",
     "ogImage": "/public/images/atmika-hero.png",
     "favicon": "/public/images/atmika-hero.png"
   },

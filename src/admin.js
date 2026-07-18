@@ -23,6 +23,8 @@ const sections = [
   ['process', 'Процесс'],
   ['story', 'История'],
   ['contact', 'Контакты'],
+  ['academy', 'Курсы'],
+  ['payments', 'Платежи'],
   ['chatAdmin', 'Чаты'],
 ];
 
@@ -659,7 +661,10 @@ const logout = async () => {
 
 const renderApp = () => {
   const isChatSection = activeSection === 'chatAdmin';
-  const currentValue = isChatSection ? null : content[activeSection];
+  const isAcademySection = activeSection === 'academy';
+  const isPaymentsSection = activeSection === 'payments';
+  const isSpecialSection = isChatSection || isAcademySection || isPaymentsSection;
+  const currentValue = isSpecialSection ? null : content[activeSection];
 
   root.innerHTML = `
     <div class="admin-shell">
@@ -679,15 +684,15 @@ const renderApp = () => {
         <div class="admin-toolbar">
           <div>
             <h1>${sectionLabel(activeSection)}</h1>
-            <p class="status">${isChatSection ? 'Просмотр диалогов, ссылки на чаты и текущий контекст AI.' : 'Изменения сохраняются в content.json и сразу попадают на сайт.'}</p>
+            <p class="status">${isChatSection ? 'Просмотр диалогов, ссылки на чаты и текущий контекст AI.' : isAcademySection ? 'Категории, курсы, материалы, обложки и документы магазина.' : isPaymentsSection ? 'Платежи за курсы и отдельные материалы.' : 'Изменения сохраняются в content.json и сразу попадают на сайт.'}</p>
           </div>
           <div class="action-row">
             <button type="button" onclick="window.open('/', '_blank')">Открыть сайт</button>
-            ${isChatSection ? '' : '<button type="button" class="primary" data-save>Сохранить</button>'}
+            ${isChatSection || isPaymentsSection ? '' : '<button type="button" class="primary" data-save>Сохранить</button>'}
             <button type="button" class="danger" data-logout>Выйти</button>
           </div>
         </div>
-        ${isChatSection ? renderChatAdmin() : `
+        ${isChatSection ? renderChatAdmin() : isAcademySection ? window.AtmikaAcademyAdmin.render() : isPaymentsSection ? window.AtmikaAcademyAdmin.renderPayments() : `
           <section class="editor-panel">
             <h2>${sectionLabel(activeSection)}</h2>
             ${renderValue([activeSection], currentValue, activeSection)}
@@ -704,7 +709,9 @@ const renderApp = () => {
     });
   });
 
-  root.querySelector('[data-save]')?.addEventListener('click', saveContent);
+  root.querySelector('[data-save]')?.addEventListener('click', isAcademySection
+    ? () => window.AtmikaAcademyAdmin.save()
+    : saveContent);
   root.querySelector('[data-logout]').addEventListener('click', logout);
 
   if (isChatSection) {
@@ -712,6 +719,14 @@ const renderApp = () => {
 
     if (!chatAdmin.loaded && !chatAdmin.isLoading) {
       loadChatAdmin();
+    }
+  } else if (isAcademySection || isPaymentsSection) {
+    window.AtmikaAcademyAdmin.bind({ rerender: renderApp, notify });
+    if (isAcademySection && !window.AtmikaAcademyAdmin.loaded) {
+      window.AtmikaAcademyAdmin.load();
+    }
+    if (isPaymentsSection && !window.AtmikaAcademyAdmin.paymentsLoaded) {
+      window.AtmikaAcademyAdmin.loadPayments();
     }
   } else {
     bindEditorEvents();
