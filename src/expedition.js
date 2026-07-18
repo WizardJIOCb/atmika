@@ -127,9 +127,19 @@ const ATMIKA_RABBIT_VARIANTS = [
   },
   {
     label: 'Люми · лесной проводник',
-    badge: 'Новый',
     webp: 'public/images/atmika-rabbit-variant-19.webp',
     png: 'public/images/atmika-rabbit-variant-19.png',
+  },
+  {
+    label: 'Люми · мудрый хранитель',
+    webp: 'public/images/atmika-rabbit-variant-20.webp',
+    png: 'public/images/atmika-rabbit-variant-20.png',
+  },
+  {
+    label: 'Люми · световой оракул',
+    badge: 'Новый',
+    webp: 'public/images/atmika-rabbit-variant-21.webp',
+    png: 'public/images/atmika-rabbit-variant-21.png',
   },
 ];
 
