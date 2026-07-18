@@ -25,6 +25,7 @@ const telegramLeadChatId = process.env.TELEGRAM_LEAD_CHAT_ID || '';
 const telegramBotApiBaseUrl = (process.env.TELEGRAM_BOT_API_BASE_URL || 'https://api.telegram.org')
   .replace(/\/+$/, '');
 const publicSiteUrl = (process.env.ATMIKA_PUBLIC_URL || 'https://iam-atmika.com').replace(/\/+$/, '');
+const personalDataConsentVersion = '18.07.2026';
 const isTelegramLeadConfigured = (
   /^\d+:[a-zA-Z0-9_-]+$/.test(telegramBotToken)
   && /^-?\d+$/.test(telegramLeadChatId)
@@ -197,6 +198,8 @@ const readChat = async (id) => {
     updatedAt: chat.updatedAt || new Date().toISOString(),
     messages: normalizeChatMessages(chat.messages),
     lead: normalizeLead(chat.lead),
+    consentAt: String(chat.consentAt || ''),
+    consentVersion: String(chat.consentVersion || ''),
   };
 };
 
@@ -209,6 +212,8 @@ const writeChat = async (chat) => {
     updatedAt: now,
     messages: normalizeChatMessages(chat.messages),
     lead: normalizeLead(chat.lead),
+    consentAt: String(chat.consentAt || ''),
+    consentVersion: String(chat.consentVersion || ''),
   };
   const target = chatPath(nextChat.id);
   const tmp = `${target}.tmp`;
@@ -560,7 +565,13 @@ const handleLeadMessage = async (chat, message) => {
   return null;
 };
 
-const appendChatMessageAndAnswer = async (requestedId, message) => {
+const appendChatMessageAndAnswer = async (requestedId, message, options = {}) => {
+  if (options.requireConsent && options.personalDataConsent !== true) {
+    const error = new Error('Подтвердите отдельное согласие на обработку персональных данных');
+    error.status = 400;
+    throw error;
+  }
+
   if (requestedId && !isSafeChatId(requestedId)) {
     const error = new Error('Invalid chat_id');
     error.status = 400;
@@ -583,6 +594,10 @@ const appendChatMessageAndAnswer = async (requestedId, message) => {
 
   const id = requestedId || createChatId();
   let chat = await readChat(id);
+  if (options.personalDataConsent === true && !chat.consentAt) {
+    chat.consentAt = new Date().toISOString();
+    chat.consentVersion = personalDataConsentVersion;
+  }
   chat.messages.push({
     role: 'user',
     content: normalizedMessage,
@@ -788,7 +803,10 @@ const handleChatApi = async (request, response, url) => {
 
     if (url.pathname === '/api/chat' && request.method === 'POST') {
       const body = JSON.parse(await readBody(request, 1024 * 128) || '{}');
-      const result = await appendChatMessageAndAnswer(body.chat_id, body.message);
+      const result = await appendChatMessageAndAnswer(body.chat_id, body.message, {
+        requireConsent: true,
+        personalDataConsent: body.personal_data_consent === true,
+      });
       json(response, 200, { chat_id: result.id, messages: result.chat.messages, answer: result.answer });
       return;
     }
