@@ -359,7 +359,7 @@
         <label class="academy-field academy-field-wide"><span>Краткие условия возврата</span><textarea data-setting="refundSummary">${escapeHtml(s.refundSummary || '')}</textarea></label>
       </div></section>
       ${renderLegalRich('offerHtml', 'Публичная оферта', 'Если поле пустое, сайт покажет базовый шаблон. Перед запуском нужна юридическая проверка.')}
-      ${renderLegalRich('privacyHtml', 'Политика оператора в отношении обработки персональных данных', 'Если поле пустое, сайт покажет приведённую в соответствие редакцию от 18.07.2026.')}
+      ${renderLegalRich('privacyHtml', 'Политика оператора в отношении обработки персональных данных', 'Если поле пустое, сайт покажет приведённую в соответствие редакцию 18.07.2026-r2.')}
       ${renderLegalRich('consentHtml', 'Согласие на обработку персональных данных', 'Отдельный документ, который пользователь подтверждает независимо от оферты.')}
       ${renderLegalRich('paymentHtml', 'Оплата, доступ и возвраты', 'Дополнительные правила покупки цифровых материалов.')}
       <section class="academy-payment-config"><strong>Интеграция ЮKassa: ${data.paymentConfigured ? 'настроена' : 'ожидает ключи'}</strong><span>${data.paymentConfigured ? `Магазин ${escapeHtml(data.shopId)}` : 'На сервере задайте YOOKASSA_SHOP_ID и YOOKASSA_SECRET_KEY.'}</span><code>${escapeHtml(data.webhookUrl || '')}</code><small>Этот HTTPS-адрес укажите в ЮKassa для событий payment.succeeded и payment.canceled.</small></section>`;

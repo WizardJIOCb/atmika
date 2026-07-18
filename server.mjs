@@ -25,7 +25,7 @@ const telegramLeadChatId = process.env.TELEGRAM_LEAD_CHAT_ID || '';
 const telegramBotApiBaseUrl = (process.env.TELEGRAM_BOT_API_BASE_URL || 'https://api.telegram.org')
   .replace(/\/+$/, '');
 const publicSiteUrl = (process.env.ATMIKA_PUBLIC_URL || 'https://iam-atmika.com').replace(/\/+$/, '');
-const personalDataConsentVersion = '18.07.2026';
+const personalDataConsentVersion = '18.07.2026-r2';
 const isTelegramLeadConfigured = (
   /^\d+:[a-zA-Z0-9_-]+$/.test(telegramBotToken)
   && /^-?\d+$/.test(telegramLeadChatId)
