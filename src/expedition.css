@@ -1167,9 +1167,7 @@ h1 {
 .home-category-grid span,
 .home-material-grid span,
 .home-materials-head > span { color: var(--aqua); font-size: 10px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
-.free-label { display: inline-flex; align-items: baseline; gap: 0.5em; white-space: nowrap; }
-.free-label s { opacity: 0.48; text-decoration-color: currentColor; text-decoration-thickness: 1.5px; }
-.free-label b { color: inherit; font: inherit; font-weight: 900; }
+.free-label { display: inline-block; font-weight: 900; white-space: nowrap; }
 .home-category-grid h3 { margin: 9px 0; font-size: clamp(30px, 4vw, 46px); }
 .home-category-grid p,
 .home-material-grid p { margin: 0; color: var(--muted); line-height: 1.6; }

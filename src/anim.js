@@ -23,7 +23,7 @@
     return /^(?:https?:|mailto:|tel:|\/|#)/i.test(url) ? html(url) : fallback;
   };
   const pad = (value) => String(value).padStart(2, '0');
-  const freeLabel = () => '<span class="free-label"><s>Бесплатно</s> <b>Безоплатно</b></span>';
+  const freeLabel = () => '<span class="free-label">Безоплатно</span>';
   const sceneClips = [
     '/public/gallery/compressed/state-visible-03.mp4',
     '/public/gallery/compressed/state-visible-01.mp4',

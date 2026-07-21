@@ -18,7 +18,7 @@
 
   const SESSION_OFFER_SLUG = 'kvantovaya-chistka-polya-dushi';
   const isSessionOffer = (item) => item?.slug === SESSION_OFFER_SLUG;
-  const freeLabel = (className = '') => `<span class="free-label${className ? ` ${className}` : ''}"><s>Бесплатно</s> <b>Безоплатно</b></span>`;
+  const freeLabel = (className = '') => `<span class="free-label${className ? ` ${className}` : ''}">Безоплатно</span>`;
 
   const requestJson = async (url, options = {}) => {
     const response = await fetch(url, {
@@ -300,7 +300,7 @@
         const parent = item && catalog.courses.find((entry) => entry.id === item.courseId);
         return item && parent ? materialCard(item, parent) : '';
       }).join('');
-      const content = `<section class="account-head"><div><span class="academy-eyebrow">Личный кабинет</span><h1>${escapeHtml(data.user.name || 'Мои покупки')}</h1><p>${escapeHtml(data.user.email)}</p></div><button class="academy-button is-outline" type="button" data-logout>Выйти</button></section><section class="academy-section"><div class="academy-section-head"><span>01</span><div><h2>Доступные покупки</h2><p>Оплаченные программы, сессии и отдельные материалы.</p></div></div><div class="academy-course-grid">${cards || '<div class="academy-public-empty">Покупок пока нет. Бесплатные материалы доступны в каталоге.</div>'}</div></section>`;
+      const content = `<section class="account-head"><div><span class="academy-eyebrow">Личный кабинет</span><h1>${escapeHtml(data.user.name || 'Мои покупки')}</h1><p>${escapeHtml(data.user.email)}</p></div><button class="academy-button is-outline" type="button" data-logout>Выйти</button></section><section class="academy-section"><div class="academy-section-head"><span>01</span><div><h2>Доступные покупки</h2><p>Оплаченные программы, сессии и отдельные материалы.</p></div></div><div class="academy-course-grid">${cards || '<div class="academy-public-empty">Покупок пока нет. Безоплатные материалы доступны в каталоге.</div>'}</div></section>`;
       root.innerHTML = shell(content, catalog.settings);
       bindCommon();
       document.querySelector('[data-logout]').addEventListener('click', async () => { await requestJson('/api/academy/logout', { method: 'POST', body: '{}' }); window.location.reload(); });
@@ -359,7 +359,7 @@
       <h3>2.1. Работа сайта, безопасность и сохранение пользовательских настроек</h3>
       <p>Обрабатываются IP-адрес, дата и время запроса, адрес запрошенной страницы, сведения о браузере, устройстве и операционной системе, технические идентификаторы сессии, записи технических журналов, выбранные настройки cookies и localStorage. Субъекты — посетители и пользователи сайта. Основания — согласие, исполнение договора или действий по запросу пользователя, а также законный интерес оператора в обеспечении работоспособности и безопасности сайта при условии соблюдения прав субъекта.</p>
       <h3>2.2. Регистрация и предоставление доступа к личному кабинету</h3>
-      <p>Обрабатываются имя, адрес электронной почты, защищённое представление пароля, сведения о сессии и предоставленных доступах. Цели — создание аккаунта, аутентификация, предоставление приобретённых и бесплатных материалов. Основания — отдельное согласие субъекта, заключение и исполнение договора.</p>
+      <p>Обрабатываются имя, адрес электронной почты, защищённое представление пароля, сведения о сессии и предоставленных доступах. Цели — создание аккаунта, аутентификация, предоставление приобретённых и безоплатных материалов. Основания — отдельное согласие субъекта, заключение и исполнение договора.</p>
       <h3>2.3. Оформление и исполнение заказа</h3>
       <p>Обрабатываются имя, email, сведения о выбранном продукте, сумме, номере, дате и статусе заказа и платежа. Реквизиты банковской карты на сайте оператора не вводятся и не хранятся. Цели — оформление заказа, проведение оплаты, выдача доступа, направление электронного чека, возврат и исполнение требований законодательства. Основания — договор, согласие и обязанности, установленные законом.</p>
       <h3>2.4. Обращения, ИИ‑чат и заявки</h3>

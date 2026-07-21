@@ -368,22 +368,9 @@ a.sw-rich-card:hover {
 }
 
 .free-label {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.5em;
-  white-space: nowrap;
-}
-
-.free-label s {
-  opacity: 0.48;
-  text-decoration-color: currentColor;
-  text-decoration-thickness: 1.5px;
-}
-
-.free-label b {
-  color: inherit;
-  font: inherit;
+  display: inline-block;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .sw-rich-card strong,
