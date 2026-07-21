@@ -24,11 +24,15 @@ function mountScrollWorld(container, config) {
   const settleEnabled = config.settle !== false && !reduceMotion;
   const settleDelay = Math.max(80, Number(config.settleDelay) || 180);
   const settleDuration = Math.max(600, Number(config.settleDuration) || 1600);
+  const continuousVideo = config.videoPlayback === 'continuous';
+  const videoPlaybackRate = Math.min(1.25, Math.max(0.5, Number(config.videoPlaybackRate) || 1));
 
   if (!sections.length) return;
 
   container.classList.add('sw-root');
   container.dataset.settleDuration = String(settleDuration);
+  container.dataset.videoPlayback = continuousVideo ? 'continuous' : 'scrub';
+  container.dataset.videoPlaybackRate = String(videoPlaybackRate);
 
   const segments = [];
   sections.forEach((section, index) => {
@@ -152,6 +156,8 @@ function mountScrollWorld(container, config) {
       current: 0,
       target: 0,
       visible: false,
+      playPending: false,
+      playBlocked: false,
     });
   });
 
@@ -363,6 +369,31 @@ function mountScrollWorld(container, config) {
     } catch {}
   }
 
+  function syncContinuousVideo(segment) {
+    if (!continuousVideo || !segment.video || !segment.ready) return;
+    const { video } = segment;
+
+    if (!segment.visible) {
+      if (!video.paused) video.pause();
+      return;
+    }
+
+    video.playbackRate = videoPlaybackRate;
+    if (!video.paused || segment.playPending || segment.playBlocked) return;
+
+    try {
+      const promise = video.play();
+      if (!promise?.then) return;
+      segment.playPending = true;
+      promise
+        .then(() => { segment.playBlocked = false; })
+        .catch(() => { segment.playBlocked = true; })
+        .finally(() => { segment.playPending = false; });
+    } catch {
+      segment.playBlocked = true;
+    }
+  }
+
   function loadClip(segment) {
     if (reduceMotion || segment.loading || !segment.clip) return;
     segment.loading = true;
@@ -376,6 +407,9 @@ function mountScrollWorld(container, config) {
         video.muted = true;
         video.playsInline = true;
         video.preload = 'auto';
+        video.autoplay = continuousVideo;
+        video.loop = continuousVideo;
+        video.playbackRate = videoPlaybackRate;
         video.setAttribute('muted', '');
         video.setAttribute('playsinline', '');
         video.src = URL.createObjectURL(blob);
@@ -383,10 +417,17 @@ function mountScrollWorld(container, config) {
           segment.ready = true;
           readScroll();
         });
-        video.addEventListener('seeked', () => segment.element.classList.add('has-clip'), { once: true });
+        if (!continuousVideo) {
+          video.addEventListener('seeked', () => segment.element.classList.add('has-clip'), { once: true });
+        }
         video.addEventListener('loadeddata', () => {
-          try { video.pause(); } catch {}
-          if (userReady) primeVideo(video);
+          if (continuousVideo) {
+            segment.element.classList.add('has-clip');
+            syncContinuousVideo(segment);
+          } else {
+            try { video.pause(); } catch {}
+            if (userReady) primeVideo(video);
+          }
         });
         segment.element.appendChild(video);
         segment.video = video;
@@ -463,6 +504,12 @@ function mountScrollWorld(container, config) {
   }
 
   function updateVideoFrames() {
+    if (continuousVideo) {
+      segments.forEach(syncContinuousVideo);
+      requestAnimationFrame(updateVideoFrames);
+      return;
+    }
+
     const threshold = isMobile() ? 0.018 : 0.006;
 
     segments.forEach((segment) => {
@@ -479,7 +526,14 @@ function mountScrollWorld(container, config) {
   function onFirstGesture() {
     if (userReady) return;
     userReady = true;
-    segments.forEach((segment) => primeVideo(segment.video));
+    segments.forEach((segment) => {
+      if (continuousVideo) {
+        segment.playBlocked = false;
+        syncContinuousVideo(segment);
+      } else {
+        primeVideo(segment.video);
+      }
+    });
   }
 
   function onResize() {

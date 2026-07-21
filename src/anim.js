@@ -439,6 +439,8 @@
       settle: true,
       settleDelay: 180,
       settleDuration: 1600,
+      videoPlayback: 'continuous',
+      videoPlaybackRate: 1,
       sections,
       connectors: [],
       connectorsMobile: [],
