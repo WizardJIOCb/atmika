@@ -18,6 +18,7 @@
 
   const SESSION_OFFER_SLUG = 'kvantovaya-chistka-polya-dushi';
   const isSessionOffer = (item) => item?.slug === SESSION_OFFER_SLUG;
+  const freeLabel = (className = '') => `<span class="free-label${className ? ` ${className}` : ''}"><s>Бесплатно</s> <b>Безоплатно</b></span>`;
 
   const requestJson = async (url, options = {}) => {
     const response = await fetch(url, {
@@ -64,7 +65,7 @@
 
   const priceBadge = (item) => item.accessType === 'paid'
     ? `<span class="academy-price">${isSessionOffer(item) ? `1 сессия · ${money(item.priceKopecks)}` : money(item.priceKopecks)}</span>`
-    : '<span class="academy-price is-free">Бесплатно</span>';
+    : freeLabel('academy-price is-free');
 
   const header = (settings = {}) => `
     <header class="academy-header">
@@ -165,15 +166,15 @@
     const course = data.course;
     const sessionOffer = isSessionOffer(course);
     const accessCopy = course.accessType === 'paid'
-      ? (sessionOffer ? `1 индивидуальная сессия · ${money(course.priceKopecks)}` : money(course.priceKopecks))
-      : 'Бесплатная программа';
+      ? escapeHtml(sessionOffer ? `1 индивидуальная сессия · ${money(course.priceKopecks)}` : money(course.priceKopecks))
+      : freeLabel();
     const buyAction = course.accessType === 'paid' && !course.owned
       ? `<button class="academy-button" type="button" data-checkout="course:${course.id}">${sessionOffer ? 'Оплатить одну сессию' : 'Купить программу'} · ${money(course.priceKopecks)}</button>`
       : `<a class="academy-button" href="#course-materials">${sessionOffer ? 'Открыть материалы к сессии' : (course.owned ? 'Продолжить обучение' : 'Открыть материалы')}</a>`;
     const content = `
-      <section class="course-hero"><div class="course-hero-media">${media(course)}</div><div class="course-hero-shade"></div><div class="course-hero-content"><a class="academy-back-link" href="/courses/${attr(data.category?.slug || '')}/">← ${escapeHtml(data.category?.title || 'Все форматы')}</a><span class="academy-eyebrow">${escapeHtml(accessCopy)}</span><h1>${escapeHtml(course.title)}</h1><p>${escapeHtml(course.summary || '')}</p><div class="course-hero-actions">${buyAction}<a class="academy-button is-outline" href="#course-program">${sessionOffer ? 'О сессии' : 'Программа'}</a></div></div></section>
+      <section class="course-hero"><div class="course-hero-media">${media(course)}</div><div class="course-hero-shade"></div><div class="course-hero-content"><a class="academy-back-link" href="/courses/${attr(data.category?.slug || '')}/">← ${escapeHtml(data.category?.title || 'Все форматы')}</a><span class="academy-eyebrow">${accessCopy}</span><h1>${escapeHtml(course.title)}</h1><p>${escapeHtml(course.summary || '')}</p><div class="course-hero-actions">${buyAction}<a class="academy-button is-outline" href="#course-program">${sessionOffer ? 'О сессии' : 'Программа'}</a></div></div></section>
       ${course.content?.length ? `<article class="course-description" id="course-program">${renderBlocks(course.content)}</article>` : ''}
-      <section class="academy-section" id="course-materials"><div class="academy-section-head"><span>01</span><div><h2>${sessionOffer ? 'Материалы к сессии' : 'Материалы программы'}</h2><p>${escapeHtml(sessionOffer ? 'Подготовительные материалы откроются после оплаты одной индивидуальной сессии. Время встречи согласовывается отдельно.' : data.settings.accessInstructions || '')}</p></div></div><div class="course-material-list">${data.materials.length ? data.materials.map((item, index) => `<a href="/article/${attr(course.slug)}/${attr(item.slug)}/"><span>${String(index + 1).padStart(2, '0')}</span><div><small>${item.accessType === 'free' ? 'Бесплатно' : item.canAccess ? 'Доступ открыт' : item.priceKopecks ? money(item.priceKopecks) : (sessionOffer ? 'После оплаты сессии' : 'После покупки программы')}</small><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.excerpt || '')}</p></div><strong>${item.canAccess ? 'Открыть →' : 'Закрыто 🔒'}</strong></a>`).join('') : `<div class="academy-public-empty">${sessionOffer ? 'Материалы к сессии' : 'Материалы программы'} скоро появятся.</div>`}</div></section>`;
+      <section class="academy-section" id="course-materials"><div class="academy-section-head"><span>01</span><div><h2>${sessionOffer ? 'Материалы к сессии' : 'Материалы программы'}</h2><p>${escapeHtml(sessionOffer ? 'Подготовительные материалы откроются после оплаты одной индивидуальной сессии. Время встречи согласовывается отдельно.' : data.settings.accessInstructions || '')}</p></div></div><div class="course-material-list">${data.materials.length ? data.materials.map((item, index) => `<a href="/article/${attr(course.slug)}/${attr(item.slug)}/"><span>${String(index + 1).padStart(2, '0')}</span><div><small>${item.accessType === 'free' ? freeLabel() : item.canAccess ? 'Доступ открыт' : item.priceKopecks ? money(item.priceKopecks) : (sessionOffer ? 'После оплаты сессии' : 'После покупки программы')}</small><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.excerpt || '')}</p></div><strong>${item.canAccess ? 'Открыть →' : 'Закрыто 🔒'}</strong></a>`).join('') : `<div class="academy-public-empty">${sessionOffer ? 'Материалы к сессии' : 'Материалы программы'} скоро появятся.</div>`}</div></section>`;
     root.innerHTML = shell(content, data.settings);
     updateMeta({ title: course.title, description: course.summary, image: course.coverUrl, url: window.location.href });
     bindCommon();
@@ -200,7 +201,7 @@
     const previous = data.adjacent[currentIndex - 1];
     const next = data.adjacent[currentIndex + 1];
     const content = `
-      <section class="article-hero"><div class="article-hero-media">${media(item)}</div><div class="article-hero-copy"><a class="academy-back-link" href="/course/${attr(data.course.slug)}/">← ${escapeHtml(data.course.title)}</a><span class="academy-eyebrow">${item.accessType === 'free' ? 'Бесплатный материал' : item.canAccess ? 'Доступ открыт' : 'Платный материал'}</span><h1>${escapeHtml(item.title)}</h1><p>${escapeHtml(item.excerpt || '')}</p></div></section>
+      <section class="article-hero"><div class="article-hero-media">${media(item)}</div><div class="article-hero-copy"><a class="academy-back-link" href="/course/${attr(data.course.slug)}/">← ${escapeHtml(data.course.title)}</a><span class="academy-eyebrow">${item.accessType === 'free' ? freeLabel() : item.canAccess ? 'Доступ открыт' : 'Платный материал'}</span><h1>${escapeHtml(item.title)}</h1><p>${escapeHtml(item.excerpt || '')}</p></div></section>
       ${body}
       <nav class="article-navigation">${previous ? `<a href="/article/${attr(data.course.slug)}/${attr(previous.slug)}/"><span>Предыдущий</span><strong>← ${escapeHtml(previous.title)}</strong></a>` : '<span></span>'}${next ? `<a class="is-next" href="/article/${attr(data.course.slug)}/${attr(next.slug)}/"><span>Следующий</span><strong>${escapeHtml(next.title)} →</strong></a>` : ''}</nav>`;
     root.innerHTML = shell(content, data.settings);

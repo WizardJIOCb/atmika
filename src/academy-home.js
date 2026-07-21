@@ -6,6 +6,7 @@
   const escapeHtml = (value) => String(value ?? '')
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+  const freeLabel = () => '<span class="free-label"><s>Бесплатно</s> <b>Безоплатно</b></span>';
 
   const media = (item) => {
     if (!item?.coverUrl) return '<div class="home-academy-media-empty"><span>A</span></div>';
@@ -45,7 +46,7 @@
         ${categories.length ? `<div class="home-category-grid">${categories.slice(0, 4).map((item) => `<a href="/courses/${escapeHtml(item.slug)}/"><div class="home-academy-media">${media(item)}</div><div class="home-academy-shade"></div><div><span>${data.courses.filter((course) => course.categoryId === item.id).length} формат(ов)</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description || '')}</p></div></a>`).join('')}</div>` : '<div class="home-academy-empty">Категории форматов скоро появятся.</div>'}
         ${materials.length ? `<div class="home-materials-head"><span>Материалы программ и сессий</span><h3>Статьи и практики</h3></div><div class="home-material-grid">${materials.map((item) => {
           const course = data.courses.find((entry) => entry.id === item.courseId);
-          return `<a href="/article/${escapeHtml(course?.slug || '')}/${escapeHtml(item.slug)}/"><div class="home-academy-media">${media(item)}</div><div><span>${item.accessType === 'free' ? 'Бесплатно' : item.canAccess ? 'Доступ открыт' : 'Платный материал'}</span><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.excerpt || '')}</p><strong>Открыть →</strong></div></a>`;
+          return `<a href="/article/${escapeHtml(course?.slug || '')}/${escapeHtml(item.slug)}/"><div class="home-academy-media">${media(item)}</div><div>${item.accessType === 'free' ? freeLabel() : `<span>${item.canAccess ? 'Доступ открыт' : 'Платный материал'}</span>`}<h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.excerpt || '')}</p><strong>Открыть →</strong></div></a>`;
         }).join('')}</div>` : ''}`;
     })
     .catch(() => {

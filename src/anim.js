@@ -23,6 +23,7 @@
     return /^(?:https?:|mailto:|tel:|\/|#)/i.test(url) ? html(url) : fallback;
   };
   const pad = (value) => String(value).padStart(2, '0');
+  const freeLabel = () => '<span class="free-label"><s>Бесплатно</s> <b>Безоплатно</b></span>';
   const sceneClips = [
     '/public/gallery/compressed/state-visible-03.mp4',
     '/public/gallery/compressed/state-visible-01.mp4',
@@ -40,10 +41,10 @@
     clip: sceneClips[number - 1],
   });
 
-  const card = ({ eyebrow, title, description, meta, href }) => {
+  const card = ({ eyebrow, title, description, meta, href, free = false }) => {
     const tag = href ? 'a' : 'div';
     const link = href ? ` href="${safeUrl(href)}"` : '';
-    return `<${tag} class="sw-rich-card"${link}>${eyebrow ? `<span>${html(eyebrow)}</span>` : ''}<strong>${html(title)}</strong>${description ? `<p>${html(description)}</p>` : ''}${meta ? `<em>${html(meta)}</em>` : ''}</${tag}>`;
+    return `<${tag} class="sw-rich-card"${link}>${free ? freeLabel() : eyebrow ? `<span>${html(eyebrow)}</span>` : ''}<strong>${html(title)}</strong>${description ? `<p>${html(description)}</p>` : ''}${meta ? `<em>${html(meta)}</em>` : ''}</${tag}>`;
   };
 
   const row = ({ number, title, description }) => `
@@ -197,7 +198,8 @@
     const materialCards = materials.map((material) => {
       const course = courses.find((entry) => entry.id === material.courseId);
       return card({
-        eyebrow: material.accessType === 'free' ? 'Бесплатно' : 'Материал курса',
+        eyebrow: 'Материал курса',
+        free: material.accessType === 'free',
         title: material.title,
         description: material.excerpt,
         href: `/article/${encodeURIComponent(course?.slug || '')}/${encodeURIComponent(material.slug)}/`,
