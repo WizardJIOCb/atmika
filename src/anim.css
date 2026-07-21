@@ -652,11 +652,19 @@ a.sw-rich-card:hover {
   transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
-.sw-route__dot.is-active i,
-.sw-route__dot:hover i {
+.sw-route__dot:hover i,
+.sw-route__dot:focus-visible i {
   background: var(--sw-accent);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--sw-accent) 16%, transparent);
   transform: scale(1.45);
+}
+
+.sw-route__dot.is-active i {
+  background: #f7fff9;
+  box-shadow:
+    0 0 0 4px var(--sw-accent),
+    0 0 18px color-mix(in srgb, var(--sw-accent) 68%, transparent);
+  transform: scale(1.32);
 }
 
 .sw-route__dot span {
@@ -664,24 +672,43 @@ a.sw-rich-card:hover {
   top: 50%;
   right: 23px;
   padding: 5px 8px;
-  border: 1px solid rgba(243, 245, 235, 0.1);
-  background: rgba(2, 8, 7, 0.76);
-  color: var(--sw-ink);
+  border: 1px solid rgba(243, 245, 235, 0.12);
+  background: rgba(2, 8, 7, 0.66);
+  color: rgba(243, 245, 235, 0.68);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(5px, -50%);
-  transition: opacity 180ms ease, transform 180ms ease;
+  opacity: 0.72;
+  pointer-events: auto;
+  transform: translate(0, -50%);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
   white-space: nowrap;
   backdrop-filter: blur(10px);
 }
 
 .sw-route__dot:hover span,
+.sw-route__dot:focus-visible span {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--sw-accent) 58%, transparent);
+  background: color-mix(in srgb, var(--sw-accent) 13%, rgba(2, 8, 7, 0.92));
+  color: #fff;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--sw-accent) 18%, transparent);
+  transform: translate(-3px, -50%);
+}
+
 .sw-route__dot.is-active span {
   opacity: 1;
-  transform: translate(0, -50%);
+  border-color: var(--sw-accent);
+  background: var(--sw-accent);
+  color: #06110e;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--sw-accent) 32%, transparent);
+  transform: translate(-5px, -50%);
 }
 
 .sw-progress {
@@ -869,7 +896,14 @@ a.sw-rich-card:hover {
   }
 
   .sw-route__dot span {
-    display: none;
+    display: block;
+    right: 24px;
+    max-width: min(46vw, 155px);
+    overflow: hidden;
+    padding: 4px 6px;
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    text-overflow: ellipsis;
   }
 
   .sw-hint span {

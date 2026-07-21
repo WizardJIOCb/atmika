@@ -493,7 +493,12 @@ function mountScrollWorld(container, config) {
 
     if (nearestSection !== activeIndex) {
       activeIndex = nearestSection;
-      dots.forEach((dot, index) => dot.classList.toggle('is-active', index === activeIndex));
+      dots.forEach((dot, index) => {
+        const isActive = index === activeIndex;
+        dot.classList.toggle('is-active', isActive);
+        if (isActive) dot.setAttribute('aria-current', 'step');
+        else dot.removeAttribute('aria-current');
+      });
       container.style.setProperty('--sw-accent', sections[activeIndex].accent || '');
     }
 
