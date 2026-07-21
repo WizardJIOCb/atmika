@@ -434,6 +434,8 @@
       routeLabel: 'Маршрут Atmika',
       diveScroll: 1.35,
       crossfade: 0.42,
+      settle: true,
+      settleDelay: 180,
       sections,
       connectors: [],
       connectorsMobile: [],

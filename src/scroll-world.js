@@ -21,6 +21,8 @@ function mountScrollWorld(container, config) {
   const defaultSceneScroll = config.diveScroll || 1.25;
   const defaultConnectorScroll = config.connScroll || 0.72;
   const transitionWidth = config.crossfade == null ? 0.38 : config.crossfade;
+  const settleEnabled = config.settle !== false && !reduceMotion;
+  const settleDelay = Math.max(80, Number(config.settleDelay) || 180);
 
   if (!sections.length) return;
 
@@ -197,6 +199,85 @@ function mountScrollWorld(container, config) {
   let ticking = false;
   let layoutWidth = window.innerWidth;
   let userReady = false;
+  let settleTimer = 0;
+  let settleTarget = null;
+  let settling = false;
+  let inputDirection = 0;
+  let touchY = null;
+
+  const setScrollState = (state) => {
+    container.dataset.scrollState = state;
+  };
+
+  const stableScrollTop = (index) => {
+    const segment = sections[index]?._segment;
+    if (!segment) return 0;
+    return index === 0 ? segment.start : segment.start + ((segment.end - segment.start) * 0.5);
+  };
+
+  const stableScrollPoints = () => sections.map((_, index) => stableScrollTop(index));
+
+  function finishSettling() {
+    settling = false;
+    settleTarget = null;
+    setScrollState('stable');
+  }
+
+  function scrollToStable(top) {
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - viewportHeight);
+    const target = clamp(top, 0, maxScroll);
+    const tolerance = Math.max(3, viewportHeight * 0.004);
+    window.clearTimeout(settleTimer);
+    settleTimer = 0;
+    inputDirection = 0;
+
+    if (Math.abs((window.scrollY || window.pageYOffset) - target) <= tolerance) {
+      finishSettling();
+      return;
+    }
+
+    settling = true;
+    settleTarget = target;
+    setScrollState('settling');
+    window.scrollTo({ top: target, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+
+  function settleScroll() {
+    settleTimer = 0;
+    if (!settleEnabled || settling) return;
+
+    const scrollY = window.scrollY || window.pageYOffset;
+    const points = stableScrollPoints();
+    const intentThreshold = Math.max(10, viewportHeight * 0.025);
+    let target;
+
+    if (inputDirection > 0) {
+      target = points.find((point) => point > scrollY + intentThreshold) ?? points[points.length - 1];
+    } else if (inputDirection < 0) {
+      target = [...points].reverse().find((point) => point < scrollY - intentThreshold) ?? points[0];
+    } else {
+      target = points.reduce((nearest, point) => (
+        Math.abs(point - scrollY) < Math.abs(nearest - scrollY) ? point : nearest
+      ), points[0]);
+    }
+
+    scrollToStable(target);
+  }
+
+  function scheduleSettle() {
+    if (!settleEnabled || settling) return;
+    window.clearTimeout(settleTimer);
+    settleTimer = window.setTimeout(settleScroll, settleDelay);
+  }
+
+  function noteScrollIntent(direction) {
+    if (!direction) return;
+    settling = false;
+    settleTarget = null;
+    inputDirection = direction;
+    setScrollState('scrubbing');
+    scheduleSettle();
+  }
 
   function layout() {
     viewportHeight = window.innerHeight;
@@ -209,14 +290,14 @@ function mountScrollWorld(container, config) {
     });
     totalWeight = offset;
     track.style.height = `${(totalWeight + 1) * viewportHeight}px`;
+    finishSettling();
     readScroll();
   }
 
   function jumpTo(index) {
     const segment = sections[index]?._segment;
     if (!segment) return;
-    const top = segment.start + ((segment.end - segment.start) * (index === 0 ? 0.08 : 0.5));
-    window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
+    scrollToStable(stableScrollTop(index));
   }
 
   function primeVideo(video) {
@@ -263,6 +344,9 @@ function mountScrollWorld(container, config) {
 
   function readScroll() {
     const scrollY = window.scrollY || window.pageYOffset;
+    if (settling && Math.abs(scrollY - settleTarget) <= Math.max(3, viewportHeight * 0.004)) {
+      finishSettling();
+    }
     const fade = Math.max(1, transitionWidth * viewportHeight);
     let currentSegment = 0;
 
@@ -355,7 +439,23 @@ function mountScrollWorld(container, config) {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(readScroll);
+    scheduleSettle();
   }, { passive: true });
+  window.addEventListener('wheel', (event) => noteScrollIntent(Math.sign(event.deltaY)), { passive: true });
+  window.addEventListener('touchstart', (event) => {
+    touchY = event.touches[0]?.clientY ?? null;
+  }, { passive: true });
+  window.addEventListener('touchmove', (event) => {
+    const nextY = event.touches[0]?.clientY;
+    if (touchY == null || nextY == null) return;
+    noteScrollIntent(Math.sign(touchY - nextY));
+    touchY = nextY;
+  }, { passive: true });
+  window.addEventListener('touchend', scheduleSettle, { passive: true });
+  window.addEventListener('keydown', (event) => {
+    if (['ArrowDown', 'PageDown', 'Space', 'End'].includes(event.code)) noteScrollIntent(1);
+    if (['ArrowUp', 'PageUp', 'Home'].includes(event.code)) noteScrollIntent(-1);
+  });
   window.addEventListener('resize', onResize);
   window.addEventListener('orientationchange', layout);
   window.addEventListener('pointerdown', onFirstGesture, { once: true, passive: true });
