@@ -21,14 +21,20 @@ const openRouterFallbackModels = (process.env.OPENROUTER_FALLBACK_MODELS
   .filter(Boolean);
 const retryableOpenRouterStatuses = new Set([404, 408, 429, 502, 503, 504]);
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || '';
-const telegramLeadChatId = process.env.TELEGRAM_LEAD_CHAT_ID || '';
+const telegramLeadChatIds = [
+  ...new Set((process.env.TELEGRAM_LEAD_CHAT_IDS || process.env.TELEGRAM_LEAD_CHAT_ID || '')
+    .split(/[\s,;]+/)
+    .map((chatId) => chatId.trim())
+    .filter(Boolean)),
+];
 const telegramBotApiBaseUrl = (process.env.TELEGRAM_BOT_API_BASE_URL || 'https://api.telegram.org')
   .replace(/\/+$/, '');
 const publicSiteUrl = (process.env.ATMIKA_PUBLIC_URL || 'https://iam-atmika.com').replace(/\/+$/, '');
 const personalDataConsentVersion = '18.07.2026-r2';
 const isTelegramLeadConfigured = (
   /^\d+:[a-zA-Z0-9_-]+$/.test(telegramBotToken)
-  && /^-?\d+$/.test(telegramLeadChatId)
+  && telegramLeadChatIds.length > 0
+  && telegramLeadChatIds.every((chatId) => /^-?\d+$/.test(chatId))
 );
 
 const contentDir = process.env.ATMIKA_CONTENT_DIR
@@ -452,35 +458,40 @@ const sendLeadToTelegram = async (chat) => {
   ].join('\n');
   const text = `${textBeforeChatLink}${chatLinkLabel}\nВремя: ${new Date().toISOString()}`;
 
-  let response;
-  try {
-    response = await fetch(`${telegramBotApiBaseUrl}/bot${telegramBotToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: telegramLeadChatId,
-        text,
-        entities: [{
-          type: 'text_link',
-          offset: textBeforeChatLink.length,
-          length: chatLinkLabel.length,
-          url: chatUrl,
-        }],
-        disable_web_page_preview: true,
-      }),
-    });
-  } catch {
-    throw new Error('Telegram request failed');
+  const messageIds = [];
+  for (const chatId of telegramLeadChatIds) {
+    let response;
+    try {
+      response = await fetch(`${telegramBotApiBaseUrl}/bot${telegramBotToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          entities: [{
+            type: 'text_link',
+            offset: textBeforeChatLink.length,
+            length: chatLinkLabel.length,
+            url: chatUrl,
+          }],
+          disable_web_page_preview: true,
+        }),
+      });
+    } catch {
+      throw new Error(`Telegram request failed for chat ${chatId}`);
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.ok) {
+      const error = new Error(payload.description || `Telegram request failed: ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+
+    messageIds.push(String(payload.result?.message_id || ''));
   }
 
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || !payload.ok) {
-    const error = new Error(payload.description || `Telegram request failed: ${response.status}`);
-    error.status = response.status;
-    throw error;
-  }
-
-  return String(payload.result?.message_id || '');
+  return messageIds.filter(Boolean).join(',');
 };
 
 const handleLeadMessage = async (chat, message) => {

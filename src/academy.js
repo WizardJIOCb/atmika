@@ -30,7 +30,7 @@
   const routeParts = () => decodeURIComponent(window.location.pathname).split('/').filter(Boolean);
 
   const sanitizeRichHtml = (value) => {
-    const allowedTags = new Set(['P', 'H2', 'H3', 'H4', 'STRONG', 'B', 'EM', 'I', 'U', 'A', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'BR', 'SPAN']);
+    const allowedTags = new Set(['P', 'H1', 'H2', 'H3', 'H4', 'STRONG', 'B', 'EM', 'I', 'U', 'A', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'BR', 'SPAN']);
     const template = document.createElement('template');
     template.innerHTML = String(value || '');
     template.content.querySelectorAll('*').forEach((node) => {
@@ -416,8 +416,7 @@
     const titles = { offer: 'Публичная оферта', privacy: 'Политика оператора в отношении обработки персональных данных', consent: 'Согласие на обработку персональных данных', payment: 'Оплата и возвраты' };
     const html = data.html ? sanitizeRichHtml(data.html) : generatedLegal(type, data.settings);
     const isSelfEmployed = /самозан|нпд/i.test(String(data.settings.sellerStatus || ''));
-    const requiresCommerceContacts = ['offer', 'payment'].includes(type);
-    const incomplete = !data.settings.sellerLegalName || !data.settings.sellerStatus || !data.settings.inn || !data.settings.email || (!isSelfEmployed && !data.settings.ogrn) || (requiresCommerceContacts && (!data.settings.legalAddress || !data.settings.phone));
+    const incomplete = !data.settings.sellerLegalName || !data.settings.sellerStatus || !data.settings.inn || !data.settings.email || (!isSelfEmployed && !data.settings.ogrn);
     const version = data.documentVersion || data.settings.legalDocumentVersion || '18.07.2026-r2';
     const content = `<article class="legal-document"><a class="academy-back-link" href="/courses/">← К курсам</a><span class="academy-eyebrow">Правовая информация</span>${incomplete ? '<div class="legal-draft">Для полного комплекта реквизитов продавца нужно дополнительно указать адрес и телефон в настройках сайта.</div>' : ''}<div class="article-rich-text">${html}</div><p class="legal-updated">Редакция документа: ${escapeHtml(version)}</p></article>`;
     root.innerHTML = shell(content, data.settings);

@@ -358,7 +358,7 @@
         <label class="academy-field academy-field-wide"><span>Как покупатель получает цифровой доступ</span><textarea data-setting="accessInstructions">${escapeHtml(s.accessInstructions || '')}</textarea></label>
         <label class="academy-field academy-field-wide"><span>Краткие условия возврата</span><textarea data-setting="refundSummary">${escapeHtml(s.refundSummary || '')}</textarea></label>
       </div></section>
-      ${renderLegalRich('offerHtml', 'Публичная оферта', 'Если поле пустое, сайт покажет базовый шаблон. Перед запуском нужна юридическая проверка.')}
+      ${renderLegalRich('offerHtml', 'Публичная оферта', 'Если поле пустое, сайт покажет полную редакцию от 18.07.2026 из файла оферты ИП Панкратовой.')}
       ${renderLegalRich('privacyHtml', 'Политика оператора в отношении обработки персональных данных', 'Если поле пустое, сайт покажет приведённую в соответствие редакцию 18.07.2026-r2.')}
       ${renderLegalRich('consentHtml', 'Согласие на обработку персональных данных', 'Отдельный документ, который пользователь подтверждает независимо от оферты.')}
       ${renderLegalRich('paymentHtml', 'Оплата, доступ и возвраты', 'Дополнительные правила покупки цифровых материалов.')}
