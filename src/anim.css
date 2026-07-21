@@ -678,9 +678,9 @@ a.sw-rich-card:hover {
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  opacity: 0.72;
-  pointer-events: auto;
-  transform: translate(0, -50%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(5px, -50%);
   transition:
     opacity 180ms ease,
     transform 180ms ease,
