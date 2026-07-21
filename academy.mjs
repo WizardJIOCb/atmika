@@ -2,11 +2,22 @@ import { createHash, randomBytes, randomUUID, scryptSync, timingSafeEqual } from
 import { DatabaseSync } from 'node:sqlite';
 import { mkdir, open, readFile, rename, stat, unlink } from 'node:fs/promises';
 import path from 'node:path';
+import {
+  PUBLIC_OFFER_HTML,
+  PUBLIC_OFFER_RELEASE_VERSION,
+  PUBLIC_OFFER_VERSION,
+} from './legal-documents.mjs';
 
 const now = () => new Date().toISOString();
 const bool = (value) => (value ? 1 : 0);
 const trim = (value, max = 5000) => String(value ?? '').trim().slice(0, max);
 const legalDocumentVersion = '18.07.2026-r2';
+const legalDocumentVersions = {
+  offer: PUBLIC_OFFER_VERSION,
+  privacy: legalDocumentVersion,
+  consent: legalDocumentVersion,
+  payment: legalDocumentVersion,
+};
 const operatorIdentityVersion = 'pankratova-2026-07-18';
 const operatorIdentitySettings = {
   sellerName: 'Атмика',
@@ -17,8 +28,15 @@ const operatorIdentitySettings = {
   legalAddress: '',
   postalAddress: '',
   phone: '',
-  email: 'magicscar8@gmail.com',
-  supportEmail: 'magicscar8@gmail.com',
+  email: 'eygru@proton.me',
+  supportEmail: 'eygru@proton.me',
+};
+const publicOfferSettings = {
+  publicOfferReleaseVersion: PUBLIC_OFFER_RELEASE_VERSION,
+  email: 'eygru@proton.me',
+  supportEmail: 'eygru@proton.me',
+  refundSummary: 'Для отказа от услуг и возврата направьте письменное заявление на eygru@proton.me. Условия возврата зависят от вида услуги и изложены в разделе 7 публичной оферты.',
+  offerHtml: PUBLIC_OFFER_HTML,
 };
 const safeJson = (value, fallback) => {
   try {
@@ -63,9 +81,8 @@ const defaultSettings = {
   description: 'Практики, программы и материалы для самостоятельного прохождения.',
   ...operatorIdentitySettings,
   operatorIdentityVersion,
+  ...publicOfferSettings,
   accessInstructions: 'После успешной оплаты доступ откроется в личном кабинете на iam-atmika.com.',
-  refundSummary: 'Для возврата напишите на электронную почту поддержки. Условия и срок возврата определяются офертой и применимым законодательством.',
-  offerHtml: '',
   privacyHtml: '',
   consentHtml: '',
   paymentHtml: '',
@@ -334,13 +351,19 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
         .run(JSON.stringify(defaultSettings), now());
     } else {
       const storedSettings = safeJson(settings.value_json, {});
+      const migratedSettings = { ...storedSettings };
+      let shouldMigrate = false;
       if (storedSettings.operatorIdentityVersion !== operatorIdentityVersion) {
+        Object.assign(migratedSettings, operatorIdentitySettings, { operatorIdentityVersion });
+        shouldMigrate = true;
+      }
+      if (storedSettings.publicOfferReleaseVersion !== PUBLIC_OFFER_RELEASE_VERSION) {
+        Object.assign(migratedSettings, publicOfferSettings);
+        shouldMigrate = true;
+      }
+      if (shouldMigrate) {
         db.prepare('UPDATE academy_settings SET value_json = ?, updated_at = ? WHERE id = 1')
-          .run(JSON.stringify({
-            ...storedSettings,
-            ...operatorIdentitySettings,
-            operatorIdentityVersion,
-          }), now());
+          .run(JSON.stringify(migratedSettings), now());
       }
     }
   };
@@ -356,6 +379,7 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
     ['sellerName', 'sellerLegalName', 'sellerStatus', 'inn', 'ogrn', 'email', 'supportEmail'].forEach((key) => {
       if (!trim(settings[key])) settings[key] = defaultSettings[key];
     });
+    if (!trim(settings.offerHtml, 200_000)) settings.offerHtml = PUBLIC_OFFER_HTML;
     return settings;
   };
 
@@ -451,11 +475,11 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
     return { id, email: normalizedEmail, name: trim(name, 180) };
   };
 
-  const recordLegalAcceptance = (userId, kind) => {
+  const recordLegalAcceptance = (userId, kind, documentVersion = legalDocumentVersion) => {
     db.prepare(`
       INSERT INTO academy_legal_acceptances (id, user_id, kind, document_version, created_at)
       VALUES (?, ?, ?, ?, ?)
-    `).run(randomUUID(), userId, trim(kind, 80), legalDocumentVersion, now());
+    `).run(randomUUID(), userId, trim(kind, 80), trim(documentVersion, 80), now());
   };
 
   const userEntitlements = (userId) => new Set(
@@ -505,7 +529,7 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
     return {
       type,
       html: trim(custom, 200_000),
-      documentVersion: legalDocumentVersion,
+      documentVersion: legalDocumentVersions[type] || legalDocumentVersion,
       settings: publicSettings(),
     };
   };
@@ -974,7 +998,7 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
         }
         createSession(request, headers, user.id);
       }
-      recordLegalAcceptance(user.id, 'checkout-offer-acceptance');
+      recordLegalAcceptance(user.id, 'checkout-offer-acceptance', PUBLIC_OFFER_VERSION);
       recordLegalAcceptance(user.id, 'checkout-personal-data-consent');
       const owned = userEntitlements(user.id);
       if (owned.has(`${target.type}:${target.id}`)) {
