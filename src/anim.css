@@ -243,7 +243,26 @@ a {
 }
 
 .sw-copy--wide {
-  width: min(56vw, 760px);
+  width: min(72vw, 980px);
+  max-height: calc(100dvh - 48px);
+}
+
+@media (min-width: 861px) {
+  .sw-copy--wide {
+    padding: clamp(22px, 2.5vw, 32px);
+  }
+
+  .sw-copy--wide .sw-copy__rich {
+    margin-top: 18px;
+  }
+
+  .sw-copy--wide .sw-rich-group-title {
+    margin: 12px 0 6px;
+  }
+
+  .sw-copy--wide .sw-copy__cta {
+    margin-top: 20px;
+  }
 }
 
 .sw-copy__num,
@@ -297,8 +316,8 @@ a {
 .sw-copy__rich > p {
   margin: 0;
   color: color-mix(in srgb, var(--sw-ink) 74%, var(--sw-soft));
-  font-size: 13px;
-  line-height: 1.58;
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.62;
 }
 
 .sw-copy__rich > p + p {
@@ -310,7 +329,7 @@ a {
   margin: 15px 0 8px;
   color: color-mix(in srgb, var(--sw-accent) 78%, white);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -361,7 +380,7 @@ a.sw-rich-card:hover {
 .sw-rich-row > span {
   color: var(--sw-accent);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -377,23 +396,23 @@ a.sw-rich-card:hover {
 .sw-rich-row strong {
   color: var(--sw-ink);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px;
+  font-size: clamp(17px, 1.25vw, 20px);
   font-weight: 500;
-  line-height: 1.08;
+  line-height: 1.12;
 }
 
 .sw-rich-card p,
 .sw-rich-row p {
   margin: 0;
   color: var(--sw-soft);
-  font-size: 10px;
-  line-height: 1.38;
+  font-size: clamp(12px, 0.9vw, 14px);
+  line-height: 1.5;
 }
 
 .sw-rich-card em {
   margin-top: auto;
   color: var(--sw-gold);
-  font-size: 10px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 800;
 }
@@ -852,7 +871,7 @@ a.sw-rich-card:hover {
 
   .sw-rich-card strong,
   .sw-rich-row strong {
-    font-size: 13px;
+    font-size: 15px;
   }
 
   .sw-rich-card p {
@@ -866,7 +885,8 @@ a.sw-rich-card:hover {
   }
 
   .sw-rich-row p {
-    font-size: 9px;
+    font-size: 11px;
+    line-height: 1.42;
   }
 
   .sw-copy__tags {
@@ -938,12 +958,12 @@ a.sw-rich-card:hover {
 
   .sw-rich-card span,
   .sw-rich-row > span {
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .sw-rich-card strong,
   .sw-rich-row strong {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .sw-copy__cta {
