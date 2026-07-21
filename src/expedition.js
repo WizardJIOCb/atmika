@@ -36,7 +36,9 @@ const serviceDestination = (service) => {
   return slug ? `/course/${slug}/` : telegramBookingUrl(service);
 };
 const serviceTargetAttributes = (service) => serviceCourseSlug(service) ? '' : ' target="_blank" rel="noreferrer"';
-const serviceActionLabel = (service) => serviceCourseSlug(service) ? 'открыть курс' : 'записаться в Telegram';
+const serviceActionLabel = (service) => serviceCourseSlug(service)
+  ? (serviceCourseSlug(service) === 'kvantovaya-chistka-polya-dushi' ? 'узнать о сессии' : 'открыть программу')
+  : 'записаться в Telegram';
 
 const RABBIT_VARIANT_STORAGE_KEY = 'atmika_rabbit_variant';
 const RABBIT_DEFAULT_MIGRATION_KEY = 'atmika_lumi_default_v1';
@@ -793,7 +795,7 @@ app.innerHTML = `
     </section>` : ''}
 
     <section class="section home-academy-section" id="courses" data-academy-home>
-      <div class="home-academy-empty">Загружаем категории курсов…</div>
+      <div class="home-academy-empty">Загружаем категории форматов…</div>
     </section>
 
     <section class="section split-section" id="for-whom">

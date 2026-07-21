@@ -76,9 +76,9 @@ const slugify = (value, fallback = 'item') => {
 };
 
 const defaultSettings = {
-  title: 'Курсы Атмики',
-  eyebrow: 'Пространство обучения',
-  description: 'Практики, программы и материалы для самостоятельного прохождения.',
+  title: 'Программы и сессии Атмики',
+  eyebrow: 'Пространство практик и обучения',
+  description: 'Индивидуальные сессии, программы, практики и материалы Атмики.',
   ...operatorIdentitySettings,
   operatorIdentityVersion,
   ...publicOfferSettings,

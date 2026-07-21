@@ -23,7 +23,7 @@ const sections = [
   ['process', 'Процесс'],
   ['story', 'История'],
   ['contact', 'Контакты'],
-  ['academy', 'Курсы'],
+  ['academy', 'Форматы'],
   ['payments', 'Платежи'],
   ['chatAdmin', 'Чаты'],
 ];
@@ -684,7 +684,7 @@ const renderApp = () => {
         <div class="admin-toolbar">
           <div>
             <h1>${sectionLabel(activeSection)}</h1>
-            <p class="status">${isChatSection ? 'Просмотр диалогов, ссылки на чаты и текущий контекст AI.' : isAcademySection ? 'Категории, курсы, материалы, обложки и документы магазина.' : isPaymentsSection ? 'Платежи за курсы и отдельные материалы.' : 'Изменения сохраняются в content.json и сразу попадают на сайт.'}</p>
+            <p class="status">${isChatSection ? 'Просмотр диалогов, ссылки на чаты и текущий контекст AI.' : isAcademySection ? 'Категории, программы, сессии, материалы, обложки и документы магазина.' : isPaymentsSection ? 'Платежи за программы, сессии и отдельные материалы.' : 'Изменения сохраняются в content.json и сразу попадают на сайт.'}</p>
           </div>
           <div class="action-row">
             <button type="button" onclick="window.open('/', '_blank')">Открыть сайт</button>

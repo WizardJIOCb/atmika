@@ -105,7 +105,7 @@
       return false;
     }
     const item = {
-      id: uid(), categoryId, slug: `course-${courses().length + 1}`, title: 'Новый курс', summary: '',
+      id: uid(), categoryId, slug: `course-${courses().length + 1}`, title: 'Новый формат', summary: '',
       coverType: 'image', coverUrl: '', coverPoster: '', accessType: 'free', priceKopecks: 0,
       published: false, featured: false, position: courses().filter((entry) => entry.categoryId === categoryId).length,
       content: [],
@@ -117,7 +117,7 @@
 
   const newMaterial = (courseId = courses()[0]?.id || '') => {
     if (!courseId) {
-      host.notify('Сначала создайте курс.', true);
+      host.notify('Сначала создайте формат.', true);
       return false;
     }
     const item = {
@@ -261,10 +261,10 @@
       <label class="academy-field academy-field-wide"><span>Описание</span><textarea data-entity-field="description">${escapeHtml(item.description || '')}</textarea></label>
     </div></section>
     ${renderCoverFields(item)}
-    <div class="academy-context-actions"><button type="button" data-add-course="${item.id}">+ Создать курс в этой категории</button></div>`;
+    <div class="academy-context-actions"><button type="button" data-add-course="${item.id}">+ Создать формат в этой категории</button></div>`;
 
   const renderCourseEditor = (item) => `
-    <div class="academy-editor-head"><div><span>Курс</span><h2>${escapeHtml(item.title)}</h2></div><button class="academy-danger-button" type="button" data-delete-entity>Удалить курс</button></div>
+    <div class="academy-editor-head"><div><span>Программа или сессия</span><h2>${escapeHtml(item.title)}</h2></div><button class="academy-danger-button" type="button" data-delete-entity>Удалить формат</button></div>
     <section class="academy-form-section"><div class="academy-field-grid">
       <label class="academy-field academy-field-wide"><span>Название</span><input data-entity-field="title" value="${escapeHtml(item.title)}" /></label>
       <label class="academy-field"><span>Категория</span><select data-entity-field="categoryId">${categories().map((entry) => `<option value="${entry.id}" ${entry.id === item.categoryId ? 'selected' : ''}>${escapeHtml(entry.title)}</option>`).join('')}</select></label>
@@ -277,19 +277,19 @@
     </div></section>
     ${renderCoverFields(item)}
     ${renderBlockEditor(item.content)}
-    <div class="academy-context-actions"><button type="button" data-add-material="${item.id}">+ Добавить материал в курс</button><a href="/course/${escapeHtml(item.slug)}/" target="_blank">Открыть страницу курса ↗</a></div>`;
+    <div class="academy-context-actions"><button type="button" data-add-material="${item.id}">+ Добавить материал к формату</button><a href="/course/${escapeHtml(item.slug)}/" target="_blank">Открыть страницу формата ↗</a></div>`;
 
   const renderMaterialEditor = (item) => {
     const parent = course(item.courseId);
     return `
-      <div class="academy-editor-head"><div><span>Материал курса</span><h2>${escapeHtml(item.title)}</h2></div><button class="academy-danger-button" type="button" data-delete-entity>Удалить материал</button></div>
+      <div class="academy-editor-head"><div><span>Материал формата</span><h2>${escapeHtml(item.title)}</h2></div><button class="academy-danger-button" type="button" data-delete-entity>Удалить материал</button></div>
       <section class="academy-form-section"><div class="academy-field-grid">
         <label class="academy-field academy-field-wide"><span>Название</span><input data-entity-field="title" value="${escapeHtml(item.title)}" /></label>
-        <label class="academy-field"><span>Курс</span><select data-entity-field="courseId">${courses().map((entry) => `<option value="${entry.id}" ${entry.id === item.courseId ? 'selected' : ''}>${escapeHtml(entry.title)}</option>`).join('')}</select></label>
+        <label class="academy-field"><span>Программа или сессия</span><select data-entity-field="courseId">${courses().map((entry) => `<option value="${entry.id}" ${entry.id === item.courseId ? 'selected' : ''}>${escapeHtml(entry.title)}</option>`).join('')}</select></label>
         <label class="academy-field"><span>Адрес (slug)</span><input data-entity-field="slug" value="${escapeHtml(item.slug)}" /></label>
         <label class="academy-field academy-field-wide"><span>Анонс</span><textarea data-entity-field="excerpt">${escapeHtml(item.excerpt || '')}</textarea></label>
         <label class="academy-field"><span>Доступ</span><select data-entity-field="accessType"><option value="free" ${item.accessType === 'free' ? 'selected' : ''}>Бесплатный материал</option><option value="paid" ${item.accessType === 'paid' ? 'selected' : ''}>Платный материал</option></select></label>
-        ${item.accessType === 'paid' ? `<label class="academy-field"><span>Отдельная цена, ₽</span><input type="number" min="0" step="1" data-price-field value="${Number(item.priceKopecks || 0) / 100}" /><small>Если 0 ₽ — материал доступен только после покупки платного курса.</small></label>` : ''}
+        ${item.accessType === 'paid' ? `<label class="academy-field"><span>Отдельная цена, ₽</span><input type="number" min="0" step="1" data-price-field value="${Number(item.priceKopecks || 0) / 100}" /><small>Если 0 ₽ — материал доступен только после оплаты программы или сессии.</small></label>` : ''}
         <label class="academy-check"><input type="checkbox" data-entity-field="published" ${item.published ? 'checked' : ''} /> Опубликован</label>
       </div></section>
       ${renderCoverFields(item)}
@@ -298,18 +298,18 @@
   };
 
   const renderOverview = () => `
-    <div class="academy-overview-head"><div><span class="academy-kicker">Учебное пространство</span><h2>Категории, курсы и статьи</h2><p>Создавайте структуру обучения, назначайте стоимость и собирайте публикации из визуальных блоков.</p></div>
-      <div class="academy-stat-grid"><div><strong>${categories().length}</strong><span>категорий</span></div><div><strong>${courses().length}</strong><span>курсов</span></div><div><strong>${materials().length}</strong><span>материалов</span></div></div>
+    <div class="academy-overview-head"><div><span class="academy-kicker">Пространство практик и обучения</span><h2>Категории, программы, сессии и статьи</h2><p>Создавайте структуру форматов, назначайте стоимость и собирайте публикации из визуальных блоков.</p></div>
+      <div class="academy-stat-grid"><div><strong>${categories().length}</strong><span>категорий</span></div><div><strong>${courses().length}</strong><span>форматов</span></div><div><strong>${materials().length}</strong><span>материалов</span></div></div>
     </div>
-    <div class="academy-quick-actions"><button type="button" data-add-category>+ Категория</button><button type="button" data-add-course>+ Курс</button><button type="button" data-add-material>+ Материал</button><button type="button" data-view-settings>Настройки и реквизиты</button></div>
+    <div class="academy-quick-actions"><button type="button" data-add-category>+ Категория</button><button type="button" data-add-course>+ Формат</button><button type="button" data-add-material>+ Материал</button><button type="button" data-view-settings>Настройки и реквизиты</button></div>
     ${categories().length ? `<div class="academy-category-admin-grid">${categories().map((entry) => {
       const categoryCourses = courses().filter((item) => item.categoryId === entry.id);
-      return `<article class="academy-admin-card"><button type="button" data-open-entity="category:${entry.id}"><span>${entry.published ? 'Опубликована' : 'Черновик'}</span><strong>${escapeHtml(entry.title)}</strong><small>${categoryCourses.length} курс(ов)</small></button><div>${categoryCourses.map((item) => `<button type="button" data-open-entity="course:${item.id}">${escapeHtml(item.title)} <em>${item.accessType === 'paid' ? money(item.priceKopecks) : 'Бесплатно'}</em></button>`).join('') || '<small>Курсов пока нет</small>'}</div></article>`;
-    }).join('')}</div>` : '<div class="academy-empty academy-empty-large"><strong>Начните с категории</strong><span>Внутри неё появятся курсы и материалы.</span><button type="button" data-add-category>Создать категорию</button></div>'}`;
+      return `<article class="academy-admin-card"><button type="button" data-open-entity="category:${entry.id}"><span>${entry.published ? 'Опубликована' : 'Черновик'}</span><strong>${escapeHtml(entry.title)}</strong><small>${categoryCourses.length} формат(ов)</small></button><div>${categoryCourses.map((item) => `<button type="button" data-open-entity="course:${item.id}">${escapeHtml(item.title)} <em>${item.accessType === 'paid' ? money(item.priceKopecks) : 'Бесплатно'}</em></button>`).join('') || '<small>Форматов пока нет</small>'}</div></article>`;
+    }).join('')}</div>` : '<div class="academy-empty academy-empty-large"><strong>Начните с категории</strong><span>Внутри неё появятся программы, сессии и материалы.</span><button type="button" data-add-category>Создать категорию</button></div>'}`;
 
   const renderNavigator = () => `
     <aside class="academy-tree">
-      <button class="academy-tree-home ${view.type === 'overview' ? 'is-active' : ''}" type="button" data-view-overview>Обзор курсов</button>
+      <button class="academy-tree-home ${view.type === 'overview' ? 'is-active' : ''}" type="button" data-view-overview>Обзор форматов</button>
       ${categories().map((categoryItem) => `
         <div class="academy-tree-category">
           <button class="${view.type === 'category' && view.id === categoryItem.id ? 'is-active' : ''}" type="button" data-open-entity="category:${categoryItem.id}"><span>${categoryItem.published ? '●' : '○'}</span>${escapeHtml(categoryItem.title)}</button>
@@ -336,7 +336,7 @@
     return `
       <div class="academy-editor-head"><div><span>Настройки школы</span><h2>Реквизиты и документы</h2></div></div>
       <div class="academy-readiness ${missing.length ? 'is-warning' : 'is-ready'}"><strong>${missing.length ? 'До подключения ЮKassa нужно заполнить данные' : 'Основные реквизиты заполнены'}</strong><span>${missing.length ? `Не хватает: ${missing.join(', ')}.` : 'Проверьте тексты документов с юристом перед публикацией.'}</span></div>
-      <section class="academy-form-section"><div class="academy-section-title"><h3>Витрина курсов</h3></div><div class="academy-field-grid">
+      <section class="academy-form-section"><div class="academy-section-title"><h3>Витрина форматов</h3></div><div class="academy-field-grid">
         <label class="academy-field"><span>Надзаголовок</span><input data-setting="eyebrow" value="${escapeHtml(s.eyebrow || '')}" /></label>
         <label class="academy-field"><span>Заголовок</span><input data-setting="title" value="${escapeHtml(s.title || '')}" /></label>
         <label class="academy-field academy-field-wide"><span>Описание</span><textarea data-setting="description">${escapeHtml(s.description || '')}</textarea></label>
@@ -366,7 +366,7 @@
   };
 
   const renderAcademy = () => {
-    if (isLoading || !data) return '<div class="academy-loading">Загружаю курсы…</div>';
+    if (isLoading || !data) return '<div class="academy-loading">Загружаю форматы…</div>';
     const item = activeEntity();
     const editor = view.type === 'overview' ? renderOverview()
       : view.type === 'settings' ? renderSettings()
@@ -384,8 +384,8 @@
 
   const renderPayments = () => {
     if (isLoading && !paymentsLoaded) return '<div class="academy-loading">Загружаю платежи…</div>';
-    return `<section class="payments-admin"><div class="payments-head"><div><h2>Платежи за курсы и материалы</h2><p>Последние 500 заказов. Статус успешного платежа подтверждается через API ЮKassa.</p></div><button type="button" data-refresh-payments>Обновить</button></div>
-      ${payments.length ? `<div class="payments-table-wrap"><table><thead><tr><th>Дата</th><th>Покупатель</th><th>Покупка</th><th>Сумма</th><th>Статус</th><th>ЮKassa</th><th></th></tr></thead><tbody>${payments.map((payment) => `<tr><td>${date(payment.createdAt)}${payment.test ? '<small>Тестовый</small>' : ''}</td><td><strong>${escapeHtml(payment.name || '—')}</strong><small>${escapeHtml(payment.email)}</small></td><td><strong>${escapeHtml(payment.targetTitle)}</strong><small>${payment.targetType === 'course' ? 'Курс' : 'Материал'}</small></td><td>${money(payment.amountKopecks)}</td><td><span class="payment-status is-${escapeHtml(payment.status)}">${escapeHtml(statusLabel(payment.status))}</span>${payment.paidAt ? `<small>${date(payment.paidAt)}</small>` : ''}</td><td><code>${escapeHtml(payment.yookassaId || 'не создан')}</code><small>${escapeHtml(payment.paymentMethod || '')}</small></td><td>${payment.yookassaId ? `<button type="button" data-sync-payment="${payment.id}">Сверить</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="academy-empty academy-empty-large"><strong>Платежей пока нет</strong><span>Заказы появятся здесь после начала оформления.</span></div>'}</section>`;
+    return `<section class="payments-admin"><div class="payments-head"><div><h2>Платежи за программы, сессии и материалы</h2><p>Последние 500 заказов. Статус успешного платежа подтверждается через API ЮKassa.</p></div><button type="button" data-refresh-payments>Обновить</button></div>
+      ${payments.length ? `<div class="payments-table-wrap"><table><thead><tr><th>Дата</th><th>Покупатель</th><th>Покупка</th><th>Сумма</th><th>Статус</th><th>ЮKassa</th><th></th></tr></thead><tbody>${payments.map((payment) => `<tr><td>${date(payment.createdAt)}${payment.test ? '<small>Тестовый</small>' : ''}</td><td><strong>${escapeHtml(payment.name || '—')}</strong><small>${escapeHtml(payment.email)}</small></td><td><strong>${escapeHtml(payment.targetTitle)}</strong><small>${payment.targetType === 'course' ? 'Программа или сессия' : 'Материал'}</small></td><td>${money(payment.amountKopecks)}</td><td><span class="payment-status is-${escapeHtml(payment.status)}">${escapeHtml(statusLabel(payment.status))}</span>${payment.paidAt ? `<small>${date(payment.paidAt)}</small>` : ''}</td><td><code>${escapeHtml(payment.yookassaId || 'не создан')}</code><small>${escapeHtml(payment.paymentMethod || '')}</small></td><td>${payment.yookassaId ? `<button type="button" data-sync-payment="${payment.id}">Сверить</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="academy-empty academy-empty-large"><strong>Платежей пока нет</strong><span>Заказы появятся здесь после начала оформления.</span></div>'}</section>`;
   };
 
   const upload = async (file) => {
@@ -480,7 +480,7 @@
   const load = async (force = false) => {
     if (isLoading || (data && !force)) return;
     isLoading = true; host.rerender();
-    try { data = await requestJson(endpoints.academy); host.notify('Курсы загружены.'); }
+    try { data = await requestJson(endpoints.academy); host.notify('Форматы загружены.'); }
     catch (error) { host.notify(error.message, true); }
     finally { isLoading = false; host.rerender(); }
   };
@@ -495,11 +495,11 @@
 
   const save = async () => {
     if (!data || isSaving) return;
-    isSaving = true; host.notify('Сохраняю курсы…');
+    isSaving = true; host.notify('Сохраняю форматы…');
     try {
       const result = await requestJson(endpoints.academy, { method: 'POST', body: JSON.stringify(data) });
       data = { ...data, settings: result.settings, categories: result.categories, courses: result.courses, materials: result.materials };
-      host.notify('Курсы и настройки опубликованы.'); host.rerender();
+      host.notify('Форматы и настройки опубликованы.'); host.rerender();
     } catch (error) { host.notify(error.message, true); }
     finally { isSaving = false; }
   };

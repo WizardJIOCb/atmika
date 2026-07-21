@@ -16,6 +16,9 @@
     style: 'currency', currency: 'RUB', maximumFractionDigits: Number(kopecks) % 100 ? 2 : 0,
   }).format((Number(kopecks) || 0) / 100);
 
+  const SESSION_OFFER_SLUG = 'kvantovaya-chistka-polya-dushi';
+  const isSessionOffer = (item) => item?.slug === SESSION_OFFER_SLUG;
+
   const requestJson = async (url, options = {}) => {
     const response = await fetch(url, {
       credentials: 'same-origin',
@@ -60,13 +63,13 @@
   };
 
   const priceBadge = (item) => item.accessType === 'paid'
-    ? `<span class="academy-price">${money(item.priceKopecks)}</span>`
+    ? `<span class="academy-price">${isSessionOffer(item) ? `1 сессия · ${money(item.priceKopecks)}` : money(item.priceKopecks)}</span>`
     : '<span class="academy-price is-free">Бесплатно</span>';
 
   const header = (settings = {}) => `
     <header class="academy-header">
       <a class="academy-brand" href="/" aria-label="На главную Атмики"><span>A</span><strong>АТМИКА</strong></a>
-      <nav><a href="/">Главная</a><a href="/courses/">Курсы</a><a href="/account/">Личный кабинет</a></nav>
+      <nav><a href="/">Главная</a><a href="/courses/">Форматы</a><a href="/account/">Личный кабинет</a></nav>
       <button type="button" data-academy-menu aria-label="Открыть меню"><span></span><span></span></button>
     </header>`;
 
@@ -75,8 +78,8 @@
     return `
       <footer class="academy-footer">
         <div class="academy-footer-main">
-          <div><a class="academy-brand" href="/"><span>A</span><strong>АТМИКА</strong></a><p>Курсы и цифровые материалы для самостоятельного прохождения.</p></div>
-          <div><strong>Обучение</strong><a href="/courses/">Категории и курсы</a><a href="/account/">Личный кабинет</a><span>${escapeHtml(settings.accessInstructions || 'Доступ открывается после успешной оплаты.')}</span></div>
+          <div><a class="academy-brand" href="/"><span>A</span><strong>АТМИКА</strong></a><p>Программы, индивидуальные сессии и цифровые материалы.</p></div>
+          <div><strong>Форматы</strong><a href="/courses/">Категории и форматы</a><a href="/account/">Личный кабинет</a><span>${escapeHtml(settings.accessInstructions || 'Доступ открывается после успешной оплаты.')}</span></div>
           <div><strong>Документы</strong><a href="/legal/offer/">Публичная оферта</a><a href="/legal/privacy/">Политика оператора в отношении обработки персональных данных</a><a href="/legal/consent/">Согласие на обработку персональных данных</a><a href="/legal/payment/">Оплата, доступ и возвраты</a></div>
           <div><strong>Продавец</strong><span>${escapeHtml(legalName)}</span>${settings.sellerStatus ? `<span>${escapeHtml(settings.sellerStatus)}</span>` : ''}${settings.inn ? `<span>ИНН ${escapeHtml(settings.inn)}</span>` : ''}${settings.ogrn ? `<span>ОГРН/ОГРНИП ${escapeHtml(settings.ogrn)}</span>` : ''}${settings.legalAddress ? `<span>${escapeHtml(settings.legalAddress)}</span>` : ''}${settings.postalAddress && settings.postalAddress !== settings.legalAddress ? `<span>${escapeHtml(settings.postalAddress)}</span>` : ''}${settings.phone ? `<a href="tel:${attr(settings.phone.replace(/[^+\d]/g, ''))}">${escapeHtml(settings.phone)}</a>` : ''}${settings.email ? `<a href="mailto:${attr(settings.email)}">${escapeHtml(settings.email)}</a>` : ''}</div>
         </div>
@@ -90,13 +93,13 @@
     <a class="academy-category-card" href="/courses/${attr(category.slug)}/">
       <div class="academy-card-media">${media(category)}</div>
       <div class="academy-card-overlay"></div>
-      <div class="academy-category-copy"><span>${courseCount} курс(ов)</span><h2>${escapeHtml(category.title)}</h2><p>${escapeHtml(category.description || '')}</p><strong>Открыть категорию ↗</strong></div>
+      <div class="academy-category-copy"><span>${courseCount} формат(ов)</span><h2>${escapeHtml(category.title)}</h2><p>${escapeHtml(category.description || '')}</p><strong>Открыть категорию ↗</strong></div>
     </a>`;
 
   const courseCard = (course, category) => `
     <a class="academy-course-card" href="/course/${attr(course.slug)}/">
       <div class="academy-card-media">${media(course)}</div>
-      <div class="academy-course-copy"><div><span>${escapeHtml(category?.title || 'Курс')}</span>${priceBadge(course)}</div><h3>${escapeHtml(course.title)}</h3><p>${escapeHtml(course.summary || '')}</p><strong>${course.owned ? 'Продолжить обучение' : 'Подробнее'} →</strong></div>
+      <div class="academy-course-copy"><div><span>${escapeHtml(isSessionOffer(course) ? 'Индивидуальная сессия' : category?.title || 'Программа')}</span>${priceBadge(course)}</div><h3>${escapeHtml(course.title)}</h3><p>${escapeHtml(course.summary || '')}</p><strong>${isSessionOffer(course) ? (course.owned ? 'Открыть материалы к сессии' : 'Подробнее о сессии') : (course.owned ? 'Продолжить обучение' : 'Подробнее')} →</strong></div>
     </a>`;
 
   const materialCard = (item, course) => `
@@ -127,13 +130,13 @@
     if (categorySlug && !selected) throw new Error('Категория не найдена');
     const visibleCourses = selected ? data.courses.filter((item) => item.categoryId === selected.id) : data.courses;
     const intro = selected
-      ? `<a class="academy-back-link" href="/courses/">← Все категории</a><span class="academy-eyebrow">Категория курсов</span><h1>${escapeHtml(selected.title)}</h1><p>${escapeHtml(selected.description || '')}</p>`
+      ? `<a class="academy-back-link" href="/courses/">← Все категории</a><span class="academy-eyebrow">Категория форматов</span><h1>${escapeHtml(selected.title)}</h1><p>${escapeHtml(selected.description || '')}</p>`
       : `<span class="academy-eyebrow">${escapeHtml(data.settings.eyebrow)}</span><h1>${escapeHtml(data.settings.title)}</h1><p>${escapeHtml(data.settings.description)}</p>`;
     const content = `
       <section class="academy-catalog-hero">${selected ? `<div class="academy-catalog-hero-media">${media(selected)}</div>` : '<div class="academy-orbit" aria-hidden="true"><span>A</span></div>'}<div class="academy-catalog-intro">${intro}</div></section>
-      ${!selected ? `<section class="academy-section"><div class="academy-section-head"><span>01</span><div><h2>Категории</h2><p>Выберите направление и откройте входящие в него курсы.</p></div></div><div class="academy-category-grid">${data.categories.length ? data.categories.map((item) => categoryCard(item, data.courses.filter((course) => course.categoryId === item.id).length)).join('') : '<div class="academy-public-empty">Категории скоро появятся.</div>'}</div></section>` : ''}
-      <section class="academy-section"><div class="academy-section-head"><span>${selected ? '01' : '02'}</span><div><h2>${selected ? 'Курсы категории' : 'Все курсы'}</h2><p>${selected ? 'Откройте подробную программу и материалы курса.' : 'Бесплатные и платные программы в одном пространстве.'}</p></div></div><div class="academy-course-grid">${visibleCourses.length ? visibleCourses.map((item) => courseCard(item, data.categories.find((category) => category.id === item.categoryId))).join('') : '<div class="academy-public-empty">В этой категории пока нет опубликованных курсов.</div>'}</div></section>
-      ${!selected && data.materials.length ? `<section class="academy-section"><div class="academy-section-head"><span>03</span><div><h2>Свежие материалы</h2><p>Статьи и практики из опубликованных курсов.</p></div></div><div class="academy-material-grid">${data.materials.slice(-6).reverse().map((item) => materialCard(item, data.courses.find((course) => course.id === item.courseId))).join('')}</div></section>` : ''}`;
+      ${!selected ? `<section class="academy-section"><div class="academy-section-head"><span>01</span><div><h2>Категории</h2><p>Выберите направление и откройте входящие в него программы и сессии.</p></div></div><div class="academy-category-grid">${data.categories.length ? data.categories.map((item) => categoryCard(item, data.courses.filter((course) => course.categoryId === item.id).length)).join('') : '<div class="academy-public-empty">Категории скоро появятся.</div>'}</div></section>` : ''}
+      <section class="academy-section"><div class="academy-section-head"><span>${selected ? '01' : '02'}</span><div><h2>${selected ? 'Форматы категории' : 'Все форматы'}</h2><p>${selected ? 'Откройте описание программы или индивидуальной сессии.' : 'Программы и индивидуальные сессии в одном пространстве.'}</p></div></div><div class="academy-course-grid">${visibleCourses.length ? visibleCourses.map((item) => courseCard(item, data.categories.find((category) => category.id === item.categoryId))).join('') : '<div class="academy-public-empty">В этой категории пока нет опубликованных форматов.</div>'}</div></section>
+      ${!selected && data.materials.length ? `<section class="academy-section"><div class="academy-section-head"><span>03</span><div><h2>Свежие материалы</h2><p>Статьи и практики из опубликованных форматов.</p></div></div><div class="academy-material-grid">${data.materials.slice(-6).reverse().map((item) => materialCard(item, data.courses.find((course) => course.id === item.courseId))).join('')}</div></section>` : ''}`;
     root.innerHTML = shell(content, data.settings);
     updateMeta({ title: selected?.title || data.settings.title, description: selected?.description || data.settings.description, image: selected?.coverUrl, url: window.location.href });
     bindCommon();
@@ -160,14 +163,17 @@
     const data = await requestJson(`/api/academy/course?slug=${encodeURIComponent(slug)}`);
     sessionUser = data.user;
     const course = data.course;
-    const accessCopy = course.accessType === 'paid' ? money(course.priceKopecks) : 'Бесплатный курс';
+    const sessionOffer = isSessionOffer(course);
+    const accessCopy = course.accessType === 'paid'
+      ? (sessionOffer ? `1 индивидуальная сессия · ${money(course.priceKopecks)}` : money(course.priceKopecks))
+      : 'Бесплатная программа';
     const buyAction = course.accessType === 'paid' && !course.owned
-      ? `<button class="academy-button" type="button" data-checkout="course:${course.id}">Купить курс · ${money(course.priceKopecks)}</button>`
-      : `<a class="academy-button" href="#course-materials">${course.owned ? 'Продолжить обучение' : 'Открыть материалы'}</a>`;
+      ? `<button class="academy-button" type="button" data-checkout="course:${course.id}">${sessionOffer ? 'Оплатить одну сессию' : 'Купить программу'} · ${money(course.priceKopecks)}</button>`
+      : `<a class="academy-button" href="#course-materials">${sessionOffer ? 'Открыть материалы к сессии' : (course.owned ? 'Продолжить обучение' : 'Открыть материалы')}</a>`;
     const content = `
-      <section class="course-hero"><div class="course-hero-media">${media(course)}</div><div class="course-hero-shade"></div><div class="course-hero-content"><a class="academy-back-link" href="/courses/${attr(data.category?.slug || '')}/">← ${escapeHtml(data.category?.title || 'Все курсы')}</a><span class="academy-eyebrow">${escapeHtml(accessCopy)}</span><h1>${escapeHtml(course.title)}</h1><p>${escapeHtml(course.summary || '')}</p><div class="course-hero-actions">${buyAction}<a class="academy-button is-outline" href="#course-program">Программа</a></div></div></section>
+      <section class="course-hero"><div class="course-hero-media">${media(course)}</div><div class="course-hero-shade"></div><div class="course-hero-content"><a class="academy-back-link" href="/courses/${attr(data.category?.slug || '')}/">← ${escapeHtml(data.category?.title || 'Все форматы')}</a><span class="academy-eyebrow">${escapeHtml(accessCopy)}</span><h1>${escapeHtml(course.title)}</h1><p>${escapeHtml(course.summary || '')}</p><div class="course-hero-actions">${buyAction}<a class="academy-button is-outline" href="#course-program">${sessionOffer ? 'О сессии' : 'Программа'}</a></div></div></section>
       ${course.content?.length ? `<article class="course-description" id="course-program">${renderBlocks(course.content)}</article>` : ''}
-      <section class="academy-section" id="course-materials"><div class="academy-section-head"><span>01</span><div><h2>Материалы курса</h2><p>${escapeHtml(data.settings.accessInstructions || '')}</p></div></div><div class="course-material-list">${data.materials.length ? data.materials.map((item, index) => `<a href="/article/${attr(course.slug)}/${attr(item.slug)}/"><span>${String(index + 1).padStart(2, '0')}</span><div><small>${item.accessType === 'free' ? 'Бесплатно' : item.canAccess ? 'Доступ открыт' : item.priceKopecks ? money(item.priceKopecks) : 'После покупки курса'}</small><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.excerpt || '')}</p></div><strong>${item.canAccess ? 'Открыть →' : 'Закрыто 🔒'}</strong></a>`).join('') : '<div class="academy-public-empty">Материалы курса скоро появятся.</div>'}</div></section>`;
+      <section class="academy-section" id="course-materials"><div class="academy-section-head"><span>01</span><div><h2>${sessionOffer ? 'Материалы к сессии' : 'Материалы программы'}</h2><p>${escapeHtml(sessionOffer ? 'Подготовительные материалы откроются после оплаты одной индивидуальной сессии. Время встречи согласовывается отдельно.' : data.settings.accessInstructions || '')}</p></div></div><div class="course-material-list">${data.materials.length ? data.materials.map((item, index) => `<a href="/article/${attr(course.slug)}/${attr(item.slug)}/"><span>${String(index + 1).padStart(2, '0')}</span><div><small>${item.accessType === 'free' ? 'Бесплатно' : item.canAccess ? 'Доступ открыт' : item.priceKopecks ? money(item.priceKopecks) : (sessionOffer ? 'После оплаты сессии' : 'После покупки программы')}</small><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.excerpt || '')}</p></div><strong>${item.canAccess ? 'Открыть →' : 'Закрыто 🔒'}</strong></a>`).join('') : `<div class="academy-public-empty">${sessionOffer ? 'Материалы к сессии' : 'Материалы программы'} скоро появятся.</div>`}</div></section>`;
     root.innerHTML = shell(content, data.settings);
     updateMeta({ title: course.title, description: course.summary, image: course.coverUrl, url: window.location.href });
     bindCommon();
@@ -180,14 +186,15 @@
     const data = await requestJson(`/api/academy/material?course=${encodeURIComponent(courseSlug)}&slug=${encodeURIComponent(materialSlug)}`);
     sessionUser = data.user;
     const item = data.material;
+    const sessionOffer = isSessionOffer(data.course);
     let body;
     if (item.canAccess) {
       body = `<article class="article-body">${renderBlocks(item.content)}</article>`;
     } else {
       const purchase = item.priceKopecks > 0
         ? `<button class="academy-button" type="button" data-checkout="material:${item.id}">Купить материал · ${money(item.priceKopecks)}</button>`
-        : `<a class="academy-button" href="/course/${attr(data.course.slug)}/">Купить курс</a>`;
-      body = `<section class="article-locked"><div class="article-lock-icon">🔒</div><span class="academy-eyebrow">Платный материал</span><h2>Полный текст откроется после оплаты</h2><p>${escapeHtml(item.priceKopecks > 0 ? 'Можно приобрести этот материал отдельно.' : 'Этот материал входит в платный курс.')}</p>${purchase}</section>`;
+        : `<a class="academy-button" href="/course/${attr(data.course.slug)}/">${sessionOffer ? 'Оплатить одну сессию' : 'Купить программу'}</a>`;
+      body = `<section class="article-locked"><div class="article-lock-icon">🔒</div><span class="academy-eyebrow">Платный материал</span><h2>Полный текст откроется после оплаты</h2><p>${escapeHtml(item.priceKopecks > 0 ? 'Можно приобрести этот материал отдельно.' : (sessionOffer ? 'Это подготовительный материал к одной индивидуальной сессии.' : 'Этот материал входит в платную программу.'))}</p>${purchase}</section>`;
     }
     const currentIndex = data.adjacent.findIndex((entry) => entry.slug === item.slug);
     const previous = data.adjacent[currentIndex - 1];
@@ -208,13 +215,13 @@
       <label><span>Имя</span><input name="name" autocomplete="name" required /></label>
       <label><span>Email</span><input name="email" type="email" autocomplete="email" required /></label>
       <label><span>Пароль для личного кабинета</span><input name="password" type="password" minlength="8" autocomplete="new-password" required /><small>Не менее 8 символов. Если аккаунт уже есть — укажите его пароль.</small></label>`;
-    return `<div class="checkout-modal" data-checkout-modal><div class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><button class="checkout-close" type="button" data-checkout-close aria-label="Закрыть">×</button><span class="academy-eyebrow">Безопасная оплата</span><h2 id="checkout-title">${escapeHtml(target.title)}</h2><div class="checkout-price">${money(target.priceKopecks)}</div><form data-checkout-form>${userFields}<label class="checkout-consent"><input type="checkbox" name="acceptedOffer" required /><span>Я принимаю <a href="/legal/offer/" target="_blank">условия публичной оферты</a>.</span></label><label class="checkout-consent"><input type="checkbox" name="personalDataConsent" required /><span>Я отдельно даю <a href="/legal/consent/" target="_blank">согласие на обработку персональных данных</a> и ознакомлен(а) с <a href="/legal/privacy/" target="_blank">Политикой оператора</a>.</span></label><button class="academy-button" type="submit">Перейти к оплате в ЮKassa</button><p class="checkout-note">Платёжные данные вводятся на защищённой странице ЮKassa. После оплаты доступ появится в личном кабинете.</p><div class="checkout-error" data-checkout-error></div></form></div></div>`;
+    return `<div class="checkout-modal" data-checkout-modal><div class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><button class="checkout-close" type="button" data-checkout-close aria-label="Закрыть">×</button><span class="academy-eyebrow">${target.sessionOffer ? 'Оплата одной индивидуальной сессии' : 'Безопасная оплата'}</span><h2 id="checkout-title">${escapeHtml(target.title)}</h2><div class="checkout-price">${target.sessionOffer ? '1 сессия · ' : ''}${money(target.priceKopecks)}</div><form data-checkout-form>${userFields}<label class="checkout-consent"><input type="checkbox" name="acceptedOffer" required /><span>Я принимаю <a href="/legal/offer/" target="_blank">условия публичной оферты</a>.</span></label><label class="checkout-consent"><input type="checkbox" name="personalDataConsent" required /><span>Я отдельно даю <a href="/legal/consent/" target="_blank">согласие на обработку персональных данных</a> и ознакомлен(а) с <a href="/legal/privacy/" target="_blank">Политикой оператора</a>.</span></label><button class="academy-button" type="submit">${target.sessionOffer ? 'Перейти к оплате одной сессии' : 'Перейти к оплате в ЮKassa'}</button><p class="checkout-note">${target.sessionOffer ? 'После оплаты откроются подготовительные материалы. Время одной индивидуальной сессии согласовывается отдельно.' : 'Платёжные данные вводятся на защищённой странице ЮKassa. После оплаты доступ появится в личном кабинете.'}</p><div class="checkout-error" data-checkout-error></div></form></div></div>`;
   };
 
   const bindCheckoutButtons = (entity) => {
     document.querySelectorAll('[data-checkout]').forEach((button) => button.addEventListener('click', () => {
       const [targetType, targetId] = button.dataset.checkout.split(':');
-      checkoutTarget = { targetType, targetId, title: entity.title, priceKopecks: entity.priceKopecks };
+      checkoutTarget = { targetType, targetId, title: entity.title, priceKopecks: entity.priceKopecks, sessionOffer: isSessionOffer(entity) };
       const container = document.querySelector('[data-checkout-root]');
       container.innerHTML = checkoutModal(checkoutTarget);
       document.body.classList.add('checkout-open');
@@ -256,7 +263,7 @@
     } catch (requestError) {
       error.textContent = requestError.message;
       button.disabled = false;
-      button.textContent = 'Перейти к оплате в ЮKassa';
+      button.textContent = checkoutTarget?.sessionOffer ? 'Перейти к оплате одной сессии' : 'Перейти к оплате в ЮKassa';
     }
   };
 
@@ -268,7 +275,7 @@
       const data = await requestJson(`/api/academy/payment?order_id=${encodeURIComponent(orderId)}`);
       const succeeded = data.status === 'succeeded';
       const canceled = data.status === 'canceled';
-      const content = `<section class="payment-result ${succeeded ? 'is-success' : canceled ? 'is-canceled' : ''}"><div class="payment-result-icon">${succeeded ? '✓' : canceled ? '×' : '···'}</div><span class="academy-eyebrow">Заказ ${escapeHtml(orderId.slice(0, 8))}</span><h1>${succeeded ? 'Оплата прошла' : canceled ? 'Оплата отменена' : 'Проверяем оплату'}</h1><p>${escapeHtml(data.title)}</p><strong>${money(data.amountKopecks)}</strong>${succeeded ? `<a class="academy-button" href="${attr(data.destination)}">Открыть покупку</a>` : canceled ? '<a class="academy-button is-outline" href="/courses/">Вернуться к курсам</a>' : '<span class="payment-wait">Обычно это занимает несколько секунд. Страница обновится автоматически.</span>'}</section>`;
+      const content = `<section class="payment-result ${succeeded ? 'is-success' : canceled ? 'is-canceled' : ''}"><div class="payment-result-icon">${succeeded ? '✓' : canceled ? '×' : '···'}</div><span class="academy-eyebrow">Заказ ${escapeHtml(orderId.slice(0, 8))}</span><h1>${succeeded ? 'Оплата прошла' : canceled ? 'Оплата отменена' : 'Проверяем оплату'}</h1><p>${escapeHtml(data.title)}</p><strong>${money(data.amountKopecks)}</strong>${succeeded ? `<a class="academy-button" href="${attr(data.destination)}">Открыть покупку</a>` : canceled ? '<a class="academy-button is-outline" href="/courses/">Вернуться к форматам</a>' : '<span class="payment-wait">Обычно это занимает несколько секунд. Страница обновится автоматически.</span>'}</section>`;
       root.innerHTML = shell(content, {});
       bindCommon();
       if (!succeeded && !canceled && attempts < 12) { attempts += 1; window.setTimeout(draw, 3000); }
@@ -276,7 +283,7 @@
     await draw();
   };
 
-  const authForm = () => `<section class="account-auth"><div><span class="academy-eyebrow">Личный кабинет</span><h1>Ваши курсы и материалы</h1><p>Войдите в аккаунт, который использовали при покупке, или зарегистрируйтесь заранее.</p></div><div class="account-auth-card"><div class="account-auth-tabs"><button class="is-active" type="button" data-auth-mode="login">Вход</button><button type="button" data-auth-mode="register">Регистрация</button></div><form data-auth-form><label data-name-field hidden><span>Имя</span><input name="name" autocomplete="name" /></label><label><span>Email</span><input name="email" type="email" autocomplete="email" required /></label><label><span>Пароль</span><input name="password" type="password" minlength="8" autocomplete="current-password" required /></label><label class="checkout-consent" data-registration-consent hidden><input type="checkbox" name="personalDataConsent" /><span>Я отдельно даю <a href="/legal/consent/" target="_blank">согласие на обработку персональных данных</a> и ознакомлен(а) с <a href="/legal/privacy/" target="_blank">Политикой оператора</a>.</span></label><button class="academy-button" type="submit">Войти</button><div class="checkout-error" data-auth-error></div></form></div></section>`;
+  const authForm = () => `<section class="account-auth"><div><span class="academy-eyebrow">Личный кабинет</span><h1>Ваши покупки и материалы</h1><p>Войдите в аккаунт, который использовали при покупке, или зарегистрируйтесь заранее.</p></div><div class="account-auth-card"><div class="account-auth-tabs"><button class="is-active" type="button" data-auth-mode="login">Вход</button><button type="button" data-auth-mode="register">Регистрация</button></div><form data-auth-form><label data-name-field hidden><span>Имя</span><input name="name" autocomplete="name" /></label><label><span>Email</span><input name="email" type="email" autocomplete="email" required /></label><label><span>Пароль</span><input name="password" type="password" minlength="8" autocomplete="current-password" required /></label><label class="checkout-consent" data-registration-consent hidden><input type="checkbox" name="personalDataConsent" /><span>Я отдельно даю <a href="/legal/consent/" target="_blank">согласие на обработку персональных данных</a> и ознакомлен(а) с <a href="/legal/privacy/" target="_blank">Политикой оператора</a>.</span></label><button class="academy-button" type="submit">Войти</button><div class="checkout-error" data-auth-error></div></form></div></section>`;
 
   const renderAccount = async () => {
     try {
@@ -292,7 +299,7 @@
         const parent = item && catalog.courses.find((entry) => entry.id === item.courseId);
         return item && parent ? materialCard(item, parent) : '';
       }).join('');
-      const content = `<section class="account-head"><div><span class="academy-eyebrow">Личный кабинет</span><h1>${escapeHtml(data.user.name || 'Мои покупки')}</h1><p>${escapeHtml(data.user.email)}</p></div><button class="academy-button is-outline" type="button" data-logout>Выйти</button></section><section class="academy-section"><div class="academy-section-head"><span>01</span><div><h2>Доступные покупки</h2><p>Оплаченные курсы и отдельные материалы.</p></div></div><div class="academy-course-grid">${cards || '<div class="academy-public-empty">Покупок пока нет. Бесплатные материалы доступны в каталоге.</div>'}</div></section>`;
+      const content = `<section class="account-head"><div><span class="academy-eyebrow">Личный кабинет</span><h1>${escapeHtml(data.user.name || 'Мои покупки')}</h1><p>${escapeHtml(data.user.email)}</p></div><button class="academy-button is-outline" type="button" data-logout>Выйти</button></section><section class="academy-section"><div class="academy-section-head"><span>01</span><div><h2>Доступные покупки</h2><p>Оплаченные программы, сессии и отдельные материалы.</p></div></div><div class="academy-course-grid">${cards || '<div class="academy-public-empty">Покупок пока нет. Бесплатные материалы доступны в каталоге.</div>'}</div></section>`;
       root.innerHTML = shell(content, catalog.settings);
       bindCommon();
       document.querySelector('[data-logout]').addEventListener('click', async () => { await requestJson('/api/academy/logout', { method: 'POST', body: '{}' }); window.location.reload(); });
@@ -406,8 +413,8 @@
     const email = escapeHtml(settings.supportEmail || settings.email || '[укажите email]');
     if (type === 'privacy') return generatedPrivacyPolicy(settings);
     if (type === 'consent') return generatedPersonalDataConsent(settings);
-    if (type === 'offer') return `<h1>Публичная оферта</h1><p>Настоящий документ является предложением ${seller} заключить договор предоставления доступа к цифровым образовательным и информационным материалам, размещённым на iam-atmika.com.</p><h2>Предмет договора</h2><p>Продавец предоставляет пользователю доступ к выбранному курсу или отдельному материалу в объёме и на условиях, указанных на странице соответствующего продукта.</p><h2>Оформление и оплата</h2><p>Пользователь выбирает продукт, отдельно принимает условия оферты, отдельно даёт согласие на обработку персональных данных и оплачивает заказ на защищённой странице ЮKassa. Цена указывается на странице продукта в рублях.</p><h2>Предоставление доступа</h2><p>${escapeHtml(settings.accessInstructions || 'Доступ открывается в личном кабинете после подтверждения оплаты.')}</p><h2>Возвраты</h2><p>${escapeHtml(settings.refundSummary || `Для обращения по вопросу возврата напишите на ${email}.`)}</p><h2>Реквизиты</h2><p>${operatorRequisites(settings)}</p>`;
-    return `<h1>Оплата, получение доступа и возвраты</h1><h2>Как оплатить</h2><p>Выберите платный курс или материал, заполните данные личного кабинета, отдельно примите публичную оферту и дайте согласие на обработку персональных данных, затем перейдите на защищённую страницу ЮKassa. Доступные способы оплаты показываются на платёжной странице.</p><h2>Как получить покупку</h2><p>${escapeHtml(settings.accessInstructions || 'После успешной оплаты вернитесь на сайт и откройте покупку в личном кабинете.')}</p><h2>Если оплата не завершилась</h2><p>Вернитесь на страницу курса и создайте новый заказ. Деньги за отменённый платёж не списываются.</p><h2>Возврат</h2><p>${escapeHtml(settings.refundSummary || 'Напишите продавцу, указав email аккаунта, название покупки и дату оплаты.')}</p><p>Контакт поддержки: ${email}.</p>`;
+    if (type === 'offer') return `<h1>Публичная оферта</h1><p>Настоящий документ является предложением ${seller} заключить договор предоставления услуг и доступа к цифровым образовательным и информационным материалам, размещённым на iam-atmika.com.</p><h2>Предмет договора</h2><p>Продавец предоставляет пользователю выбранную программу, индивидуальную сессию или отдельный материал в объёме и на условиях, указанных на странице соответствующего продукта.</p><h2>Оформление и оплата</h2><p>Пользователь выбирает продукт, отдельно принимает условия оферты, отдельно даёт согласие на обработку персональных данных и оплачивает заказ на защищённой странице ЮKassa. Цена указывается на странице продукта в рублях.</p><h2>Предоставление доступа</h2><p>${escapeHtml(settings.accessInstructions || 'Доступ открывается в личном кабинете после подтверждения оплаты.')}</p><h2>Возвраты</h2><p>${escapeHtml(settings.refundSummary || `Для обращения по вопросу возврата напишите на ${email}.`)}</p><h2>Реквизиты</h2><p>${operatorRequisites(settings)}</p>`;
+    return `<h1>Оплата, получение доступа и возвраты</h1><h2>Как оплатить</h2><p>Выберите платную программу, индивидуальную сессию или материал, заполните данные личного кабинета, отдельно примите публичную оферту и дайте согласие на обработку персональных данных, затем перейдите на защищённую страницу ЮKassa. Доступные способы оплаты показываются на платёжной странице.</p><h2>Как получить покупку</h2><p>${escapeHtml(settings.accessInstructions || 'После успешной оплаты вернитесь на сайт и откройте покупку в личном кабинете.')}</p><h2>Если оплата не завершилась</h2><p>Вернитесь на страницу выбранного формата и создайте новый заказ. Деньги за отменённый платёж не списываются.</p><h2>Возврат</h2><p>${escapeHtml(settings.refundSummary || 'Напишите продавцу, указав email аккаунта, название покупки и дату оплаты.')}</p><p>Контакт поддержки: ${email}.</p>`;
   };
 
   const renderLegal = async () => {
@@ -418,7 +425,7 @@
     const isSelfEmployed = /самозан|нпд/i.test(String(data.settings.sellerStatus || ''));
     const incomplete = !data.settings.sellerLegalName || !data.settings.sellerStatus || !data.settings.inn || !data.settings.email || (!isSelfEmployed && !data.settings.ogrn);
     const version = data.documentVersion || data.settings.legalDocumentVersion || '18.07.2026-r2';
-    const content = `<article class="legal-document"><a class="academy-back-link" href="/courses/">← К курсам</a><span class="academy-eyebrow">Правовая информация</span>${incomplete ? '<div class="legal-draft">Для полного комплекта реквизитов продавца нужно дополнительно указать адрес и телефон в настройках сайта.</div>' : ''}<div class="article-rich-text">${html}</div><p class="legal-updated">Редакция документа: ${escapeHtml(version)}</p></article>`;
+    const content = `<article class="legal-document"><a class="academy-back-link" href="/courses/">← К форматам</a><span class="academy-eyebrow">Правовая информация</span>${incomplete ? '<div class="legal-draft">Для полного комплекта реквизитов продавца нужно дополнительно указать адрес и телефон в настройках сайта.</div>' : ''}<div class="article-rich-text">${html}</div><p class="legal-updated">Редакция документа: ${escapeHtml(version)}</p></article>`;
     root.innerHTML = shell(content, data.settings);
     document.title = `${titles[type] || titles.payment} | Атмика`;
     bindCommon();
@@ -441,7 +448,7 @@
   };
 
   const renderError = (error) => {
-    root.innerHTML = shell(`<section class="academy-error"><span>A</span><h1>Не удалось открыть страницу</h1><p>${escapeHtml(error.message)}</p><a class="academy-button" href="/courses/">Перейти к курсам</a></section>`, {});
+    root.innerHTML = shell(`<section class="academy-error"><span>A</span><h1>Не удалось открыть страницу</h1><p>${escapeHtml(error.message)}</p><a class="academy-button" href="/courses/">Перейти к форматам</a></section>`, {});
     bindCommon();
   };
 

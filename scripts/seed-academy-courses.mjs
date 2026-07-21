@@ -51,25 +51,28 @@ const lessonBlocks = (lesson, includeContact = false) => {
   return result;
 };
 
-const courseBlocks = (course) => [
-  block('text', {
-    html: `
-      <h2>О программе</h2>
+const courseBlocks = (course) => {
+  const sessionOffer = course.offerType === 'session';
+  return [
+    block('text', {
+      html: `
+      <h2>${sessionOffer ? 'Об одной индивидуальной сессии' : 'О программе'}</h2>
       <p>${escapeHtml(course.overview)}</p>
       <h2>Что входит</h2>
       ${bulletList(course.includes)}
-      <h2>Как проходить</h2>
+      <h2>${sessionOffer ? 'Как подготовиться' : 'Как проходить'}</h2>
       <p>${escapeHtml(course.format)}</p>
       <h2>После оплаты</h2>
       <p>${escapeHtml(course.afterPayment)}</p>
     `,
-  }),
-  block('quote', {
-    text: 'Материалы предназначены для самоисследования и развития навыков внимания. Они не заменяют медицинскую, психотерапевтическую или иную профессиональную помощь и не обещают гарантированного результата.',
-    author: 'Важная информация',
-  }),
-  block('button', { label: 'Задать вопрос до покупки', url: contactUrl, style: 'outline' }),
-];
+    }),
+    block('quote', {
+      text: 'Материалы предназначены для самоисследования и развития навыков внимания. Они не заменяют медицинскую, психотерапевтическую или иную профессиональную помощь и не обещают гарантированного результата.',
+      author: 'Важная информация',
+    }),
+    block('button', { label: sessionOffer ? 'Задать вопрос до оплаты сессии' : 'Задать вопрос до покупки', url: contactUrl, style: 'outline' }),
+  ];
+};
 
 const categories = [
   {
@@ -169,13 +172,14 @@ const courseSpecs = [
     slug: 'kvantovaya-chistka-polya-dushi',
     title: 'Квантовая чистка поля души',
     summary: 'Работа с первопричинами, внутренними блоками, повторяющимися событиями и тем, что ощущается как энергетическая тяжесть.',
+    offerType: 'session',
     priceKopecks: 5_000_000,
     featured: true,
     coverUrl: '/public/gallery/compressed/state-visible-02.mp4',
-    overview: 'Индивидуальный формат с подготовительными материалами. Курс помогает сформулировать запрос, провести инвентаризацию незавершённых переживаний и подготовиться к одной личной онлайн-сессии с последующей интеграцией.',
-    includes: ['четыре материала в личном кабинете;', 'одна индивидуальная онлайн-сессия по предварительному согласованию времени;', 'подготовка запроса и рекомендации по бережной интеграции;', 'контактная кнопка для согласования даты после оплаты.'],
-    format: 'Сначала пройдите бесплатный вводный урок и убедитесь, что формат вам подходит. После покупки заполните подготовительную карту, затем свяжитесь для согласования индивидуальной встречи.',
-    afterPayment: 'Закрытые материалы откроются сразу. Дата индивидуальной сессии не назначается автоматически — её нужно согласовать через кнопку связи в последнем уроке.',
+    overview: 'Стоимость 50 000 ₽ включает одну индивидуальную онлайн-сессию и подготовительные материалы. Они помогают сформулировать запрос, провести инвентаризацию незавершённых переживаний и подготовиться к личной встрече с последующей интеграцией.',
+    includes: ['одна индивидуальная онлайн-сессия по предварительному согласованию времени;', 'четыре подготовительных материала в личном кабинете;', 'подготовка запроса и рекомендации по бережной интеграции;', 'контактная кнопка для согласования даты после оплаты.'],
+    format: 'Сначала пройдите бесплатный вводный материал и убедитесь, что формат вам подходит. После оплаты одной сессии заполните подготовительную карту, затем свяжитесь для согласования индивидуальной встречи.',
+    afterPayment: 'Подготовительные материалы откроются сразу. Оплата 50 000 ₽ относится к одной индивидуальной сессии. Дата встречи не назначается автоматически — её нужно согласовать через кнопку связи в последнем материале.',
     lessons: [
       {
         slug: 'namerenie-i-granicy',
@@ -567,9 +571,22 @@ try {
       access_type=excluded.access_type, price_kopecks=excluded.price_kopecks, content_json=excluded.content_json,
       published=1, position=excluded.position, updated_at=excluded.updated_at
   `);
+  const readSettings = db.prepare('SELECT value_json FROM academy_settings WHERE id = 1');
+  const updateSettings = db.prepare('UPDATE academy_settings SET value_json = ?, updated_at = ? WHERE id = 1');
 
   db.exec('BEGIN IMMEDIATE');
   try {
+    const settingsRow = readSettings.get();
+    if (settingsRow) {
+      let settings = {};
+      try { settings = JSON.parse(settingsRow.value_json); } catch { settings = {}; }
+      updateSettings.run(JSON.stringify({
+        ...settings,
+        title: 'Программы и сессии Атмики',
+        eyebrow: 'Пространство практик и обучения',
+        description: 'Индивидуальные сессии, программы, практики и материалы Атмики.',
+      }), stamp);
+    }
     categories.forEach((item) => upsertCategory.run(
       item.id, item.slug, item.title, item.description, item.coverType, item.coverUrl,
       item.coverPoster, item.position, stamp, stamp,

@@ -54,9 +54,9 @@
 
   const fallbackCatalog = () => ({
     settings: {
-      eyebrow: 'Пространство обучения',
-      title: 'Курсы Атмики',
-      description: 'Практики, программы и материалы для самостоятельного прохождения.',
+      eyebrow: 'Пространство практик и обучения',
+      title: 'Программы и сессии Атмики',
+      description: 'Индивидуальные сессии, программы, практики и материалы Атмики.',
       sellerLegalName: 'ИП Панкратова Оксана Сергеевна',
       inn: '236504298920',
       ogrn: '326237500235369',
@@ -187,7 +187,7 @@
     const categoryCards = categories.slice(0, 4).map((category) => {
       const count = courses.filter((course) => course.categoryId === category.id).length;
       return card({
-        eyebrow: `${count} курс(ов)`,
+        eyebrow: `${count} формат(ов)`,
         title: category.title,
         description: category.description,
         href: `/courses/${encodeURIComponent(category.slug)}/`,
@@ -285,19 +285,19 @@
         title: content.servicesSection?.title,
         html: `<div class="sw-rich-grid sw-rich-grid--three">${serviceCards}</div>`,
         cta: {
-          secondary: { label: 'Все курсы', href: '/courses/' },
+          secondary: { label: 'Все форматы', href: '/courses/' },
         },
       },
       {
         ...sceneMedia(4),
         id: 'academy',
-        label: 'Курсы',
+        label: 'Форматы',
         accent: '#88e7bd',
         scroll: 1.65,
         linger: 0.45,
         wide: true,
-        eyebrow: settings.eyebrow || 'Пространство обучения',
-        title: settings.title || 'Курсы Атмики',
+        eyebrow: settings.eyebrow || 'Пространство практик и обучения',
+        title: settings.title || 'Программы и сессии Атмики',
         body: settings.description,
         html: `
           <span class="sw-rich-group-title">Категории</span>
@@ -305,7 +305,7 @@
           ${materialCards ? `<span class="sw-rich-group-title">Статьи и практики</span><div class="sw-rich-grid sw-rich-grid--three">${materialCards}</div>` : ''}
         `,
         cta: {
-          primary: { label: 'Открыть все курсы', href: '/courses/' },
+          primary: { label: 'Открыть все форматы', href: '/courses/' },
           secondary: { label: 'Личный кабинет', href: '/account/' },
         },
       },
