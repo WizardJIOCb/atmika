@@ -6,7 +6,7 @@
   const escapeHtml = (value) => String(value ?? '')
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-  const freeLabel = () => '<span class="free-label"><s>Бесплатно</s> <b>Безоплатно</b></span>';
+  const freeLabel = () => '<span class="free-label">Безоплатно</span>';
 
   const media = (item) => {
     if (!item?.coverUrl) return '<div class="home-academy-media-empty"><span>A</span></div>';

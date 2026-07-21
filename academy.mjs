@@ -10,7 +10,11 @@ import {
 
 const now = () => new Date().toISOString();
 const bool = (value) => (value ? 1 : 0);
-const trim = (value, max = 5000) => String(value ?? '').trim().slice(0, max);
+const preferredTerminology = (value) => String(value ?? '')
+  .replaceAll('БЕСПЛАТ', 'БЕЗОПЛАТ')
+  .replaceAll('Бесплат', 'Безоплат')
+  .replaceAll('бесплат', 'безоплат');
+const trim = (value, max = 5000) => preferredTerminology(value).trim().slice(0, max);
 const legalDocumentVersion = '18.07.2026-r2';
 const legalDocumentVersions = {
   offer: PUBLIC_OFFER_VERSION,
@@ -95,7 +99,9 @@ const normalizeBlocks = (value) => (Array.isArray(value) ? value : [])
   .map((block) => ({
     id: /^[a-zA-Z0-9_-]{6,80}$/.test(String(block?.id || '')) ? String(block.id) : randomUUID(),
     type: blockTypes.has(block?.type) ? block.type : 'text',
-    data: block?.data && typeof block.data === 'object' && !Array.isArray(block.data) ? block.data : {},
+    data: block?.data && typeof block.data === 'object' && !Array.isArray(block.data)
+      ? safeJson(preferredTerminology(JSON.stringify(block.data)), {})
+      : {},
   }));
 
 const normalizeMediaType = (value) => (value === 'video' ? 'video' : 'image');
@@ -366,6 +372,22 @@ export const createAcademy = ({ root, publicSiteUrl, isSecureRequest }) => {
           .run(JSON.stringify(migratedSettings), now());
       }
     }
+
+    const terminologyFields = [
+      ['academy_settings', ['value_json']],
+      ['academy_categories', ['title', 'description']],
+      ['academy_courses', ['title', 'summary', 'content_json']],
+      ['academy_materials', ['title', 'excerpt', 'content_json']],
+    ];
+    terminologyFields.forEach(([table, fields]) => {
+      const replacements = fields
+        .map((field) => `${field} = replace(replace(replace(${field}, 'БЕСПЛАТ', 'БЕЗОПЛАТ'), 'Бесплат', 'Безоплат'), 'бесплат', 'безоплат')`)
+        .join(', ');
+      const condition = fields
+        .map((field) => `instr(${field}, 'БЕСПЛАТ') > 0 OR instr(${field}, 'Бесплат') > 0 OR instr(${field}, 'бесплат') > 0`)
+        .join(' OR ');
+      db.prepare(`UPDATE ${table} SET ${replacements}, updated_at = ? WHERE ${condition}`).run(now());
+    });
   };
 
   const ready = initialize();

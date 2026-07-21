@@ -299,9 +299,7 @@ img, video { display: block; max-width: 100%; }
 .academy-material-copy > div > span { color: var(--academy-muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
 .academy-price { color: var(--academy-gold); font-size: 12px; font-weight: 900; }
 .academy-price.is-free { color: var(--academy-aqua); }
-.free-label { display: inline-flex; align-items: baseline; gap: 0.5em; white-space: nowrap; }
-.free-label s { opacity: 0.48; text-decoration-color: currentColor; text-decoration-thickness: 1.5px; }
-.free-label b { color: inherit; font: inherit; font-weight: 900; }
+.free-label { display: inline-block; font-weight: 900; white-space: nowrap; }
 .academy-course-copy h3,
 .academy-material-copy h3 { margin: 0; font-size: 28px; line-height: 1.08; }
 .academy-course-copy p,
