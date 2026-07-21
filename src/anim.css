@@ -672,33 +672,36 @@ a.sw-rich-card:hover {
   top: 50%;
   right: 23px;
   padding: 5px 8px;
-  border: 1px solid rgba(243, 245, 235, 0.12);
-  background: rgba(2, 8, 7, 0.66);
-  color: rgba(243, 245, 235, 0.68);
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(243, 245, 235, 0.38);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(5px, -50%);
+  opacity: 1;
+  pointer-events: auto;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.88);
+  transform: translate(0, -50%);
   transition:
     opacity 180ms ease,
     transform 180ms ease,
     color 180ms ease,
     border-color 180ms ease,
     background 180ms ease,
-    box-shadow 180ms ease;
+    box-shadow 180ms ease,
+    text-shadow 180ms ease;
   white-space: nowrap;
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 }
 
 .sw-route__dot:hover span,
 .sw-route__dot:focus-visible span {
   opacity: 1;
-  border-color: color-mix(in srgb, var(--sw-accent) 58%, transparent);
-  background: color-mix(in srgb, var(--sw-accent) 13%, rgba(2, 8, 7, 0.92));
-  color: #fff;
-  box-shadow: 0 0 14px color-mix(in srgb, var(--sw-accent) 18%, transparent);
+  border-color: transparent;
+  background: transparent;
+  color: var(--sw-accent);
+  box-shadow: none;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--sw-accent) 62%, transparent);
   transform: translate(-3px, -50%);
 }
 
@@ -708,6 +711,7 @@ a.sw-rich-card:hover {
   background: var(--sw-accent);
   color: #06110e;
   box-shadow: 0 0 18px color-mix(in srgb, var(--sw-accent) 32%, transparent);
+  text-shadow: none;
   transform: translate(-5px, -50%);
 }
 
