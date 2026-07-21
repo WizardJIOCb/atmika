@@ -438,6 +438,7 @@
       crossfade: 0.42,
       settle: true,
       settleDelay: 180,
+      settleDuration: 1600,
       sections,
       connectors: [],
       connectorsMobile: [],

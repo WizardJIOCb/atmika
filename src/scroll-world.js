@@ -23,10 +23,12 @@ function mountScrollWorld(container, config) {
   const transitionWidth = config.crossfade == null ? 0.38 : config.crossfade;
   const settleEnabled = config.settle !== false && !reduceMotion;
   const settleDelay = Math.max(80, Number(config.settleDelay) || 180);
+  const settleDuration = Math.max(600, Number(config.settleDuration) || 1600);
 
   if (!sections.length) return;
 
   container.classList.add('sw-root');
+  container.dataset.settleDuration = String(settleDuration);
 
   const segments = [];
   sections.forEach((section, index) => {
@@ -201,6 +203,8 @@ function mountScrollWorld(container, config) {
   let userReady = false;
   let settleTimer = 0;
   let settleTarget = null;
+  let settleFrame = 0;
+  let savedScrollBehavior = null;
   let settling = false;
   let inputDirection = 0;
   let touchY = null;
@@ -217,7 +221,23 @@ function mountScrollWorld(container, config) {
 
   const stableScrollPoints = () => sections.map((_, index) => stableScrollTop(index));
 
+  const lockInstantScroll = () => {
+    if (savedScrollBehavior !== null) return;
+    savedScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'auto';
+  };
+
+  const cancelSettleAnimation = () => {
+    if (settleFrame) window.cancelAnimationFrame(settleFrame);
+    settleFrame = 0;
+    if (savedScrollBehavior !== null) {
+      document.documentElement.style.scrollBehavior = savedScrollBehavior;
+      savedScrollBehavior = null;
+    }
+  };
+
   function finishSettling() {
+    cancelSettleAnimation();
     settling = false;
     settleTarget = null;
     setScrollState('stable');
@@ -230,6 +250,7 @@ function mountScrollWorld(container, config) {
     window.clearTimeout(settleTimer);
     settleTimer = 0;
     inputDirection = 0;
+    cancelSettleAnimation();
 
     if (Math.abs((window.scrollY || window.pageYOffset) - target) <= tolerance) {
       finishSettling();
@@ -239,7 +260,40 @@ function mountScrollWorld(container, config) {
     settling = true;
     settleTarget = target;
     setScrollState('settling');
-    window.scrollTo({ top: target, behavior: reduceMotion ? 'auto' : 'smooth' });
+
+    if (reduceMotion) {
+      lockInstantScroll();
+      window.scrollTo(0, target);
+      finishSettling();
+      readScroll();
+      return;
+    }
+
+    const start = window.scrollY || window.pageYOffset;
+    const distance = target - start;
+    const startedAt = performance.now();
+    lockInstantScroll();
+
+    const animate = (now) => {
+      if (!settling || settleTarget !== target) return;
+      const progress = clamp((now - startedAt) / settleDuration);
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - (Math.pow((-2 * progress) + 2, 3) / 2);
+      window.scrollTo(0, start + (distance * eased));
+
+      if (progress < 1) {
+        settleFrame = window.requestAnimationFrame(animate);
+        return;
+      }
+
+      settleFrame = 0;
+      window.scrollTo(0, target);
+      finishSettling();
+      readScroll();
+    };
+
+    settleFrame = window.requestAnimationFrame(animate);
   }
 
   function settleScroll() {
@@ -272,6 +326,7 @@ function mountScrollWorld(container, config) {
 
   function noteScrollIntent(direction) {
     if (!direction) return;
+    cancelSettleAnimation();
     settling = false;
     settleTarget = null;
     inputDirection = direction;
@@ -344,9 +399,6 @@ function mountScrollWorld(container, config) {
 
   function readScroll() {
     const scrollY = window.scrollY || window.pageYOffset;
-    if (settling && Math.abs(scrollY - settleTarget) <= Math.max(3, viewportHeight * 0.004)) {
-      finishSettling();
-    }
     const fade = Math.max(1, transitionWidth * viewportHeight);
     let currentSegment = 0;
 
