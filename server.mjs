@@ -829,7 +829,12 @@ const handleChatApi = async (request, response, url) => {
 };
 
 const serveStatic = async (request, response, url, overridePath = '') => {
-  const rawPath = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
+  const pageAliases = {
+    '/': '/anim.html',
+    '/index.html': '/anim.html',
+    '/old.html': '/index.html',
+  };
+  const rawPath = decodeURIComponent(pageAliases[url.pathname] || url.pathname);
   const normalized = path.normalize(rawPath).replace(/^(\.\.[/\\])+/, '');
   const filePath = overridePath || path.join(root, normalized);
 
