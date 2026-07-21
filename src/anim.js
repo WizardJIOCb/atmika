@@ -293,7 +293,7 @@
       {
         ...sceneMedia(4),
         id: 'academy',
-        label: 'Форматы',
+        label: 'Программы',
         accent: '#88e7bd',
         scroll: 1.65,
         linger: 0.45,
